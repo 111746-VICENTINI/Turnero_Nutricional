@@ -1,0 +1,113 @@
+package nutricentro.exception;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@ControllerAdvice
+@NoArgsConstructor
+public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorApi> handleApiException(ApiException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(ex.getStatus())
+                .error(HttpStatus.valueOf(ex.getStatus()).name())
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("0️⃣0️⃣0️⃣ ApiException capturada: {}", ex.getMessage(), ex);
+        return new ResponseEntity<>(error, HttpStatus.valueOf(ex.getStatus()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorApi> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Error de validación");
+
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("VALIDATION_ERROR")
+                .message(message)
+                .build();
+        LOGGER.warn("4️⃣0️⃣0️⃣ MethodArgumentNotValidException (Error de validación): {}", message);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorApi> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.name())
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("4️⃣0️⃣0️⃣ IllegalArgumentException: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorApi> handleGenericException(Exception ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("INTERNAL_SERVER_ERROR")
+                .message(ex.getMessage())
+                .build();
+        LOGGER.error("5️⃣0️⃣0️⃣ Exception no controlada: {}", ex.getMessage(), ex);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorApi> handleEntityNotFound(EntityNotFoundException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.name())
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("4️⃣0️⃣4️⃣ EntityNotFoundException: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorApi> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.name())
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("4️⃣0️⃣9️⃣ DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage(), ex);
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorApi> handleAccessDenied(AccessDeniedException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.FORBIDDEN.value())
+                .error(HttpStatus.FORBIDDEN.name())
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("4️⃣0️⃣3️⃣ AccessDeniedException: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+}

@@ -1,0 +1,48 @@
+package nutricentro.entities;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "users")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserEntity extends BaseEntity {
+
+    @NotBlank(message = "Username is required")
+    @NotNull(message = "Username is required")
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    @Email(message = "Email format is invalid")
+    @Column(nullable = false, unique = true)
+    @NotBlank(message = "Email is required")
+    @NotNull(message = "Email is required")
+    private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    @NotBlank(message = "Password is required")
+    @NotNull(message = "Password is required")
+    private String passwordHash;
+
+    private Boolean isActive;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles = new HashSet<>();
+}

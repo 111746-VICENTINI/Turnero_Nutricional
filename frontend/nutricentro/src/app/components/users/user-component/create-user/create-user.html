@@ -1,0 +1,56 @@
+<div class="card">
+
+  <h2>Crear usuario</h2>
+
+  <form [formGroup]="form">
+    <div class="field">
+      <label for="username">Usuario</label>
+
+      <input
+        pInputText
+        id="username"
+        formControlName="username"
+        autocomplete="username">
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+
+      <input
+        pInputText
+        id="email"
+        formControlName="email"
+        autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+
+      <p-password
+        id="password"
+        formControlName="password"
+        [toggleMask]="true"
+        autocomplete="new-password">
+      </p-password>
+    </div>
+
+    <div class="field">
+      <label for="roles">Roles</label>
+
+      <p-multiselect
+        inputId="roles"
+        formControlName="roles"
+        [options]="roles"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Seleccione roles">
+      </p-multiselect>
+    </div>
+
+    <p-button
+      label="Guardar"
+      (onClick)="save()">
+    </p-button>
+
+  </form>
+</div>

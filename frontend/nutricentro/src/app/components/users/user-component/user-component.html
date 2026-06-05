@@ -1,0 +1,14 @@
+<div class="grid">
+
+  <div class="col-12 md:col-4">
+    <app-create-user
+      (userCreated)="usersList.loadUsers()">
+    </app-create-user>
+  </div>
+
+  <div class="col-12 md:col-8">
+    <app-users-list #usersList>
+    </app-users-list>
+  </div>
+
+</div>

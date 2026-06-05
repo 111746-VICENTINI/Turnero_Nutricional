@@ -1,0 +1,88 @@
+<p-toast></p-toast>
+
+<div class="login-container">
+  <p-card>
+    <div class="text-center" style="text-align: center; margin-bottom: 2rem;">
+<!--      <div style="background-color: red; color: white; width: 3rem; height: 3rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">-->
+<!--        <i class="pi pi-heart-fill" style="font-size: 1.5rem;"></i>-->
+<!--      </div>-->
+      <h2 style="margin: 0; font-size: 3rem; color: darkorange;">Nutri Centro</h2>
+      <p style="margin: 0.8rem 0 0 0; font-size: 2rem; color: #000000;">Iniciar sesión</p>
+    </div>
+
+    <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
+      <div class="field" style="margin-bottom: 1.5rem;">
+        <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: #000000;">Usuario</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          formControlName="username"
+          autocomplete="username"
+          style="width: 100%; padding: 0.75rem; background-color: #fff; color: #000"
+          placeholder="Ejemplo: admin"
+        />
+      </div>
+
+      <div class="field" style="margin-bottom: 1.5rem;">
+        <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: #000000;">Contraseña</label>
+        <p-password
+          id="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="current-password"
+          [style]="{'width':'100%'}"
+          [inputStyle]="{'width':'100%', 'padding': '0.75rem', 'background-color': '#fff', 'color': '#000'}"
+          placeholder="********"
+        ></p-password>
+      </div>
+
+      <p-button
+        type="submit"
+        icon="pi pi-sign-in"
+        class="login-button"
+        [loading]="loading"
+        styleClass="width: 100%; padding: 0.75rem; margin-top: 1rem; background-color: lightyellow; color: darkorange; border: 1px solid darkorange;"
+      >
+        Ingresar
+      </p-button>
+    </form>
+
+    <div class="recovery-section" style="text-align: center; margin-top: 1rem;">
+      <p-button
+        type="button"
+        [text]="true"
+        styleClass="color: black; cursor: pointer; text-decoration: none; font-weight: 500; transition: opacity 0.2s;"
+        (click)="openRecovery()">
+        ¿Olvidaste tu contraseña?
+      </p-button>
+    </div>
+  </p-card>
+</div>
+
+<p-dialog
+  header="Recuperar Contraseña"
+  [(visible)]="forgotPasswordDialog"
+  [modal]="true"
+  [style]="{ width: '400px', maxWidth: '90vw', color: '#000'}"
+>
+  <div class="recovery-dialog" style="display: flex; flex-direction: column; gap: 1rem; padding-top: 1rem;">
+    <p style="margin: 0; color: #000000;">Ingresa tu correo electrónico para recuperar tu contraseña.</p>
+
+    <input
+      type="email"
+      pInputText
+      [(ngModel)]="recoveryEmail"
+      placeholder="correo@gmail.com"
+      style="width: 100%; padding: 0.75rem; background-color: #fff; color: #000000; border: 1px solid darkorange;"
+    />
+
+    <p-button
+      label="Enviar"
+      icon="pi pi-send"
+      (click)="sendRecovery()"
+      styleClass="align-self: flex-end; background-color: lightyellow; color: darkorange; border: 1px solid darkorange;"
+    ></p-button>
+  </div>
+</p-dialog>

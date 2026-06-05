@@ -1,0 +1,10 @@
+<p-card>
+
+  <h2>Bienvenido {{ authService.getUser()?.username }}</h2>
+
+  <p>
+    Rol:
+    {{ authService.getUser()?.roles?.join(', ') }}
+  </p>
+
+</p-card>

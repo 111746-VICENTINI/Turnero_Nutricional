@@ -1,0 +1,88 @@
+<div style="min-height: 100vh; display: flex; flex-direction: column; background-color: #f8f9fa;">
+
+  <div style="background-color: #10b981; color: white; padding: 1rem; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <p-button
+      icon="pi pi-bars"
+      [text]="true"
+      (onClick)="visible = true"
+      styleClass="text-white">
+    </p-button>
+    <span style="font-size: 1.25rem; font-weight: bold; margin-left: 1rem;">Nutri Centro</span>
+  </div>
+
+  <p-drawer [(visible)]="visible" [modal]="true" styleClass="w-20rem">
+    <ng-template #headless>
+      <div class="flex flex-column h-full">
+
+        <div class="flex align-items-center justify-content-between px-4 py-4 border-bottom-1 surface-border">
+          <div class="flex align-items-center gap-3">
+<!--            <div class="flex align-items-center justify-content-center border-circle bg-primary text-primary-contrast" style="width: 2.5rem; height: 2.5rem;">-->
+<!--              <i class="pi pi-heart-fill"></i>-->
+<!--            </div>-->
+            <div>
+              <div class="font-bold text-lg">NUTRICENTRO</div>
+<!--              <small class="text-color-secondary">Gestión</small>-->
+            </div>
+          </div>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="visible = false"></p-button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3">
+          <div class="text-sm text-color-secondary px-3 mb-2">MENU</div>
+          <ul class="list-none p-0 m-0 flex flex-column gap-2">
+            @if (isAdmin()) {
+              <li>
+                <a pRipple routerLink="/dashboard" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
+                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
+                  <i class="pi pi-home"></i><span>Inicio</span>
+                </a>
+              </li>
+            }
+            @if (isAdmin()) {
+              <li>
+                <a
+                  pRipple
+                  routerLink="/users"
+                  routerLinkActive="surface-100 text-primary font-semibold"
+                  (click)="visible = false"
+                  class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color">
+                  <i class="pi pi-user-plus"></i>
+                  <span>Usuarios</span>
+                </a>
+              </li>
+            }
+            @if (isAdmin() || isSecretary()) {
+              <li>
+                <a pRipple routerLink="/agenda" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
+                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
+                  <i class="pi pi-calendar"></i><span>Agenda</span>
+                </a>
+              </li>
+            }
+            @if (isAdmin() || isSecretary() || isProfessional()) {
+              <li>
+                <a pRipple routerLink="/patients" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
+                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
+                  <i class="pi pi-users"></i><span>Pacientes</span>
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <p-button
+          type="button"
+          (click)="logout()"
+          class="w-full flex align-items-center gap-3 p-2 border-round">
+          <i class="pi pi-sign-out"></i>
+          <span>Cerrar Sesión</span>
+        </p-button>
+
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <div class="flex-1 p-4 main-content" style="display: flex; flex-direction: column; overflow: auto;">
+    <router-outlet></router-outlet>
+  </div>
+</div>

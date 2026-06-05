@@ -7,9 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
@@ -33,6 +35,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.valueOf(ex.getStatus()));
     }
 
+    //cuando falla una validacion de dto
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorApi> handleValidationErrors(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -82,7 +85,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.NOT_FOUND.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣4️⃣ EntityNotFoundException: {}", ex.getMessage());
+        LOGGER.warn("4️⃣0️⃣4️⃣ Entidad no encontrada: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
@@ -106,8 +109,37 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.FORBIDDEN.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣3️⃣ AccessDeniedException: {}", ex.getMessage());
+        LOGGER.warn("4️⃣0️⃣3️⃣ Excepción de Acceso Denegado: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
+    //error de parametro: /abc (espera long)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorApi> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.name())
+                .message("Parametro inválido: " + ex.getName())
+                .build();
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    //json mal formado
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorApi> handleJsonError(
+            HttpMessageNotReadableException ex) {
+
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.name())
+                .message("JSON inválido")
+                .build();
+
+        return ResponseEntity.badRequest().body(error);
+    }
 }

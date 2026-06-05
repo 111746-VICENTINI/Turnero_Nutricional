@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.PersonStatus;
 
+import java.time.LocalDate;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,8 +18,8 @@ public class PatientResponseDTO {
     private String lastName;
     private String email;
     private String mobile;
-    private String birthDate;
+    private LocalDate birthDate;
     private Integer age;
+    private Integer document;
     private PersonStatus status;
-    private Boolean active;
 }

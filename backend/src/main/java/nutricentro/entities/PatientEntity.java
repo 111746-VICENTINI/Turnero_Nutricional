@@ -1,14 +1,13 @@
 package nutricentro.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "patients")
@@ -21,23 +20,15 @@ public class PatientEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long patientId;
 
-    @NotBlank(message = "El nombre es obligatorio")
-    @NotNull(message = "El nombre es obligatorio")
     @Column(nullable = false)
     private String firstName;
 
-    @NotBlank(message = "El apellido es obligatorio")
-    @NotNull(message = "El apellido es obligatorio")
     @Column(nullable = false)
     private String lastName;
 
-    @NotNull(message = "La edad es obligatoria")
     @Column(nullable = false)
-    private Integer age;
+    private LocalDate birthDate;
 
-    //fecha de cumpleaños?
-
-    @NotNull(message = "El dni es obligatorio")
     @Column(nullable = false)
     private Integer document;
 
@@ -45,13 +36,9 @@ public class PatientEntity {
     @Enumerated(EnumType.STRING)
     private GenderType gender;
 
-    @Email(message = "El formato email no es válido")
     private String email;
-
     private String mobile;
-
     private String address;
-
     private String observations;
 
     @Enumerated(EnumType.STRING)

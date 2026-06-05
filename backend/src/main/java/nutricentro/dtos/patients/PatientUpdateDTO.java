@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
+import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
 
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PatientRequestDTO {
+public class PatientUpdateDTO {
     @NotBlank(message = "El nombre es obligatorio")
     @NotNull(message = "El nombre es obligatorio")
     private String firstName;
@@ -24,18 +25,18 @@ public class PatientRequestDTO {
     @NotNull(message = "El apellido es obligatorio")
     private String lastName;
 
-    @NotNull(message = "El dni es obligatorio")
-    private Integer document;
-
     @Email(message = "El formato email no es válido")
     private String email;
+    private String mobile;
+
+    @NotNull(message = "El dni es obligatorio")
+    private Integer document;
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     private LocalDate birthDate;
 
+    private PersonStatus status;
+
     @NotNull(message = "El género es obligatorio")
     private GenderType gender;
-
-    private String mobile;
-    private String address;
 }

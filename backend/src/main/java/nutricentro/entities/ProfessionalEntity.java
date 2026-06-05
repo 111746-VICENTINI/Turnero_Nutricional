@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "professionals")
 @Data
@@ -21,46 +23,32 @@ public class ProfessionalEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long professionalId;
 
-    @NotBlank(message = "El nombre es obligatorio")
-    @NotNull(message = "El nombre es obligatorio")
     @Column(nullable = false)
     private String firstName;
 
-    @NotBlank(message = "El apellido es obligatorio")
-    @NotNull(message = "El apellido es obligatorio")
     @Column(nullable = false)
     private String lastName;
 
-    @NotNull(message = "La edad es obligatoria")
     @Column(nullable = false)
-    private Integer age;
+    private LocalDate birthDate;
 
-    @NotNull(message = "El dni es obligatorio")
     @Column(nullable = false)
     private Integer document;
 
-    @NotBlank(message = "La especialidad es obligatoria")
-    @NotNull(message = "La especialidad es obligatoria")
     @Column(nullable = false)
     private String specialty;
 
-    @NotBlank(message = "La matricula es obligatoria")
-    @NotNull(message = "La matricula es obligatoria")
     @Column(nullable = false)
     private String tuition;
 
     private String mobile;
+    private String registration;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private GenderType gender;
 
-    @Email(message = "El formato email no es válido")
     private String email;
-
-    private String registration;
-
-    private String state;
 
     @Enumerated(EnumType.STRING)
     private PersonStatus status;

@@ -31,7 +31,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientResponseDTO getPatientById(Long id) {
         PatientEntity patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
         return toResponse(patient);
     }
 

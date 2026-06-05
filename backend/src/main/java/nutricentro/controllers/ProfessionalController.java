@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.professionals.ProfessionalRequestDTO;
 import nutricentro.dtos.professionals.ProfessionalResponseDTO;
+import nutricentro.dtos.professionals.ProfessionalUpdateDTO;
 import nutricentro.services.ProfessionalService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class ProfessionalController {
     private final ProfessionalService professionalService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProfessionalResponseDTO> createProfessional(@Valid @RequestBody ProfessionalRequestDTO professional) {
         return ResponseEntity.status(HttpStatus.CREATED).body(professionalService.createProfessional(professional));
     }
@@ -35,5 +36,19 @@ public class ProfessionalController {
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<ProfessionalResponseDTO> getProfessionalById(@PathVariable Long id) {
         return ResponseEntity.ok(professionalService.getProfessionalById(id));
+    }
+
+    @PutMapping("{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProfessionalResponseDTO> update(@PathVariable Long id,
+                                                          @Valid @RequestBody ProfessionalUpdateDTO professional) {
+        return ResponseEntity.ok(professionalService.update(id, professional));
+    }
+
+    @PatchMapping("{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        professionalService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,5 +1,6 @@
 package nutricentro.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.users.RegisterRequestDTO;
 import nutricentro.dtos.users.UpdateUserDTO;
@@ -19,7 +20,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/create")
-    public ResponseEntity<UserResponseDTO> create(@RequestBody RegisterRequestDTO request){
+    public ResponseEntity<UserResponseDTO> create(@Valid @RequestBody RegisterRequestDTO request){
         return ResponseEntity.ok(userService.createUser(request));
     }
 
@@ -30,7 +31,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(@PathVariable Long id,
-                                                  @RequestBody UpdateUserDTO request) {
+                                                  @Valid @RequestBody UpdateUserDTO request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 

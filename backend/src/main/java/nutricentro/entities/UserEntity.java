@@ -20,20 +20,13 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserEntity extends BaseEntity {
 
-    @NotBlank(message = "Username is required")
-    @NotNull(message = "Username is required")
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Email(message = "Email format is invalid")
     @Column(nullable = false, unique = true)
-    @NotBlank(message = "Email is required")
-    @NotNull(message = "Email is required")
     private String email;
 
     @Column(name = "password_hash", nullable = false)
-    @NotBlank(message = "Password is required")
-    @NotNull(message = "Password is required")
     private String passwordHash;
 
     private Boolean isActive;

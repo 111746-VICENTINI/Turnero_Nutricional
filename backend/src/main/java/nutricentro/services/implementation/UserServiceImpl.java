@@ -1,14 +1,17 @@
 package nutricentro.services.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.users.RegisterRequestDTO;
 import nutricentro.dtos.users.UpdateUserDTO;
 import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.entities.RoleEntity;
 import nutricentro.entities.UserEntity;
+import nutricentro.exception.ApiException;
 import nutricentro.repositories.UserRepository;
 import nutricentro.services.RoleService;
 import nutricentro.services.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +30,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserResponseDTO createUser(RegisterRequestDTO request) {
 		if (userRepository.existsByUsernameIgnoreCase(request.getUsername())) {
-			throw new IllegalArgumentException("Username ya existe");
+			throw new ApiException("Ya existe un usuario con ese username",
+									HttpStatus.CONFLICT.value());
 		}
 		if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
-			throw new IllegalArgumentException("Email ya existe");
+			throw new ApiException("Ya existe un usuario con ese email",
+									HttpStatus.CONFLICT.value());
 		}
 
 		Set<RoleEntity> roles = roleService.resolveRoles(request.getRoles());
@@ -56,11 +61,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserResponseDTO update(Long id, UpdateUserDTO request) {
 		UserEntity user = userRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
 		user.setUsername(request.getUsername());
 		user.setEmail(request.getEmail());
-
 		user.setIsActive(request.getIsActive());
 
 		Set<RoleEntity> roles = roleService.resolveRoles(request.getRoles());
@@ -72,7 +76,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void delete(Long id) {
 		UserEntity user = userRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
 		user.setIsActive(false);
 		userRepository.save(user);

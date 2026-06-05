@@ -1,6 +1,7 @@
 package nutricentro.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,10 +21,11 @@ public class RoleEntity extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @NotNull
     private Set<UserEntity> users = new HashSet<>();
 
     @Column(name = "hierarchy")

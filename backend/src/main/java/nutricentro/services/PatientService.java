@@ -2,7 +2,7 @@ package nutricentro.services;
 
 import nutricentro.dtos.patients.PatientRequestDTO;
 import nutricentro.dtos.patients.PatientResponseDTO;
-import nutricentro.entities.PatientEntity;
+import nutricentro.dtos.patients.PatientUpdateDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,4 +12,6 @@ public interface PatientService {
     List<PatientResponseDTO> getAllPatients();
     PatientResponseDTO getPatientById(Long id);
     PatientResponseDTO createPatient(PatientRequestDTO patient);
+    void delete (Long id);
+    PatientResponseDTO update (Long id, PatientUpdateDTO patient);
 }

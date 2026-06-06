@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
+import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
 
@@ -35,6 +36,8 @@ public class PatientRequestDTO {
 
     @NotNull(message = "El género es obligatorio")
     private GenderType gender;
+
+    private PersonStatus status;
 
     private String mobile;
     private String address;

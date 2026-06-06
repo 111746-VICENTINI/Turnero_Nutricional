@@ -25,5 +25,6 @@ public class ProfessionalResponseDTO {
     private String state;
     private Integer document;
     private PersonStatus status;
+    private String specialty;
 
 }

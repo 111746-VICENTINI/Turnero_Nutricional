@@ -1,6 +1,8 @@
 package nutricentro.config;
 
 import jakarta.servlet.ServletException;
+import nutricentro.entities.UserEntity;
+import nutricentro.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +13,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -20,6 +26,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -60,7 +67,7 @@ public class SecurityConfig {
 
                             .requestMatchers("/api/v1/appointment/**").hasAnyRole("ADMIN", "SECRETARY", "PROFESSIONAL")
 
-                            .requestMatchers("/api/v1/medical-history/**").hasRole("PROFESSIONAL")
+                            .requestMatchers("/api/v1/medical-history/**").hasAnyRole("ADMIN", "PROFESSIONAL")
                             .anyRequest().authenticated()
                     )
                     .oauth2ResourceServer(oauth2 -> oauth2
@@ -97,6 +104,25 @@ public class SecurityConfig {
         } catch (Exception e) {
             throw new IllegalStateException("No se pudo obtener el AuthenticationManager", e);
         }
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> {
+            UserEntity user = userRepository.findByUsernameIgnoreCase(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+            List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                    .toList();
+
+            return User.builder()
+                    .username(user.getUsername())
+                    .password(user.getPasswordHash())
+                    .authorities(authorities)
+                    .disabled(!Boolean.TRUE.equals(user.getIsActive()))
+                    .build();
+        };
     }
 
     @Bean

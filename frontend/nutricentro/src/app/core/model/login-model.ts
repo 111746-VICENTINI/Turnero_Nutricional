@@ -24,6 +24,13 @@ export interface RegisterRequestDTO {
   roles: string[];
 }
 
+export interface UpdateUserDTO {
+  username: string;
+  email: string;
+  isActive: boolean;
+  roles: string[];
+}
+
 export interface RoleResponseDTO {
   id: number,
   name: string,

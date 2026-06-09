@@ -41,10 +41,16 @@ export const routes: Routes = [
         path: 'agenda',
         component: Calendar,
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'SECRETARY'] }
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       {
         path: 'history',
+        component: HistoryClinical,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'history/:patientId',
         component: HistoryClinical,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'PROFESSIONAL'] }

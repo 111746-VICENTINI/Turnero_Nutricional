@@ -29,8 +29,6 @@ public class UserEntity extends BaseEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    private Boolean isActive;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

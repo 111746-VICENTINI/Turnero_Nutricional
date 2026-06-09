@@ -1,17 +1,14 @@
-import {Component, inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-
-import { CardModule } from 'primeng/card';
+import { RouterModule } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
-import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
-import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
-import {AuthService} from '../../../core/services/auth-service';
+import { AuthService } from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-login-form',
@@ -21,13 +18,11 @@ import {AuthService} from '../../../core/services/auth-service';
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    CardModule,
     InputTextModule,
     PasswordModule,
     ButtonModule,
-    DividerModule,
     DialogModule,
-    ToastModule
+    ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './login-form.html',
@@ -44,14 +39,15 @@ export class LoginForm {
 
   loginForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
-    password: ['', Validators.required]
+    password: ['', Validators.required],
   });
 
-  login() {
+  login(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
+
     this.loading = true;
 
     this.authService.login(this.loginForm.getRawValue()).subscribe({
@@ -60,42 +56,52 @@ export class LoginForm {
         this.messageService.add({
           severity: 'success',
           summary: 'Bienvenido',
-          detail: 'Inicio de sesion exitoso'
+          detail: 'Inicio de sesión exitoso',
         });
       },
-      error: (err) => {
+      error: () => {
         this.loading = false;
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'Credenciales incorrectas o problemas de conexion'
+          summary: 'No se pudo ingresar',
+          detail: 'Revisá el usuario, la contraseña o que el servidor esté activo.',
         });
-        console.error('Login error:', err);
-      }
+      },
     });
   }
 
-  openRecovery() {
+  openRecovery(): void {
     this.forgotPasswordDialog = true;
   }
 
-  sendRecovery() {
+  sendRecovery(): void {
     if (!this.recoveryEmail) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campo requerido',
-        detail: 'Ingresa tu correo electrónico'
+        detail: 'Ingresá tu correo electrónico.',
       });
       return;
     }
 
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Correo enviado',
-      detail: 'Revisa tu email para recuperar tu contraseña'
-    });
+    this.authService.requestPasswordReset(this.recoveryEmail).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Solicitud enviada',
+          detail: 'Si la cuenta existe, se generará la recuperación de contraseña.',
+        });
 
-    this.forgotPasswordDialog = false;
-    this.recoveryEmail = '';
+        this.forgotPasswordDialog = false;
+        this.recoveryEmail = '';
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo enviar la solicitud de recuperación.',
+        });
+      },
+    });
   }
 }

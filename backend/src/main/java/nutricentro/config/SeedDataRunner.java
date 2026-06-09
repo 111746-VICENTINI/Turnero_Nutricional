@@ -32,11 +32,19 @@ public class SeedDataRunner implements CommandLineRunner {
         RoleEntity professionalRole = roleRepository.findByNameIgnoreCase("PROFESSIONAL")
                 .orElseGet(() -> roleRepository.save(buildRole("PROFESSIONAL", "Profesional", 2)));
 
+        userRepository.findByUsernameIgnoreCase("admin").ifPresent(admin -> {
+            if (!Boolean.TRUE.equals(admin.getIsActive())) {
+                admin.setIsActive(true);
+                userRepository.save(admin);
+            }
+        });
+
         if (userRepository.count() == 0) {
             UserEntity admin = new UserEntity();
             admin.setUsername("admin");
             admin.setEmail("admin@admin");
             admin.setPasswordHash(passwordEncoder.encode("admin123"));
+            admin.setIsActive(true);
             admin.setRoles(Set.of(adminRole));
             userRepository.save(admin);
         }

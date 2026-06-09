@@ -1,5 +1,5 @@
 import {inject, Injectable} from '@angular/core';
-import {RegisterRequestDTO, UserResponseDTO} from '../model/login-model';
+import {RegisterRequestDTO, UpdateUserDTO, UserResponseDTO} from '../model/login-model';
 import {environment} from '../../enviroment/enviroment';
 import {HttpClient} from '@angular/common/http';
 
@@ -23,7 +23,7 @@ export class UserService {
     );
   }
 
-  updateUser(id: number, request: RegisterRequestDTO) {
+  updateUser(id: number, request: UpdateUserDTO) {
     return this.http.put<UserResponseDTO>(
       `${this.apiUrl}/${id}`,
       request

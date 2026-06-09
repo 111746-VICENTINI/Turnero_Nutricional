@@ -29,6 +29,7 @@ export class AuthService {
 
   login(credentials: AuthRequestDTO): Observable<AuthResponseDTO> {
     const url = `${this.apiUrl}/login`;
+    this.clearSession();
 
     return this.http.post<AuthResponseDTO>(url, credentials).pipe(
       tap(response => {
@@ -73,7 +74,7 @@ export class AuthService {
       return;
     }
     if (roles.includes('PROFESSIONAL')) {
-      this.router.navigate(['/history']);
+      this.router.navigate(['/agenda']);
       return;
     }
 
@@ -98,10 +99,7 @@ export class AuthService {
    * Elimina el token y el usuario de localStorage y navega al inicio de sesión
    */
   logout(expiredMessage: string | null = null): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
-
-    this.rolesSignal.set([]);
+    this.clearSession();
 
     if (expiredMessage) {
       this.sessionExpiredMessage.set(expiredMessage);
@@ -115,7 +113,18 @@ export class AuthService {
    * @returns true si existe un token, false de lo contrario
    */
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+
+    if (!token) {
+      return false;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.clearSession();
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -146,14 +155,29 @@ export class AuthService {
     return user?.roles ?? [];
   }
 
+  private clearSession(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+    this.rolesSignal.set([]);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1])) as { exp?: number };
+      return !!payload.exp && payload.exp * 1000 <= Date.now();
+    } catch {
+      return true;
+    }
+  }
+
 
   /**
    * Sends a password recovery email.
    * @param email - The user's email address.
    */
   requestPasswordReset(email: string): Observable<void> {
-    const url = `${this.apiUrl}/internal/forgot-password`;
-    return this.http.post<void>(url, { email });
+    const url = `${this.apiUrl}/password/forgot`;
+    return this.http.post<void>(url, { usernameOrEmail: email });
   }
 
 }

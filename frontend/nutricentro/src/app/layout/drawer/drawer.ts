@@ -6,7 +6,7 @@ import { RippleModule } from 'primeng/ripple';
 import { StyleClassModule } from 'primeng/styleclass';
 import {RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
 import {AuthService} from '../../core/services/auth-service';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-drawer',
@@ -14,15 +14,17 @@ import {CommonModule} from '@angular/common';
   imports: [CommonModule, RouterOutlet, AvatarModule,
     RouterLink,
     RouterLinkActive,
-    ButtonModule, DrawerModule, RippleModule, StyleClassModule],
+    ButtonModule, DrawerModule, RippleModule, StyleClassModule, NgOptimizedImage],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
 })
 export class Drawer {
   visible = false;
+  usersMenu = false;
 
   authService = inject(AuthService);
   roles = this.authService.roles;
+  actualUser = this.authService.getCurrentUser();
 
   isAdmin() { return this.roles().includes('ADMIN'); }
   isSecretary() { return this.roles().includes('SECRETARY'); }
@@ -31,5 +33,9 @@ export class Drawer {
   logout() {
     this.visible = false;
     this.authService.logout();
+  }
+
+  getFullName():string {
+    return `${this.actualUser?.username || 'usuario'}`;
   }
 }

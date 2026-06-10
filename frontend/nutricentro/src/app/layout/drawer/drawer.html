@@ -1,88 +1,134 @@
-<div style="min-height: 100vh; display: flex; flex-direction: column; background-color: #f8f9fa;">
-
-  <div style="background-color: #10b981; color: white; padding: 1rem; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <p-button
-      icon="pi pi-bars"
-      [text]="true"
-      (onClick)="visible = true"
-      styleClass="text-white">
-    </p-button>
-    <span style="font-size: 1.25rem; font-weight: bold; margin-left: 1rem;">Nutri Centro</span>
+<div class="app-shell">
+  <div class="topbar">
+    <p-button icon="pi pi-bars" [text]="true" (onClick)="visible = true" styleClass="text-white"></p-button>
+    <span class="brand-name">Nutri Centro</span>
   </div>
 
   <p-drawer [(visible)]="visible" [modal]="true" styleClass="w-20rem">
     <ng-template #headless>
-      <div class="flex flex-column h-full">
-
-        <div class="flex align-items-center justify-content-between px-4 py-4 border-bottom-1 surface-border">
-          <div class="flex align-items-center gap-3">
-<!--            <div class="flex align-items-center justify-content-center border-circle bg-primary text-primary-contrast" style="width: 2.5rem; height: 2.5rem;">-->
-<!--              <i class="pi pi-heart-fill"></i>-->
-<!--            </div>-->
-            <div>
-              <div class="font-bold text-lg">NUTRICENTRO</div>
-<!--              <small class="text-color-secondary">Gestión</small>-->
-            </div>
+      <div class="drawer-content">
+        <div class="drawer-header">
+          <div class="brand-block">
+            <img
+              ngSrc="/images/LogoNutriCentro.jpg"
+              alt="NutriCentro"
+              class="brand-logo"
+              height="432"
+              width="432"
+            >
+            <span class="drawer-brand">NutriCentro</span>
           </div>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" (onClick)="visible = false"></p-button>
+          <p-button
+            icon="pi pi-times"
+            [rounded]="true"
+            [text]="true"
+            [outlined]="true"
+            (onClick)="visible = false"
+            class="close-btn p-2"
+          ></p-button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-3">
-          <div class="text-sm text-color-secondary px-3 mb-2">MENU</div>
-          <ul class="list-none p-0 m-0 flex flex-column gap-2">
+        <div class="menu-panel">
+          <ul class="list-none p-1 m-0">
+
+          <!-- menu -->
             @if (isAdmin()) {
               <li>
-                <a pRipple routerLink="/dashboard" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
-                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
-                  <i class="pi pi-home"></i><span>Inicio</span>
+                <a
+                  pRipple
+                  routerLink="/dashboard"
+                  routerLinkActive="menu-active"
+                  (click)="visible = false"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-home"></i>
+                  <span>Inicio</span>
                 </a>
               </li>
             }
+
+            <!-- usuarios -->
             @if (isAdmin()) {
               <li>
                 <a
                   pRipple
                   routerLink="/users"
-                  routerLinkActive="surface-100 text-primary font-semibold"
-                  (click)="visible = false"
-                  class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color">
+                  routerLinkActive="menu-active"
+                  (click)="usersMenu = !usersMenu"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-user-plus"></i>
-                  <span>Usuarios</span>
+                  <span>Gestión de usuarios</span>
                 </a>
               </li>
             }
-            @if (isAdmin() || isSecretary()) {
-              <li>
-                <a pRipple routerLink="/agenda" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
-                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
-                  <i class="pi pi-calendar"></i><span>Agenda</span>
-                </a>
-              </li>
-            }
+
+
+            <!-- turnos -->
             @if (isAdmin() || isSecretary() || isProfessional()) {
               <li>
-                <a pRipple routerLink="/patients" routerLinkActive="surface-100 text-primary font-semibold" (click)="visible = false"
-                   class="flex align-items-center gap-3 p-3 border-round cursor-pointer no-underline text-color transition-colors transition-duration-150">
-                  <i class="pi pi-users"></i><span>Pacientes</span>
+                <a
+                  pRipple
+                  routerLink="/agenda"
+                  routerLinkActive="menu-active"
+                  (click)="visible = false"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-calendar"></i>
+                  <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Mis turnos' : 'Agenda de turnos' }}</span>
+                </a>
+              </li>
+            }
+
+            @if (isAdmin() || isSecretary() || isProfessional()) {
+              <li>
+                <a
+                  pRipple
+                  routerLink="/patients"
+                  routerLinkActive="menu-active"
+                  (click)="visible = false"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-users"></i>
+                  <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Pacientes' : 'Gestión de pacientes' }}</span>
+                </a>
+              </li>
+            }
+
+            @if (isAdmin() || isProfessional()) {
+              <li>
+                <a
+                  pRipple
+                  routerLink="/history"
+                  routerLinkActive="menu-active"
+                  (click)="visible = false"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-file-edit"></i>
+                  <span>Historial clínico</span>
                 </a>
               </li>
             }
           </ul>
         </div>
 
-        <p-button
-          type="button"
-          (click)="logout()"
-          class="w-full flex align-items-center gap-3 p-2 border-round">
-          <i class="pi pi-sign-out"></i>
-          <span>Cerrar Sesión</span>
-        </p-button>
+        <div class="user-info">
+          <div class="avatar">
+            <i class="pi pi-user"></i>
+          </div>
 
+          <div class="user-data">
+            <div class="user-name">{{ getFullName() }}</div>
+          </div>
+        </div>
+
+        <div class="logout-panel">
+          <hr class="mb-4 border-surface" />
+          <a pRipple (click)="logout()" class="logout-item flex items-center gap-3 p-4 cursor-pointer bg-orange-50">
+            <i class="pi pi-sign-out"></i>
+            <span>Cerrar sesión</span>
+          </a>
+        </div>
       </div>
     </ng-template>
   </p-drawer>
 
-  <div class="flex-1 p-4 main-content" style="display: flex; flex-direction: column; overflow: auto;">
+  <div class="main-content">
     <router-outlet></router-outlet>
   </div>
 </div>

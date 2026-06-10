@@ -3,3 +3,157 @@
   min-height: 100vh;
   width: 100%;
 }
+
+.app-shell {
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  align-items: center;
+  background-color: #10b981;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: white;
+  display: flex;
+  padding: 1rem;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-left: 1rem;
+}
+
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.drawer-header {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.brand-block {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.brand-logo {
+  height: 56px;
+  object-fit: contain;
+  width: 56px;
+}
+
+.drawer-brand {
+  color: rgba(0, 0, 0, 0.9);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.menu-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.logout-panel {
+  margin-top: auto;
+  padding: 1rem;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.menu-item {
+  color: black;
+  padding: 1rem 1.25rem;
+  font-size: 1.2rem;
+  transition: all .25s ease;
+}
+
+.menu-item:hover {
+  background: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.menu-item:hover i {
+  transform: scale(1.1);
+}
+
+.menu-item i {
+  transition: all .25s ease;
+  color: darkorange;
+  font-size: 1.5rem;
+  min-width: 32px;
+}
+
+.menu-item span {
+  color: black;
+}
+
+.menu-active {
+  background: #fff7ed;
+  color: #ea580c;
+  border-radius: 8px;
+}
+
+.menu-active span,
+.menu-active i {
+  color: #ea580c;
+  font-weight: 500;
+}
+
+/*cruz*/
+:host ::ng-deep .close-btn .p-button-icon {
+  color: darkorange;
+}
+
+:host ::ng-deep .close-btn .p-button:hover {
+  color: #ea580c;
+  background: #fff7ed;
+}
+
+/*nombres abajo*/
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgb(16 185 129 / 0.63);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-name {
+  font-weight: 600;
+  color: black;
+}
+
+.user-role {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+

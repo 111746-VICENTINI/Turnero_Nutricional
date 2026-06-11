@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import {RouterLinkActive} from '@angular/router';
+import {RouterLink} from '@angular/router';
 import {Button} from 'primeng/button';
 
 @Component({
   selector: 'app-unauthorized',
   standalone: true,
   imports: [
-    RouterLinkActive,
-    Button
+    Button,
+    RouterLink
   ],
   templateUrl: './unauthorized.component.html',
   styleUrl: './unauthorized.component.css'

@@ -59,6 +59,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public UserResponseDTO findById(Long id) {
+		UserEntity user = userRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + id));
+		return toResponse(user);
+	}
+
+	@Override
 	public UserResponseDTO update(Long id, UpdateUserDTO request) {
 		UserEntity user = userRepository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));

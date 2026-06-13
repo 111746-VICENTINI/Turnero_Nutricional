@@ -23,6 +23,12 @@ export class UserService {
     );
   }
 
+  getUserById(id: number) {
+    return this.http.get<UserResponseDTO>(
+      `${this.apiUrl}/${id}`
+    );
+  }
+
   updateUser(id: number, request: UpdateUserDTO) {
     return this.http.put<UserResponseDTO>(
       `${this.apiUrl}/${id}`,

@@ -9,6 +9,8 @@ import {Calendar} from './components/appointments/calendar/calendar';
 import {UnauthorizedComponent} from './shared/unauthorized/unauthorized.component';
 import {UserComponent} from './components/users/user-component/user-component';
 import {Patients} from './components/patients/patients';
+import {UsersList} from './components/users/user-component/users-list/users-list';
+import {CreateUser} from './components/users/user-component/create-user/create-user';
 
 export const routes: Routes = [
   {
@@ -27,8 +29,18 @@ export const routes: Routes = [
       },
       {
         path: 'users',
-        component: UserComponent,
+        component: UsersList,
         canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
+      },
+      {
+        path: 'users/create',
+        component: CreateUser,
+        data: { roles: ['ADMIN'] }
+      },
+      {
+        path: 'users/:id/edit',
+        component: CreateUser,
         data: { roles: ['ADMIN'] }
       },
       {

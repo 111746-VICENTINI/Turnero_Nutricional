@@ -20,12 +20,6 @@
   padding: 1rem;
 }
 
-.brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-left: 1rem;
-}
-
 .drawer-content {
   display: flex;
   flex-direction: column;
@@ -103,18 +97,6 @@
   color: black;
 }
 
-.menu-active {
-  background: #fff7ed;
-  color: #ea580c;
-  border-radius: 8px;
-}
-
-.menu-active span,
-.menu-active i {
-  color: #ea580c;
-  font-weight: 500;
-}
-
 /*cruz*/
 :host ::ng-deep .close-btn .p-button-icon {
   color: darkorange;
@@ -129,11 +111,7 @@
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
   border-radius: 12px;
-  background: #f8fafc;
 }
 
 .avatar {
@@ -157,3 +135,76 @@
   color: #6b7280;
 }
 
+/*sub menus*/
+.submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 3.2rem;
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .8rem 1rem;
+  text-decoration: none;
+  border-radius: 8px;
+  color: black;
+  transition: all .25s ease;
+}
+
+.submenu-item:hover {
+  background: #fff7ed;
+  transform: translateX(4px);
+}
+
+.submenu-item i {
+  color: darkorange;
+  font-size: 1rem;
+}
+
+.submenu-item span {
+  color: black;
+}
+
+.submenu-item.menu-active {
+  background: #fff7ed;
+}
+
+.submenu-item.menu-active span,
+.submenu-item.menu-active i {
+  color: #ea580c;
+  font-weight: 600;
+}
+
+/*top bar*/
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.username {
+  font-weight: 500;
+  color: white;
+}
+
+.logout-topbar {
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.logout-topbar i {
+  font-size: 1.3rem;
+}
+
+.drawer-trigger {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 100vh;
+  z-index: 999;
+}

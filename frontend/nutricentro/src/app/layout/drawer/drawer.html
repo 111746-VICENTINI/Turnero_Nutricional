@@ -1,7 +1,22 @@
 <div class="app-shell">
+
+  <!-- top bar -->
   <div class="topbar">
     <p-button icon="pi pi-bars" [text]="true" (onClick)="visible = true" styleClass="text-white"></p-button>
-    <span class="brand-name">Nutri Centro</span>
+
+    <div class="topbar-right">
+      <span class="username">{{getFullName()}}</span>
+
+      <a pRipple (click)="logout()" class="logout-topbar gap-3 p-4 cursor-pointer"
+         style="margin-left: auto;">
+        <i class="pi pi-sign-out"></i>
+      </a>
+    </div>
+  </div>
+
+  <div
+    class="drawer-trigger"
+    (mouseenter)="visible = true">
   </div>
 
   <p-drawer [(visible)]="visible" [modal]="true" styleClass="w-20rem">
@@ -37,7 +52,6 @@
                 <a
                   pRipple
                   routerLink="/dashboard"
-                  routerLinkActive="menu-active"
                   (click)="visible = false"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-home"></i>
@@ -52,15 +66,81 @@
                 <a
                   pRipple
                   routerLink="/users"
-                  routerLinkActive="menu-active"
                   (click)="usersMenu = !usersMenu"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-user-plus"></i>
                   <span>Gestión de usuarios</span>
+                  <i [class]="usersMenu ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                 </a>
               </li>
             }
 
+            @if(usersMenu){
+              <ul class="submenu">
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/users"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-list"></i>
+                    <span>Listado de usuarios</span>
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/users/create"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-user-plus"></i>
+                    <span>Crear usuario</span>
+                  </a>
+                </li>
+              </ul>
+            }
+
+            <!-- profesionales -->
+            @if (isAdmin()) {
+              <li>
+                <a
+                  pRipple
+                  routerLink="/professionals"
+                  (click)="professionalsMenu = !professionalsMenu"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-calendar"></i>
+                  <span>Gestión de profesionales</span>
+
+                  <i [class]="professionalsMenu ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+                </a>
+              </li>
+            }
+            @if(professionalsMenu){
+              <ul class="submenu">
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/professionals"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-list"></i>
+                    <span>Listado de profesionales</span>
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/professionals/create"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-plus-circle"></i>
+                    <span>Crear profesional</span>
+                  </a>
+                </li>
+              </ul>
+            }
 
             <!-- turnos -->
             @if (isAdmin() || isSecretary() || isProfessional()) {
@@ -68,7 +148,6 @@
                 <a
                   pRipple
                   routerLink="/agenda"
-                  routerLinkActive="menu-active"
                   (click)="visible = false"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-calendar"></i>
@@ -77,26 +156,54 @@
               </li>
             }
 
+            <!-- pacientes -->
             @if (isAdmin() || isSecretary() || isProfessional()) {
               <li>
                 <a
                   pRipple
                   routerLink="/patients"
-                  routerLinkActive="menu-active"
-                  (click)="visible = false"
+                  (click)="patientsMenu = !patientsMenu"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-users"></i>
                   <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Pacientes' : 'Gestión de pacientes' }}</span>
+
+                  <i [class]="patientsMenu ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                 </a>
               </li>
             }
 
+            @if(patientsMenu){
+              <ul class="submenu">
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/patients"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-list"></i>
+                    <span>Listado de pacientes</span>
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/patients/create"
+                    (click)="visible = false"
+                    class="submenu-item">
+                    <i class="pi pi-user-plus"></i>
+                    <span>Crear paciente</span>
+                  </a>
+                </li>
+              </ul>
+            }
+
+            <!-- historial clinico -->
             @if (isAdmin() || isProfessional()) {
               <li>
                 <a
                   pRipple
                   routerLink="/history"
-                  routerLinkActive="menu-active"
                   (click)="visible = false"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-file-edit"></i>
@@ -105,16 +212,6 @@
               </li>
             }
           </ul>
-        </div>
-
-        <div class="user-info">
-          <div class="avatar">
-            <i class="pi pi-user"></i>
-          </div>
-
-          <div class="user-data">
-            <div class="user-name">{{ getFullName() }}</div>
-          </div>
         </div>
 
         <div class="logout-panel">

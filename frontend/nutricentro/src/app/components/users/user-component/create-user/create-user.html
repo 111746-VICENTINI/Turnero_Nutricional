@@ -1,56 +1,125 @@
-<div class="card">
+<p-toast></p-toast>
 
-  <h2>Crear usuario</h2>
-
-  <form [formGroup]="form">
-    <div class="field">
-      <label for="username">Usuario</label>
-
-      <input
-        pInputText
-        id="username"
-        formControlName="username"
-        autocomplete="username">
+<section class="page-shell">
+  <div class="page-header">
+    <div>
+      <h1>{{ pageTitle }}</h1>
     </div>
 
-    <div class="field">
-      <label for="email">Email</label>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-arrow-left"
+        label="Volver"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="goBack()">
+      </p-button>
 
-      <input
-        pInputText
-        id="email"
-        formControlName="email"
-        autocomplete="email">
+      @if (showEditButton) {
+        <p-button
+          icon="pi pi-pencil"
+          label="Editar"
+          severity="info"
+          type="button"
+          (onClick)="enableEditing()">
+        </p-button>
+      }
+    </div>
+  </div>
+
+  <form [formGroup]="form" class="user-form" (ngSubmit)="save()">
+    <div class="form-grid">
+      <div class="field-wrapper">
+        <label for="username">Usuario <span>*</span></label>
+        <input
+          pInputText
+          id="username"
+          type="text"
+          formControlName="username"
+          autocomplete="username" />
+        @if (isInvalid('username')) {
+          <small>Este campo es obligatorio.</small>
+        }
+      </div>
+
+      <div class="field-wrapper">
+        <label for="email">Email <span>*</span></label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email" />
+        @if (isInvalid('email')) {
+          <small>Ingrese un email valido.</small>
+        }
+      </div>
+
+      @if (mode === 'create') {
+        <div class="field-wrapper">
+          <label for="password">Contrasena <span>*</span></label>
+          <input
+            pInputText
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="new-password" />
+          @if (isInvalid('password')) {
+            <small>Este campo es obligatorio.</small>
+          }
+        </div>
+      } @else {
+        <div class="field-wrapper checkbox-field">
+          <label>
+            <input type="checkbox" formControlName="isActive" />
+            Usuario activo
+          </label>
+        </div>
+      }
+
+      <fieldset class="roles-field">
+        <legend>Roles <span>*</span></legend>
+
+        <div class="roles-list">
+          @for (role of roles; track role.id) {
+            <label class="role-option">
+              <input
+                type="checkbox"
+                [checked]="hasRole(role.name)"
+                [disabled]="!isFormEditable"
+                (change)="toggleRole(role.name, $event)" />
+              <span>{{ role.name }}</span>
+            </label>
+          }
+        </div>
+
+        @if (isInvalid('roles')) {
+          <small>Seleccione al menos un rol.</small>
+        }
+      </fieldset>
     </div>
 
-    <div class="field">
-      <label for="password">Password</label>
+    @if (showFormActions) {
+      <div class="form-actions">
+        <p-button
+          [label]="mode === 'create' ? 'Cancelar' : 'Descartar'"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          type="button"
+          (onClick)="cancel()"
+          [disabled]="saving">
+        </p-button>
 
-      <p-password
-        id="password"
-        formControlName="password"
-        [toggleMask]="true"
-        autocomplete="new-password">
-      </p-password>
-    </div>
-
-    <div class="field">
-      <label for="roles">Roles</label>
-
-      <p-multiselect
-        inputId="roles"
-        formControlName="roles"
-        [options]="roles"
-        optionLabel="name"
-        optionValue="name"
-        placeholder="Seleccione roles">
-      </p-multiselect>
-    </div>
-
-    <p-button
-      label="Guardar"
-      (onClick)="save()">
-    </p-button>
-
+        <p-button
+          [label]="submitLabel"
+          icon="pi pi-save"
+          severity="success"
+          type="submit"
+          [loading]="saving">
+        </p-button>
+      </div>
+    }
   </form>
-</div>
+</section>

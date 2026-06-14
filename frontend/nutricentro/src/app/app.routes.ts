@@ -7,10 +7,10 @@ import {roleGuard} from './core/guard/role-guard';
 import {HistoryClinical} from './components/history-clinical/history-clinical';
 import {Calendar} from './components/appointments/calendar/calendar';
 import {UnauthorizedComponent} from './shared/unauthorized/unauthorized.component';
-import {UserComponent} from './components/users/user-component/user-component';
-import {Patients} from './components/patients/patients';
 import {UsersList} from './components/users/user-component/users-list/users-list';
 import {CreateUser} from './components/users/user-component/create-user/create-user';
+import {ListPatients} from './components/patients/list-patients/list-patients';
+import {ProfessionalList} from './components/professionals/professional-list/professional-list';
 
 export const routes: Routes = [
   {
@@ -27,6 +27,7 @@ export const routes: Routes = [
         redirectTo: 'dashboard',
         pathMatch: 'full'
       },
+      // USUARIOS
       {
         path: 'users',
         component: UsersList,
@@ -36,25 +37,68 @@ export const routes: Routes = [
       {
         path: 'users/create',
         component: CreateUser,
+        canActivate: [roleGuard],
         data: { roles: ['ADMIN'] }
       },
       {
         path: 'users/:id/edit',
         component: CreateUser,
+        canActivate: [roleGuard],
         data: { roles: ['ADMIN'] }
       },
+      // PANTALLA PRINCIPAL
       {
         path: 'dashboard',
         component: Dashboard,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN'] }
       },
+      // PACIENTES
+      {
+        path: 'patient',
+        component: ListPatients,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'patient/create',
+        component: ListPatients,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'patient/:id/edit',
+        component: ListPatients,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      // PROFESIONALES
+      {
+        path: 'professional',
+        component: ProfessionalList,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'professional/create',
+        component: ProfessionalList,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'professional/:id/edit',
+        component: ProfessionalList,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      // AGENDA-TURNOS
       {
         path: 'agenda',
         component: Calendar,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
+      // HISTORIAL CLINICO
       {
         path: 'history',
         component: HistoryClinical,
@@ -67,12 +111,6 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'PROFESSIONAL'] }
       },
-      {
-        path: 'patients',
-        component: Patients,
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
-      }
     ]
   },
   {

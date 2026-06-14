@@ -9,23 +9,18 @@ import {environment} from '../../enviroment/enviroment';
   providedIn: 'root',
 })
 export class AuthService {
-  public errorMsg: string | null = null;
   private router = inject(Router);
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/v1/auth`;
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
-  // private firstLoginToken = 'first_login_token';
-  // private firstLoginTokenCamelCase = 'firstLoginToken';
   private sessionExpiredMessage = signal<string | null>(null);
   private rolesSignal = signal<string[]>(this.getUserRoles());
   public roles = this.rolesSignal.asReadonly();
 
-
   constructor() {
     this.rolesSignal.set(this.getUserRoles());
   }
-
 
   login(credentials: AuthRequestDTO): Observable<AuthResponseDTO> {
     const url = `${this.apiUrl}/login`;
@@ -80,20 +75,6 @@ export class AuthService {
 
     this.logout();
   }
-
-  // /**
-  //  * Maneja la redirección después del inicio de sesión según si es el primer inicio de sesión del usuario.
-  //  * @param response - La respuesta de inicio de sesión que contiene los detalles del usuario y el token.
-  //  */
-  // private handlePostLoginRedirect(response: AuthResponseDTO): void {
-  //   if (response.firstLoginToken) {
-  //     this.router.navigate(['/password-reset'], {
-  //       queryParams: { first: true, firstLoginToken: response.firstLoginToken }
-  //     });
-  //   } else {
-  //     this.redirectToDashboard();
-  //   }
-  // }
 
   /**
    * Elimina el token y el usuario de localStorage y navega al inicio de sesión
@@ -169,7 +150,6 @@ export class AuthService {
       return true;
     }
   }
-
 
   /**
    * Sends a password recovery email.

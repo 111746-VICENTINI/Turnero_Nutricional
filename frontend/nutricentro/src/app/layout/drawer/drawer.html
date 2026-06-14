@@ -46,7 +46,7 @@
         <div class="menu-panel">
           <ul class="list-none p-1 m-0">
 
-          <!-- menu -->
+          <!-- MENU -->
             @if (isAdmin()) {
               <li>
                 <a
@@ -60,7 +60,7 @@
               </li>
             }
 
-            <!-- usuarios -->
+            <!-- USUARIOS -->
             @if (isAdmin()) {
               <li>
                 <a
@@ -101,12 +101,12 @@
               </ul>
             }
 
-            <!-- profesionales -->
+            <!-- PROFESIONALES -->
             @if (isAdmin()) {
               <li>
                 <a
                   pRipple
-                  routerLink="/professionals"
+                  routerLink="/professional"
                   (click)="professionalsMenu = !professionalsMenu"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-calendar"></i>
@@ -121,7 +121,7 @@
                 <li>
                   <a
                     pRipple
-                    routerLink="/professionals"
+                    routerLink="/professional"
                     (click)="visible = false"
                     class="submenu-item">
                     <i class="pi pi-list"></i>
@@ -132,36 +132,22 @@
                 <li>
                   <a
                     pRipple
-                    routerLink="/professionals/create"
+                    routerLink="/professional/create"
                     (click)="visible = false"
                     class="submenu-item">
-                    <i class="pi pi-plus-circle"></i>
+                    <i class="pi pi-user-plus"></i>
                     <span>Crear profesional</span>
                   </a>
                 </li>
               </ul>
             }
 
-            <!-- turnos -->
+            <!-- PACIENTES -->
             @if (isAdmin() || isSecretary() || isProfessional()) {
               <li>
                 <a
                   pRipple
-                  routerLink="/agenda"
-                  (click)="visible = false"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-calendar"></i>
-                  <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Mis turnos' : 'Agenda de turnos' }}</span>
-                </a>
-              </li>
-            }
-
-            <!-- pacientes -->
-            @if (isAdmin() || isSecretary() || isProfessional()) {
-              <li>
-                <a
-                  pRipple
-                  routerLink="/patients"
+                  routerLink="/patient"
                   (click)="patientsMenu = !patientsMenu"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
                   <i class="pi pi-users"></i>
@@ -177,7 +163,7 @@
                 <li>
                   <a
                     pRipple
-                    routerLink="/patients"
+                    routerLink="/patient"
                     (click)="visible = false"
                     class="submenu-item">
                     <i class="pi pi-list"></i>
@@ -188,7 +174,7 @@
                 <li>
                   <a
                     pRipple
-                    routerLink="/patients/create"
+                    routerLink="/patient/create"
                     (click)="visible = false"
                     class="submenu-item">
                     <i class="pi pi-user-plus"></i>
@@ -198,7 +184,21 @@
               </ul>
             }
 
-            <!-- historial clinico -->
+            <!-- TURNOS -->
+            @if (isAdmin() || isSecretary() || isProfessional()) {
+              <li>
+                <a
+                  pRipple
+                  routerLink="/agenda"
+                  (click)="visible = false"
+                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
+                  <i class="pi pi-calendar"></i>
+                  <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Mis turnos' : 'Agenda de turnos' }}</span>
+                </a>
+              </li>
+            }
+
+            <!-- HISTORIAL CLINICO -->
             @if (isAdmin() || isProfessional()) {
               <li>
                 <a

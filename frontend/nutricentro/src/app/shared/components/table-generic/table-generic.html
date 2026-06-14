@@ -1,0 +1,176 @@
+<div class="generic-table-container" [ngClass]="[
+    'table-' + formWidth,
+    'font-' + fontSize,
+    'toolbar-' + columnsPerRow
+  ]">
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{ width: 'min(32rem, 92vw)' }"></p-confirmDialog>
+
+  @if (title || subtitle || showGlobalFilter) {
+    <div class="table-toolbar">
+      <div>
+        @if (title) {
+          <h2>{{ title }}</h2>
+        }
+        @if (subtitle) {
+          <p>{{ subtitle }}</p>
+        }
+      </div>
+
+      @if (showGlobalFilter) {
+        <div class="search-container">
+          <p-iconField iconPosition="left">
+            <p-inputIcon class="pi pi-search"></p-inputIcon>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar..."
+              (input)="onGlobalFilter($event)"
+              [(ngModel)]="globalFilter"
+              class="search-input"
+            />
+          </p-iconField>
+          <p-button
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            type="button"
+            (onClick)="clear()"
+            pTooltip="Limpiar búsqueda"
+            tooltipPosition="top"
+          ></p-button>
+        </div>
+      }
+    </div>
+  }
+
+  <p-table
+    #dataTable
+    [value]="filteredData"
+    [paginator]="showPagination"
+    [rows]="rows"
+    [rowsPerPageOptions]="pageSizeOptions"
+    [first]="first"
+    [(selection)]="selection"
+    [loading]="loading"
+    [scrollable]="scrollable"
+    scrollHeight="flex"
+    [tableStyle]="{ 'min-width': '48rem' }"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-striped"
+    [dataKey]="dataKey"
+    (selectionChange)="onSelectionChange($event)"
+    (onPage)="onTableStateChange($event)"
+    (onSort)="onTableStateChange($event)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        @if (showCheckbox) {
+          <th class="selection-cell">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+        }
+
+        @for (column of columns; track column.field) {
+          <th
+            [pSortableColumn]="column.sortable === false ? undefined : column.field"
+            [style.width]="column.width"
+            [style.min-width]="column.minWidth || '10rem'"
+          >
+            <div class="column-header" [class.center]="column.alignCenter">
+              {{ column.header }}
+              @if (column.sortable !== false) {
+                <p-sortIcon [field]="column.field"></p-sortIcon>
+              }
+            </div>
+          </th>
+        }
+
+        @if (actions.length > 0) {
+          <th class="actions-header">Acciones</th>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        @if (showCheckbox) {
+          <td class="selection-cell">
+            <p-tableCheckbox [value]="row"></p-tableCheckbox>
+          </td>
+        }
+
+        @for (column of columns; track column.field) {
+          <td [class.center]="column.alignCenter">
+            @switch (column.type) {
+              @case ('boolean') {
+                <p-tag
+                  [value]="getNestedProperty(row, column.field) ? 'Sí' : 'No'"
+                  [severity]="getNestedProperty(row, column.field) ? 'success' : 'danger'"
+                ></p-tag>
+              }
+              @case ('date') {
+                {{ formatValue(getNestedProperty(row, column.field), 'date', column.formatFn, row) }}
+              }
+              @case ('number') {
+                {{ formatValue(getNestedProperty(row, column.field), 'number', column.formatFn, row) }}
+              }
+              @case ('custom') {
+                @if (column.tagSeverityFn) {
+                  <p-tag
+                    [value]="formatValue(getNestedProperty(row, column.field), 'custom', column.formatFn, row)"
+                    [severity]="column.tagSeverityFn(getNestedProperty(row, column.field), row)"
+                  ></p-tag>
+                } @else {
+                  {{ formatValue(getNestedProperty(row, column.field), 'custom', column.formatFn, row) }}
+                }
+              }
+              @default {
+                {{ formatValue(getNestedProperty(row, column.field), 'text', column.formatFn, row) }}
+              }
+            }
+          </td>
+        }
+
+        @if (actions.length > 0) {
+          <td>
+            <div class="actions-cell">
+              @for (action of actions; track action.field) {
+                @if (isActionVisible(action, row)) {
+                  <p-button
+                    [icon]="action.icon || 'pi pi-pencil'"
+                    [severity]="action.severity || 'info'"
+                    [outlined]="true"
+                    [rounded]="true"
+                    [text]="true"
+                    type="button"
+                    [disabled]="!isActionEnabled(action, row)"
+                    (onClick)="performAction(action, row)"
+                    [pTooltip]="action.label"
+                    tooltipPosition="top"
+                    styleClass="action-button"
+                  ></p-button>
+                }
+              }
+            </div>
+          </td>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td
+          [attr.colspan]="columns.length + (actions.length > 0 ? 1 : 0) + (showCheckbox ? 1 : 0)"
+          class="empty-cell"
+        >
+          {{ emptyMessage }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="paginatorright">
+      <span class="total-records">Total: {{ totalRecords }}</span>
+    </ng-template>
+  </p-table>
+</div>

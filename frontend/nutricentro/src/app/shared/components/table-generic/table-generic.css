@@ -1,0 +1,184 @@
+.generic-table-container {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+  display: grid;
+}
+
+.table-toolbar h2 {
+  color: #111827;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.table-toolbar p {
+  color: #6b7280;
+  margin: 0.25rem 0 0;
+}
+
+.search-container {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-input {
+  min-width: 16rem;
+}
+
+.column-header {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.column-header.center,
+.center {
+  justify-content: center;
+  text-align: center;
+}
+
+.selection-cell {
+  text-align: center;
+  width: 3rem;
+}
+
+.actions-header {
+  min-width: 8rem;
+  text-align: center;
+  width: 8rem;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.empty-cell {
+  color: #6b7280;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.total-records {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep .p-datatable-thead > tr > th {
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 700;
+}
+
+:host ::ng-deep .p-datatable-tbody > tr > td,
+:host ::ng-deep .p-datatable-thead > tr > th {
+  padding: 0.85rem 1rem;
+}
+
+:host ::ng-deep .action-button {
+  height: 2rem;
+  width: 2rem;
+}
+
+@media (max-width: 768px) {
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-container,
+  .search-container p-iconfield,
+  .search-input {
+    width: 100%;
+  }
+}
+
+.table-sm {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.table-md {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.table-lg {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.table-xl {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.table-full {
+  width: 100%;
+}
+
+.font-sm {
+  font-size: 0.85rem;
+}
+
+.font-md {
+  font-size: 1rem;
+}
+
+.font-lg {
+  font-size: 1.1rem;
+}
+
+.font-sm .table-toolbar h2 {
+  font-size: 1rem;
+}
+
+.font-md .table-toolbar h2 {
+  font-size: 1.2rem;
+}
+
+.font-lg .table-toolbar h2 {
+  font-size: 1.4rem;
+}
+
+.font-sm ::ng-deep .p-datatable-tbody > tr > td,
+.font-sm ::ng-deep .p-datatable-thead > tr > th {
+  padding: 0.55rem;
+}
+
+.font-md ::ng-deep .p-datatable-tbody > tr > td,
+.font-md ::ng-deep .p-datatable-thead > tr > th {
+  padding: 0.85rem;
+}
+
+.font-lg ::ng-deep .p-datatable-tbody > tr > td,
+.font-lg ::ng-deep .p-datatable-thead > tr > th {
+  padding: 1.1rem;
+}
+
+.toolbar-1 .table-toolbar {
+  grid-template-columns: 1fr;
+}
+
+.toolbar-2 .table-toolbar {
+  grid-template-columns: 1fr auto;
+}
+
+.toolbar-3 .table-toolbar {
+  grid-template-columns: 1fr auto auto;
+}
+
+.toolbar-4 .table-toolbar {
+  grid-template-columns: 1fr auto auto auto;
+}

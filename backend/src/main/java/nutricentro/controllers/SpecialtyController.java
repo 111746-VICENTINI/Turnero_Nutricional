@@ -56,7 +56,8 @@ public class SpecialtyController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/search")
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Page<SpecialtyResponseDTO>> searchSpecialties(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean active,

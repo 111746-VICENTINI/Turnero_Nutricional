@@ -55,7 +55,8 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<Page<PatientResponseDTO>> searchPatients(
 
             @RequestParam(required = false)

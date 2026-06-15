@@ -54,14 +54,15 @@
     [(selection)]="selection"
     [loading]="loading"
     [scrollable]="scrollable"
+    [lazy]="lazy"
+    [totalRecords]="totalRecords"
     scrollHeight="flex"
     [tableStyle]="{ 'min-width': '48rem' }"
     responsiveLayout="scroll"
     styleClass="p-datatable-striped"
     [dataKey]="dataKey"
+    (onLazyLoad)="onTableStateChange($event)"
     (selectionChange)="onSelectionChange($event)"
-    (onPage)="onTableStateChange($event)"
-    (onSort)="onTableStateChange($event)"
   >
     <ng-template pTemplate="header">
       <tr>

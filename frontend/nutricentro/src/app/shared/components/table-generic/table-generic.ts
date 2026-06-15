@@ -11,7 +11,8 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableActionConfig, TableColumnConfig, TableState } from './model/table-model';
+import {TableActionConfig, TableColumnConfig} from './model/table-model';
+import {TableState} from '../../../core/model/paginacion-general';
 
 @Component({
   selector: 'app-table-generic',
@@ -56,6 +57,8 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   @Input() dataKey = 'id';
   @Input() title = '';
   @Input() subtitle = '';
+  @Input() lazy = false;
+  @Input() totalRecords = 0;
 
   @Output() onActionClick = new EventEmitter<{ action: TableActionConfig<T>; row: T }>();
   @Output() onDelete = new EventEmitter<T>();
@@ -68,7 +71,6 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   filteredData: T[] = [];
   first = 0;
   rows = 10;
-  totalRecords = 0;
   sortField: string | undefined;
   sortOrder: number | undefined;
 
@@ -80,18 +82,40 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] || changes['pageSize']) {
+    if (changes['pageSize']) {
       this.rows = this.pageSize;
+    }
+
+    if (changes['data']) {
       this.updateTableData();
     }
   }
 
   updateTableData(): void {
     this.filteredData = [...this.data];
-    this.totalRecords = this.filteredData.length;
+
+    if (!this.lazy) {
+      this.totalRecords = this.filteredData.length;
+    }
   }
 
   onGlobalFilter(event: Event): void {
+    if (this.lazy) {
+
+      const search =
+        (event.target as HTMLInputElement).value;
+
+      this.tableStateChange.emit({
+        first: 0,
+        rows: this.rows,
+        sortField: this.sortField,
+        sortOrder: this.sortOrder,
+        search
+      });
+
+      return;
+    }
+
     const searchValue = (event.target as HTMLInputElement).value.toLowerCase().trim();
 
     if (!searchValue) {
@@ -118,16 +142,21 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   }
 
   onTableStateChange(event: any): void {
-    this.first = event.first || 0;
-    this.rows = event.rows || this.pageSize;
-    this.sortField = event.sortField;
+    this.first = event.first ?? 0;
+    this.rows = event.rows ?? this.pageSize;
+
+    this.sortField =
+      typeof event.sortField === 'string'
+        ? event.sortField
+        : undefined;
+
     this.sortOrder = event.sortOrder;
 
     this.tableStateChange.emit({
       first: this.first,
       rows: this.rows,
       sortField: this.sortField,
-      sortOrder: this.sortOrder,
+      sortOrder: this.sortOrder
     });
   }
 
@@ -208,7 +237,16 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     this.table?.clear();
     this.globalFilter = '';
     this.filteredData = [...this.data];
-    this.totalRecords = this.filteredData.length;
+
+    if (!this.lazy) {
+      this.totalRecords = this.filteredData.length;
+    }
+
+    this.tableStateChange.emit({
+      first: 0,
+      rows: this.rows,
+      search: ''
+    });
   }
 
   reset(): void {
@@ -217,6 +255,16 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     this.sortField = undefined;
     this.sortOrder = undefined;
     this.filteredData = [...this.data];
-    this.totalRecords = this.filteredData.length;
+
+    if (!this.lazy) {
+      this.totalRecords = this.filteredData.length;
+    }
+
+    if (this.lazy) {
+      this.tableStateChange.emit({
+        first: 0,
+        rows: this.rows
+      });
+    }
   }
 }

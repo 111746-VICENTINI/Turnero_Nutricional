@@ -1,2 +1,28 @@
-<p>list-patients works!</p>
-<p>proximamente...</p>
+<section class="page-shell">
+  <div class="page-header">
+    <div>
+      <h2>Gestión de Pacientes</h2>
+    </div>
+
+    <p-button
+      label="Nuevo Paciente"
+      icon="pi pi-plus"
+      styleClass="text-xl"
+      (onClick)="createPatient()"
+    >
+    </p-button>
+  </div>
+
+    <app-table-generic
+      [title]="'Listado'"
+      [data]="patients"
+      [columns]="columns"
+      [actions]="actions"
+      formWidth="full"
+      fontSize="md"
+      (onView)="viewPatient($event)"
+      (onEdit)="editPatient($event)"
+      (onDelete)="deletePatient($event)">
+    </app-table-generic>
+
+</section>

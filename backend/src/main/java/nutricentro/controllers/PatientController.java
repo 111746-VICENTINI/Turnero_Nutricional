@@ -5,7 +5,12 @@ import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.patients.PatientRequestDTO;
 import nutricentro.dtos.patients.PatientResponseDTO;
 import nutricentro.dtos.patients.PatientUpdateDTO;
+import nutricentro.enums.GenderType;
+import nutricentro.enums.PersonStatus;
 import nutricentro.services.PatientService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,5 +53,46 @@ public class PatientController {
     public ResponseEntity<Void> delete(@PathVariable Long id){
         patientService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<PatientResponseDTO>> searchPatients(
+
+            @RequestParam(required = false)
+            String search,
+
+            @RequestParam(required = false)
+            GenderType gender,
+
+            @RequestParam(required = false)
+            PersonStatus status,
+
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            int size,
+
+            @RequestParam(defaultValue = "lastName")
+            String sortBy,
+
+            @RequestParam(defaultValue = "asc")
+            String direction
+    ) {
+
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+
+        return ResponseEntity.ok(
+                patientService.searchPatients(
+                        search,
+                        gender,
+                        status,
+                        pageRequest
+                )
+        );
     }
 }

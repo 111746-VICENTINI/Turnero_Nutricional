@@ -43,6 +43,7 @@ export class FormGeneric implements OnChanges {
   @Input() showBackButton = false;
   @Input() cancelLabel = 'Cancelar';
   @Input() showCancel = true;
+  @Input() showSubmit = true;
   @Input() showActions = true;
   @Input() readonly = false;
 

@@ -225,6 +225,7 @@
         severity="success"
         type="submit"
         [loading]="isSubmitting"
+        [disabled]="form.invalid || form.pristine"
       ></p-button>
     </div>
   }

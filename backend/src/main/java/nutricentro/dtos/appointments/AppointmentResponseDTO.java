@@ -1,0 +1,28 @@
+package nutricentro.dtos.appointments;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import nutricentro.enums.AppointmentStatus;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class AppointmentResponseDTO {
+    private Long id;
+    private LocalDate date;
+    private LocalTime time;
+    private AppointmentStatus status;
+    private String reason;
+    private Long patientId;
+    private String patientFullName;
+    private Long professionalId;
+    private String professionalFullName;
+    private Long secretaryId;
+    private String secretaryFullName;
+}

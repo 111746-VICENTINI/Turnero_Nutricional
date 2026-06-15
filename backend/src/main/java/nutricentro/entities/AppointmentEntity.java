@@ -3,6 +3,7 @@ package nutricentro.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.AppointmentStatus;
 
@@ -14,11 +15,8 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppointmentEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class AppointmentEntity extends BaseEntity{
 
     @Column(nullable = false)
     private LocalDate date;
@@ -27,14 +25,17 @@ public class AppointmentEntity {
     private LocalTime time;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
+    private String reason; //motivo
+
     @ManyToOne
-    @JoinColumn(name = "patient_id")
+    @JoinColumn(name = "patient_id", nullable = false)
     private PatientEntity patient;
 
     @ManyToOne
-    @JoinColumn(name = "professional_id")
+    @JoinColumn(name = "professional_id", nullable = false)
     private ProfessionalEntity professional;
 
     @ManyToOne

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
@@ -15,10 +16,8 @@ import nutricentro.enums.PersonStatus;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SecretaryEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class SecretaryEntity extends BaseEntity {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Column(nullable = false)
@@ -28,13 +27,9 @@ public class SecretaryEntity {
     @Column(nullable = false)
     private String lastName;
 
-    @NotNull(message = "El DNI es obligatorio")
-    @Column(nullable = false, unique = true)
-    private Integer dni;
-
-    @NotNull(message = "La edad es obligatoria")
+    @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Column(nullable = false)
-    private Integer age;
+    private Integer birthDate;
 
     @NotNull(message = "El dni es obligatorio")
     @Column(nullable = false)

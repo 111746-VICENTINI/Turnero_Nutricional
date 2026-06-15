@@ -11,6 +11,8 @@ import {UsersList} from './components/users/user-component/users-list/users-list
 import {CreateUser} from './components/users/user-component/create-user/create-user';
 import {ListPatients} from './components/patients/list-patients/list-patients';
 import {ProfessionalList} from './components/professionals/professional-list/professional-list';
+import {CreateProfessionals} from './components/professionals/create-professionals/create-professionals';
+import {CreatePatients} from './components/patients/create-patients';
 
 export const routes: Routes = [
   {
@@ -41,6 +43,12 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] }
       },
       {
+        path: 'users/:id',
+        component: CreateUser,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
+      },
+      {
         path: 'users/:id/edit',
         component: CreateUser,
         canActivate: [roleGuard],
@@ -62,13 +70,19 @@ export const routes: Routes = [
       },
       {
         path: 'patient/create',
-        component: ListPatients,
+        component: CreatePatients,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'patient/:id',
+        component: CreatePatients,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       {
         path: 'patient/:id/edit',
-        component: ListPatients,
+        component: CreatePatients,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
@@ -81,13 +95,19 @@ export const routes: Routes = [
       },
       {
         path: 'professional/create',
-        component: ProfessionalList,
+        component: CreateProfessionals,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'professional/:id',
+        component: CreateProfessionals,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       {
         path: 'professional/:id/edit',
-        component: ProfessionalList,
+        component: CreateProfessionals,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },

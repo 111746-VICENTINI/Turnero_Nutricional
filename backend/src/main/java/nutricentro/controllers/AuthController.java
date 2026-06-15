@@ -2,11 +2,11 @@ package nutricentro.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nutricentro.dtos.authDTO.AuthRequestDTO;
-import nutricentro.dtos.authDTO.AuthResponseDTO;
-import nutricentro.dtos.authDTO.PasswordResetConfirmDTO;
-import nutricentro.dtos.authDTO.PasswordResetRequestDTO;
-import nutricentro.dtos.authDTO.PasswordResetResponseDTO;
+import nutricentro.dtos.auth.AuthRequestDTO;
+import nutricentro.dtos.auth.AuthResponseDTO;
+import nutricentro.dtos.auth.PasswordResetConfirmDTO;
+import nutricentro.dtos.auth.PasswordResetRequestDTO;
+import nutricentro.dtos.auth.PasswordResetResponseDTO;
 import nutricentro.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;

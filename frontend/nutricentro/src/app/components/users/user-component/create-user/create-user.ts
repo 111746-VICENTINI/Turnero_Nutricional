@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -13,14 +13,15 @@ import {
 } from '../../../../core/model/login-model';
 import { RoleService } from '../../../../core/services/role-service';
 import { UserService } from '../../../../core/services/user-service';
+import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
+import {FormGeneric} from '../../../../shared/components/form-generic/form-generic';
 
 type UserFormMode = 'create' | 'view' | 'edit';
-type UserFormControlName = 'username' | 'email' | 'password' | 'isActive' | 'roles';
 
 @Component({
   selector: 'app-create-user',
   standalone: true,
-  imports: [ReactiveFormsModule, InputTextModule, ButtonModule, ToastModule],
+  imports: [ReactiveFormsModule, InputTextModule, ButtonModule, ToastModule, FormGeneric],
   templateUrl: './create-user.html',
   styleUrl: './create-user.css',
 })
@@ -31,21 +32,14 @@ export class CreateUser implements OnInit {
   userId?: number;
   saving = false;
   isFormEditable = true;
+  fields: GenericFormField[] = [];
+  initialValues: Record<string, any> = {};
 
-  private fb = inject(FormBuilder);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private messageService = inject(MessageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
-  form = this.fb.nonNullable.group({
-    username: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-    isActive: [true],
-    roles: [[] as string[], Validators.required],
-  });
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -58,8 +52,56 @@ export class CreateUser implements OnInit {
       this.loadUser(this.userId);
     }
 
-    this.configureFormState();
     this.loadRoles();
+  }
+
+  private buildFields(): void {
+    this.fields = [
+      {
+        name: 'username',
+        label: 'Usuario',
+        type: 'text',
+        required: true,
+        autocomplete: 'username'
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        type: 'email',
+        required: true,
+        autocomplete: 'email'
+      }
+    ];
+
+    if (this.mode === 'create') {
+      this.fields.push({
+        name: 'password',
+        label: 'Contraseña',
+        type: 'password',
+        required: true,
+        autocomplete: 'new-password'
+      });
+    }
+
+    if (this.mode !== 'create') {
+      this.fields.push({
+        name: 'isActive',
+        label: 'Usuario activo',
+        type: 'checkbox'
+      });
+    }
+
+    this.fields.push({
+      name: 'roles',
+      label: 'Roles',
+      type: 'multiselect',
+      required: true,
+      options: this.roles.map(role => ({
+        label: role.name,
+        value: role.name
+      })),
+      colSpan: 2
+    });
   }
 
   get pageTitle(): string {
@@ -74,17 +116,12 @@ export class CreateUser implements OnInit {
     return this.mode === 'create' ? 'Crear' : 'Actualizar';
   }
 
-  get showEditButton(): boolean {
-    return this.mode !== 'create' && !this.isFormEditable;
-  }
-
-  get showFormActions(): boolean {
-    return this.mode === 'create' || this.isFormEditable;
-  }
-
   loadRoles(): void {
     this.roleService.getRoles().subscribe({
-      next: (roles) => (this.roles = roles),
+      next: (roles) => {
+        this.roles = roles;
+        this.buildFields();
+      },
       error: () => this.showError('No se pudieron cargar los roles.'),
     });
   }
@@ -93,40 +130,28 @@ export class CreateUser implements OnInit {
     this.userService.getUserById(id).subscribe({
       next: (user) => {
         this.selectedUser = user;
-        this.form.patchValue({
+
+        this.initialValues = {
           username: user.username,
           email: user.email,
           password: '',
           isActive: user.isActive,
           roles: [...user.roles],
-        });
-        this.configureFormState();
+        };
       },
       error: () => this.showError('No se pudo cargar el usuario.'),
     });
   }
 
-  enableEditing(): void {
-    this.mode = 'edit';
-    this.isFormEditable = true;
-    this.configureFormState();
-  }
-
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
+  save(formData: Record<string, any>): void {
     this.saving = true;
-    const formData = this.form.getRawValue();
 
     if (this.mode !== 'create') {
       const request: UpdateUserDTO = {
-        username: formData.username,
-        email: formData.email,
-        isActive: formData.isActive,
-        roles: formData.roles,
+        username: formData['username'],
+        email: formData['email'],
+        isActive: formData['isActive'],
+        roles: formData['roles'],
       };
 
       this.userService.updateUser(this.userId!, request).subscribe({
@@ -145,10 +170,10 @@ export class CreateUser implements OnInit {
     }
 
     const request: RegisterRequestDTO = {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      roles: formData.roles,
+      username: formData['username'],
+      email: formData['email'],
+      password: formData['password'],
+      roles: formData['roles'],
     };
 
     this.userService.createUser(request).subscribe({
@@ -170,72 +195,18 @@ export class CreateUser implements OnInit {
       return;
     }
 
-    if (this.selectedUser) {
-      this.form.patchValue({
-        username: this.selectedUser.username,
-        email: this.selectedUser.email,
-        password: '',
-        isActive: this.selectedUser.isActive,
-        roles: [...this.selectedUser.roles],
-      });
-    }
+    this.initialValues = {
+      username: this.selectedUser?.username,
+      email: this.selectedUser?.email,
+      isActive: this.selectedUser?.isActive,
+      roles: [...(this.selectedUser?.roles || [])]
+    };
 
     this.isFormEditable = false;
-    this.configureFormState();
   }
 
   goBack(): void {
     this.router.navigate(['/users']);
-  }
-
-  hasRole(roleName: string): boolean {
-    return this.form.controls.roles.value.includes(roleName);
-  }
-
-  toggleRole(roleName: string, event: Event): void {
-    if (!this.isFormEditable) {
-      return;
-    }
-
-    const checked = (event.target as HTMLInputElement).checked;
-    const currentRoles = this.form.controls.roles.value;
-    const roles = checked
-      ? [...currentRoles, roleName]
-      : currentRoles.filter((role) => role !== roleName);
-
-    this.form.controls.roles.setValue(roles);
-    this.form.controls.roles.markAsTouched();
-  }
-
-  isInvalid(fieldName: UserFormControlName): boolean {
-    const control = this.form.controls[fieldName];
-    return control.invalid && (control.dirty || control.touched);
-  }
-
-  private configureFormState(): void {
-    const passwordControl = this.form.controls.password;
-
-    if (this.mode === 'create') {
-      passwordControl.setValidators(Validators.required);
-    } else {
-      passwordControl.clearValidators();
-      passwordControl.setValue('');
-      passwordControl.disable({ emitEvent: false });
-    }
-
-    passwordControl.updateValueAndValidity({ emitEvent: false });
-
-    if (this.isFormEditable) {
-      this.form.enable({ emitEvent: false });
-
-      if (this.mode !== 'create') {
-        passwordControl.disable({ emitEvent: false });
-      }
-
-      return;
-    }
-
-    this.form.disable({ emitEvent: false });
   }
 
   private showSuccess(detail: string): void {

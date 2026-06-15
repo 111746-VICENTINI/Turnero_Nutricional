@@ -124,3 +124,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.page-footer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}

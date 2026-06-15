@@ -1,4 +1,4 @@
-package nutricentro.dtos.authDTO;
+package nutricentro.dtos.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

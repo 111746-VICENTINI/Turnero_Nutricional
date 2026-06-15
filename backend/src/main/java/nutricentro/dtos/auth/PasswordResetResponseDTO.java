@@ -1,4 +1,4 @@
-package nutricentro.dtos.authDTO;
+package nutricentro.dtos.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PasswordResetRequestDTO {
-    private String usernameOrEmail;
+public class PasswordResetResponseDTO {
+    private String message;
+    private String token;
 }
 

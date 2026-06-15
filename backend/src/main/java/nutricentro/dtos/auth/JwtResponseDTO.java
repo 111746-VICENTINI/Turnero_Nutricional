@@ -1,4 +1,4 @@
-package nutricentro.dtos.authDTO;
+package nutricentro.dtos.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,10 +1,41 @@
-<p-card>
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Bienvenida {{ getFullName() }}</h1>
+  </header>
 
-  <h2>Bienvenido {{ authService.getUser()?.username }}</h2>
+  <div class="stats-grid">
+    <p-card>
+      <div class="stat-card">
+        <i class="pi pi-users"></i>
+        <span class="number">{{ patientsCount }}</span>
+        <span class="label">Pacientes</span>
+      </div>
+    </p-card>
 
-  <p>
-    Rol:
-    {{ authService.getUser()?.roles?.join(', ') }}
-  </p>
+    <p-card>
+      <div class="stat-card">
+        <i class="pi pi-calendar"></i>
+        <span class="number">{{ todayAppointments }}</span>
+        <span class="label">Turnos hoy</span>
+      </div>
+    </p-card>
 
-</p-card>
+    <p-card>
+      <div class="stat-card">
+        <i class="pi pi-user"></i>
+        <span class="number">{{ professionalsCount }}</span>
+        <span class="label">Profesionales</span>
+      </div>
+    </p-card>
+  </div>
+
+  <app-table-generic
+    [title]="'Próximos turnos'"
+    [data]="upcomingAppointments"
+    formWidth="full"
+    fontSize="md"
+    [columns]="appointmentColumns"
+    [showGlobalFilter]="false"
+    [showPagination]="false"
+  ></app-table-generic>
+</div>

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import {Router, RouterOutlet} from '@angular/router';
+import {Router} from '@angular/router';
 import { Button } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableModule } from 'primeng/table';

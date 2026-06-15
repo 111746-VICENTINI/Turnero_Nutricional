@@ -18,8 +18,9 @@
     [data]="users"
     [columns]="columns"
     [actions]="actions"
-    formWidth="xl"
+    formWidth="full"
     fontSize="md"
+    emptyMessage="No hay usuarios creados"
     (onView)="viewUser($event)"
     (onEdit)="editUser($event)"
     (onDelete)="deleteUser($event)">

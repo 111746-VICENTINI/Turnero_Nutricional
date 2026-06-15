@@ -77,7 +77,6 @@ public class PatientServiceImpl implements PatientService {
 
     private PatientResponseDTO toResponse(PatientEntity saved) {
         return PatientResponseDTO.builder()
-                .id(saved.getPatientId())
                 .firstName(saved.getFirstName())
                 .lastName(saved.getLastName())
                 .email(saved.getEmail())

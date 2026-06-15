@@ -48,7 +48,7 @@ export class CreateUser implements OnInit {
     if (id) {
       this.mode = routePath.endsWith('/edit') ? 'edit' : 'view';
       this.userId = Number(id);
-      this.isFormEditable = false;
+      this.isFormEditable = this.mode === 'edit';
       this.loadUser(this.userId);
     }
 
@@ -99,8 +99,7 @@ export class CreateUser implements OnInit {
       options: this.roles.map(role => ({
         label: role.name,
         value: role.name
-      })),
-      colSpan: 2
+      }))
     });
   }
 
@@ -202,7 +201,9 @@ export class CreateUser implements OnInit {
       roles: [...(this.selectedUser?.roles || [])]
     };
 
+    this.mode = 'view';
     this.isFormEditable = false;
+    this.buildFields();
   }
 
   goBack(): void {
@@ -215,5 +216,10 @@ export class CreateUser implements OnInit {
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
+  }
+
+  editModeUser(): void {
+    this.mode = 'edit';
+    this.isFormEditable = true;
   }
 }

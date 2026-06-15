@@ -3,6 +3,15 @@
 <section class="page-shell">
   <div class="page-header">
       <h1>{{ pageTitle }}</h1>
+
+  @if (mode === 'view') {
+    <p-button
+      icon="pi pi-pencil"
+      label="Editar"
+      styleClass="text-xl"
+      (onClick)="editModeUser()">
+    </p-button>
+  }
   </div>
 
   <app-form-generic
@@ -11,7 +20,9 @@
     [isSubmitting]="saving"
     [columnsPerRow]="2"
     [readonly]="!isFormEditable"
-    formWidth="md"
+    [showActions]="mode !== 'view'"
+    [showCancel]="mode === 'edit' || mode === 'create'"
+    formWidth="xl"
     fontSize="md"
     submitLabel="{{ submitLabel }}"
     cancelLabel="Cancelar"

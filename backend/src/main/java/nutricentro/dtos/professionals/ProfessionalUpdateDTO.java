@@ -2,6 +2,7 @@ package nutricentro.dtos.professionals;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -32,9 +34,8 @@ public class ProfessionalUpdateDTO {
     @NotNull(message = "El dni es obligatorio")
     private Integer document;
 
-    @NotBlank(message = "La especialidad es obligatoria")
-    @NotNull(message = "La especialidad es obligatoria")
-    private String specialty;
+    @NotEmpty(message = "La especialidad es obligatoria")
+    private List<Long> specialtyIds;
 
     @NotBlank(message = "La matricula es obligatoria")
     @NotNull(message = "La matricula es obligatoria")

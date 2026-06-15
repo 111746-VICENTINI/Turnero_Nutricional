@@ -8,6 +8,7 @@ import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -25,6 +26,5 @@ public class ProfessionalResponseDTO {
     private String state;
     private Integer document;
     private PersonStatus status;
-    private String specialty;
-
+    private List<String> specialties;
 }

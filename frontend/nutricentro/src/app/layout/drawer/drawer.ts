@@ -38,6 +38,10 @@ export class Drawer implements OnInit{
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
         this.visible = false;
+
+        this.usersMenu = false;
+        this.patientsMenu = false;
+        this.professionalsMenu = false;
       });
   }
 

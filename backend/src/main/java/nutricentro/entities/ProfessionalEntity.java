@@ -1,27 +1,23 @@
 package nutricentro.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "professionals")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfessionalEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long professionalId;
+@EqualsAndHashCode(callSuper = true)
+public class ProfessionalEntity extends BaseEntity {
 
     @Column(nullable = false)
     private String firstName;
@@ -34,9 +30,6 @@ public class ProfessionalEntity {
 
     @Column(nullable = false)
     private Integer document;
-
-    @Column(nullable = false)
-    private String specialty;
 
     @Column(nullable = false)
     private String tuition;
@@ -56,4 +49,12 @@ public class ProfessionalEntity {
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private UserEntity user;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "professional_specialties",
+            joinColumns = @JoinColumn(name = "professional_id"),
+            inverseJoinColumns = @JoinColumn(name = "specialty_id")
+    )
+    private List<SpecialtyEntity> specialties;
 }

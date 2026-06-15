@@ -7,8 +7,11 @@ import nutricentro.dtos.specialties.SpecialtyResponseDTO;
 import nutricentro.dtos.specialties.SpecialtyUpdateDTO;
 import nutricentro.entities.SpecialtyEntity;
 import nutricentro.repositories.ProfessionalRepository;
-import nutricentro.repositories.SpecialtyProfessionalRepository;
+import nutricentro.repositories.SpecialtyRepository;
 import nutricentro.services.SpecialtyService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SpecialtyServiceImpl implements SpecialtyService {
-    private final SpecialtyProfessionalRepository specialtyRepository;
+    private final SpecialtyRepository specialtyRepository;
     private final ProfessionalRepository professionalRepository;
 
     @Override
@@ -69,6 +72,14 @@ public class SpecialtyServiceImpl implements SpecialtyService {
         return toResponse(saved);
     }
 
+    @Override
+    public Page<SpecialtyResponseDTO> searchSpecialties(String name, Boolean active, Pageable pageable) {
+        Specification<SpecialtyEntity> spec = Specification.where(byName(name))
+                .and(byActive(active));
+
+        return specialtyRepository.findAll(spec, pageable).map(this::toResponse);
+    }
+
     private SpecialtyResponseDTO toResponse(SpecialtyEntity specialty){
         return SpecialtyResponseDTO.builder()
                 .id(specialty.getId())
@@ -76,5 +87,28 @@ public class SpecialtyServiceImpl implements SpecialtyService {
                 .description(specialty.getDescription())
                 .isActive(specialty.getIsActive())
                 .build();
+    }
+
+    private Specification<SpecialtyEntity> byName(String name) {
+        return (root, query, cb) -> {
+            if (name == null || name.isBlank()) {
+                return cb.conjunction();
+            }
+
+            return cb.like(
+                    cb.lower(root.get("name")),
+                    "%" + name.toLowerCase() + "%"
+            );
+        };
+    }
+
+    private Specification<SpecialtyEntity> byActive(Boolean active) {
+        return (root, query, cb) -> {
+            if (active == null) {
+                return cb.conjunction();
+            }
+
+            return cb.equal(root.get("isActive"), active);
+        };
     }
 }

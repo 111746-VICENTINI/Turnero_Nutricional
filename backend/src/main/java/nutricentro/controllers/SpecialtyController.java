@@ -6,6 +6,9 @@ import nutricentro.dtos.specialties.SpecialtyRequestDTO;
 import nutricentro.dtos.specialties.SpecialtyResponseDTO;
 import nutricentro.dtos.specialties.SpecialtyUpdateDTO;
 import nutricentro.services.SpecialtyService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,5 +54,22 @@ public class SpecialtyController {
     public ResponseEntity<Void> deleteSpecialty(@PathVariable Long id) {
         specialtyService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<SpecialtyResponseDTO>> searchSpecialties(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+        return ResponseEntity.ok(specialtyService.searchSpecialties(name, active, pageRequest));
     }
 }

@@ -2,7 +2,7 @@ import {Component, inject} from '@angular/core';
 import {Button} from 'primeng/button';
 import {TableModule} from 'primeng/table';
 import {TableGeneric} from '../../../shared/components/table-generic/table-generic';
-import {PatientResponseDTO} from '../models/Patient-model';
+import {PatientResponseDTO} from '../models/patient-model';
 import {PatientService} from '../services/patient-service';
 import {MessageService} from 'primeng/api';
 import {Router} from '@angular/router';

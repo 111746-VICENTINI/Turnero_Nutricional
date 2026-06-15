@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../../enviroment/enviroment';
-import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/Patient-model';
+import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/patient-model';
 
 @Injectable({
   providedIn: 'root',

@@ -18,12 +18,16 @@
     [data]="users"
     [columns]="columns"
     [actions]="actions"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
     formWidth="full"
     fontSize="md"
     emptyMessage="No hay usuarios creados"
     (onView)="viewUser($event)"
     (onEdit)="editUser($event)"
-    (onDelete)="deleteUser($event)">
+    (onDelete)="deleteUser($event)"
+    (tableStateChange)="onTableChange($event)"
+  >
   </app-table-generic>
 
 </section>

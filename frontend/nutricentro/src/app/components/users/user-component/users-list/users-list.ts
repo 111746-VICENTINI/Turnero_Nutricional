@@ -11,6 +11,7 @@ import {
   TableActionConfig,
   TableColumnConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
+import {TableState} from '../../../../core/model/paginacion-general';
 
 @Component({
   selector: 'app-users-list',
@@ -21,6 +22,7 @@ import {
 })
 export class UsersList implements OnInit {
   users: UserResponseDTO[] = [];
+  totalRecords = 0;
 
   private userService = inject(UserService);
   private router = inject(Router);
@@ -49,14 +51,31 @@ export class UsersList implements OnInit {
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
 
+  filters: {
+    search?: string;
+    role?: string;
+    isActive?: boolean;
+  } = {
+    search: ''
+  };
+
   ngOnInit(): void {
     this.loadUsers();
   }
 
-  loadUsers(): void {
-    this.userService.getUsers().subscribe({
-      next: (users) => (this.users = users),
-    });
+  loadUsers(page = 0, size = 10): void {
+    this.userService.searchUsers({
+      ...this.filters,
+      page,
+      size
+    })
+      .subscribe({
+        next: response => {
+
+          this.users = response.content;
+          this.totalRecords = response.totalElements;
+        }
+      });
   }
 
   deleteUser(user: UserResponseDTO): void {
@@ -75,5 +94,15 @@ export class UsersList implements OnInit {
 
   editUser(user: UserResponseDTO): void {
     this.router.navigate(['/users', user.id, 'edit']);
+  }
+
+  onTableChange(event: TableState): void {
+    if (event.search !== undefined) {
+      this.filters.search = event.search;
+    }
+
+    const page = Math.floor(event.first / event.rows);
+
+    this.loadUsers(page, event.rows);
   }
 }

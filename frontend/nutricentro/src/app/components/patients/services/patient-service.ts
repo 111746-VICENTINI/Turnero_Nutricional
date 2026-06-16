@@ -1,7 +1,8 @@
 import {inject, Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from '../../../enviroment/enviroment';
 import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/patient-model';
+import {PageResponse} from '../../../core/model/paginacion-general';
 
 @Injectable({
   providedIn: 'root',
@@ -37,4 +38,29 @@ export class PatientService {
     return this.http.patch<void>(`${this.apiUrl}/${id}`, {});
   }
 
+  searchPatients(filters: {
+    search?: string;
+    gender?: string;
+    status?: string;
+    page?: number;
+    size?: number;
+  }){
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        value !== ''
+      ) {
+        params = params.set(key, String(value));
+      }
+
+    });
+
+    return this.http.get<PageResponse<PatientResponseDTO>>(
+      `${environment.apiUrl}/patient`,
+      { params }
+    );
+  }
 }

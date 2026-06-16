@@ -18,9 +18,12 @@
       [data]="patients"
       [columns]="columns"
       [actions]="actions"
+      [lazy]="true"
+      [totalRecords]="totalRecords"
       emptyMessage="No hay pacientes disponibles"
       formWidth="full"
       fontSize="md"
+      (tableStateChange)="onTableChange($event)"
       (onView)="viewPatient($event)"
       (onEdit)="editPatient($event)"
       (onDelete)="deletePatient($event)">

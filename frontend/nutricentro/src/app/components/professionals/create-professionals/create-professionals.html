@@ -1,0 +1,44 @@
+<p-toast></p-toast>
+
+<section class="page-shell">
+  <header class="page-header">
+    <h1>{{ pageTitle}}</h1>
+
+    @if (mode === 'view') {
+      <p-button
+        icon="pi pi-pencil"
+        label="Editar"
+        styleClass="text-xl"
+        (onClick)="editModeUser()">
+      </p-button>
+    }
+  </header>
+
+  <app-form-generic
+    [fields]="fields"
+    [initialValues]="initialValues"
+    [isSubmitting]="saving"
+    [columnsPerRow]="3"
+    [readonly]="!isFormEditable"
+    [showActions]="mode !== 'view'"
+    [showCancel]="mode === 'edit' || mode === 'create'"
+    formWidth="full"
+    fontSize="md"
+    submitLabel="{{ submitLabel }}"
+    cancelLabel="Cancelar"
+    (formSubmit)="saveProfessional($event)"
+    (formCancel)="cancel()"
+  >
+  </app-form-generic>
+
+  <!-- volver atras -->
+  <div class="page-footer">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="Volver"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goBack()">
+    </p-button>
+  </div>
+</section>

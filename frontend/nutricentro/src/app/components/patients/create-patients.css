@@ -1,0 +1,132 @@
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.user-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1.25rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-wrapper label,
+.roles-field legend {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.field-wrapper span,
+.roles-field span,
+.field-wrapper small,
+.roles-field small {
+  color: #dc2626;
+}
+
+.field-wrapper small,
+.roles-field small {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.checkbox-field {
+  justify-content: end;
+}
+
+.checkbox-field label,
+.role-option {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.roles-field {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+}
+
+.roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.role-option {
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.role-option span {
+  color: inherit;
+}
+
+.form-actions {
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+:host ::ng-deep .p-inputtext {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .header-actions,
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.page-footer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}

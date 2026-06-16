@@ -1,0 +1,33 @@
+<p-toast></p-toast>
+
+<section class="page-shell">
+  <header class="page-header">
+    <h1>{{ pageTitle}}</h1>
+  </header>
+
+  <app-form-generic
+    [fields]="fields"
+    [initialValues]="initialValues"
+    [isSubmitting]="saving"
+    [columnsPerRow]="2"
+    [readonly]="!isFormEditable"
+    formWidth="md"
+    fontSize="md"
+    submitLabel="{{ submitLabel }}"
+    cancelLabel="Cancelar"
+    (formSubmit)="savePatient($event)"
+    (formCancel)="cancel()"
+  >
+  </app-form-generic>
+
+  <!-- volver atras -->
+  <div class="page-footer">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="Volver"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goBack()">
+    </p-button>
+  </div>
+</section>

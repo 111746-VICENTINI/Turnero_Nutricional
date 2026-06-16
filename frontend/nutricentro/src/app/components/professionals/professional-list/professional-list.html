@@ -1,0 +1,34 @@
+<p-toast></p-toast>
+
+<section class="page-shell">
+  <div class="page-header">
+    <div>
+      <h2>Gestión de Profesionales</h2>
+    </div>
+
+    <p-button
+      label="Nuevo Profesional"
+      icon="pi pi-plus"
+      styleClass="text-xl"
+      (onClick)="createProfessional()"
+    >
+    </p-button>
+  </div>
+
+  <app-table-generic
+    [title]="'Listado'"
+    [data]="professionals"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [columns]="columns"
+    [actions]="actions"
+    formWidth="full"
+    fontSize="md"
+    emptyMessage="No hay profesionales disponibles"
+    (tableStateChange)="onTableChange($event)"
+    (onView)="viewProfessional($event)"
+    (onEdit)="editProfessional($event)"
+    (onDelete)="deleteProfessional($event)">
+  </app-table-generic>
+
+</section>

@@ -157,7 +157,7 @@ export class CreateUser implements OnInit {
         next: () => {
           this.saving = false;
           this.showSuccess('Usuario actualizado correctamente.');
-          this.router.navigate(['/users']);
+          this.goBack();
         },
         error: () => {
           this.saving = false;
@@ -179,7 +179,7 @@ export class CreateUser implements OnInit {
       next: () => {
         this.saving = false;
         this.showSuccess('Usuario creado correctamente.');
-        this.router.navigate(['/users']);
+        this.goBack();
       },
       error: () => {
         this.saving = false;
@@ -190,7 +190,7 @@ export class CreateUser implements OnInit {
 
   cancel(): void {
     if (this.mode === 'create') {
-      this.router.navigate(['/users']);
+      this.goBack();
       return;
     }
 

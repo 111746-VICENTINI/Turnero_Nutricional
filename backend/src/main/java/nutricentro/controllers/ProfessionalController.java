@@ -58,6 +58,7 @@ public class ProfessionalController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Page<ProfessionalResponseDTO>>searchProfessionals(
 
             @RequestParam(required = false)

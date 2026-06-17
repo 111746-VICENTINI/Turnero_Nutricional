@@ -1,0 +1,34 @@
+<p-toast></p-toast>
+
+<section class="page-shell">
+  <div class="page-header">
+    <div>
+      <h2>Gestión de Especialidades</h2>
+    </div>
+
+    <p-button
+      label="Nueva especialidad"
+      icon="pi pi-plus"
+      styleClass="text-xl"
+      (onClick)="createSpecialty()"
+    >
+    </p-button>
+  </div>
+
+  <app-table-generic
+    [title]="'Listado'"
+    [data]="specialties"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [columns]="columns"
+    [actions]="actions"
+    formWidth="full"
+    fontSize="md"
+    emptyMessage="No hay especialidades disponibles"
+    (tableStateChange)="onTableChange($event)"
+    (onView)="viewSpecialty($event)"
+    (onEdit)="editSpecialty($event)"
+    (onDelete)="deleteSpecialty($event)">
+  </app-table-generic>
+
+</section>

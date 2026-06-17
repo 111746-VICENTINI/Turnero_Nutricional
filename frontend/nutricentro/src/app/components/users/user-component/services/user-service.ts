@@ -1,15 +1,15 @@
 import {inject, Injectable} from '@angular/core';
-import {RegisterRequestDTO, UpdateUserDTO, UserResponseDTO} from '../model/login-model';
-import {environment} from '../../enviroment/enviroment';
+import {RegisterRequestDTO, UpdateUserDTO, UserResponseDTO} from '../../../../core/model/login-model';
+import {environment} from '../../../../enviroment/enviroment';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {PageResponse} from '../model/paginacion-general';
+import {PageResponse} from '../../../../core/model/paginacion-general';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
   private http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/user`;
+  private readonly apiUrl = `${environment.apiUrl}/user`;
 
   createUser(request: RegisterRequestDTO) {
     return this.http.post<UserResponseDTO>(

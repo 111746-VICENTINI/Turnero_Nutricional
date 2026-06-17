@@ -28,7 +28,6 @@ public class ProfessionalUpdateDTO {
     @NotNull(message = "El apellido es obligatorio")
     private String lastName;
 
-    @NotNull(message = "La fecha de nacimiento es obligatoria")
     private LocalDate birthDate;
 
     @NotNull(message = "El dni es obligatorio")

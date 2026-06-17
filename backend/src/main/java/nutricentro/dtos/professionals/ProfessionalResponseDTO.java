@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nutricentro.dtos.specialties.SpecialtyOnlyNameDTO;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
@@ -26,5 +27,5 @@ public class ProfessionalResponseDTO {
     private String state;
     private Integer document;
     private PersonStatus status;
-    private List<String> specialties;
+    private List<SpecialtyOnlyNameDTO> specialties;
 }

@@ -33,7 +33,7 @@ export class ListPatients {
     { field: 'firstName', header: 'Nombre' },
     { field: 'age', header: 'Edad' },
     { field: 'email', header: 'Email' },
-    { field: 'status', header: 'Activo' }
+    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true, }
   ];
 
   actions: TableActionConfig<PatientResponseDTO>[] = [

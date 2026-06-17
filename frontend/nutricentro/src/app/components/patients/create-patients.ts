@@ -39,9 +39,11 @@ export class CreatePatients implements OnInit {
     if (id) {
       this.mode = routePath.endsWith('/edit') ? 'edit' : 'view';
       this.patientId = Number(id);
-      this.isFormEditable = false;
+      this.isFormEditable = this.mode === 'edit';
       this.loadPatients(this.patientId);
     }
+
+    this.buildFields();
   }
 
   private buildFields(): void {
@@ -59,18 +61,49 @@ export class CreatePatients implements OnInit {
         type: 'text',
         required: true,
         autocomplete: 'lastName'
+      },
+      {
+        name: 'document',
+        label: 'Documento',
+        type: 'number',
+        required: true,
+        minLength: 7,
+        maxLength: 8,
+        autocomplete: 'document'
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        type: 'email',
+        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+        required: false,
+        autocomplete: 'email'
+      },
+      {
+        name: 'mobile',
+        label: 'Número de teléfono',
+        type: 'number',
+        minLength: 6,
+        maxLength: 20,
+        required: false,
+        autocomplete: 'mobile'
+      },
+      {
+        name: 'birthDate',
+        label: 'Fecha de cumpleaños',
+        type: 'date',
+        required: true,
+        autocomplete: 'birthDate'
+      },
+      {
+        name: 'gender',
+        label: 'Género',
+        type: 'select',
+        options: this.gender,
+        required: false,
+        autocomplete: 'gender'
       }
     ];
-
-    // if (this.mode === 'create') {
-    //   this.fields.push({
-    //     name: 'password',
-    //     label: 'Contraseña',
-    //     type: 'password',
-    //     required: true,
-    //     autocomplete: 'new-password'
-    //   });
-    // }
 
     if (this.mode !== 'create') {
       this.fields.push({
@@ -80,6 +113,13 @@ export class CreatePatients implements OnInit {
       });
     }
   }
+
+  gender = [
+    { label: 'Femenino', value: 'FEMALE' },
+    { label: 'Masculino', value: 'MALE' },
+    { label: 'No binario', value: 'NON_BINARY' },
+    { label: 'Prefiero no decirlo', value: 'PREFER_NOT_TO_SAY' }
+  ];
 
   get pageTitle(): string {
     if (this.mode === 'create') {
@@ -105,7 +145,9 @@ export class CreatePatients implements OnInit {
           email: patients.email,
           mobile: patients.mobile,
           gender: patients.gender,
-          address: patients.address
+          address: patients.address,
+          birthDate: patients.birthDate,
+          document: patients.document
         };
       },
       error: () => {
@@ -116,6 +158,14 @@ export class CreatePatients implements OnInit {
 
   savePatient(formData: Record<string, any>): void {
     this.saving = true;
+    console.log('gender recibido:', formData['gender']);
+    console.log(typeof formData['gender']);
+    const birthDate = new Date(formData['birthDate'])
+      .toISOString()
+      .split('T')[0];
+
+    // const gender = formData['gender'] ? String(formData['gender'])
+    //     .toUpperCase() : null;
 
     if (this.mode !== 'create') {
       const request: PatientUpdateDTO = {
@@ -126,7 +176,7 @@ export class CreatePatients implements OnInit {
         mobile: formData['mobile'],
         gender: formData['gender'],
         address: formData['address'],
-        birthDate: formData['birthDate'],
+        birthDate,
         document: formData['document']
       };
 
@@ -134,7 +184,7 @@ export class CreatePatients implements OnInit {
         next: () => {
           this.saving = false;
           this.showSuccess('Paciente actualizado correctamente.');
-          this.router.navigate(['/patient']);
+          this.goBack();
         },
         error: () => {
           this.saving = false;
@@ -153,7 +203,7 @@ export class CreatePatients implements OnInit {
       mobile: formData['mobile'],
       gender: formData['gender'],
       address: formData['address'],
-      birthDate: formData['birthDate'],
+      birthDate,
       document: formData['document']
     };
 
@@ -161,7 +211,7 @@ export class CreatePatients implements OnInit {
       next: () => {
         this.saving = false;
         this.showSuccess('Paciente creado correctamente.');
-        this.router.navigate(['/patient']);
+        this.goBack();
       },
       error: () => {
         this.saving = false;
@@ -173,7 +223,7 @@ export class CreatePatients implements OnInit {
 
   cancel(): void {
     if (this.mode === 'create') {
-      this.router.navigate(['/patient']);
+      this.goBack();
       return;
     }
 
@@ -188,7 +238,9 @@ export class CreatePatients implements OnInit {
       address: this.selectedPatient?.address
     };
 
+    this.mode = 'view';
     this.isFormEditable = false;
+    this.buildFields();
   }
 
   goBack(): void {
@@ -201,5 +253,10 @@ export class CreatePatients implements OnInit {
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
+  }
+
+  editModePatient(): void {
+    this.mode = 'edit';
+    this.isFormEditable = true;
   }
 }

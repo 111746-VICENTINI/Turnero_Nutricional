@@ -5,10 +5,9 @@
 }
 
 .app-shell {
-  background-color: #f8f9fa;
+  /*background-color: #f8f9fa;*/
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .topbar {
@@ -18,11 +17,13 @@
   color: white;
   display: flex;
   padding: 1rem;
+  flex-shrink: 0;
 }
 
 .drawer-content {
   display: flex;
   flex-direction: column;
+  flex: 1;
   height: 100%;
 }
 
@@ -47,6 +48,11 @@
 }
 
 .drawer-brand {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem 1rem 5rem;
+  margin-top: 1rem;
   color: rgba(0, 0, 0, 0.9);
   font-size: 1.75rem;
   font-weight: 700;
@@ -59,21 +65,44 @@
 
 .logout-panel {
   margin-top: auto;
-  padding: 1rem;
+  padding: .5rem;
 }
 
 .main-content {
-  display: flex;
   flex: 1;
-  flex-direction: column;
   overflow: auto;
   padding: 1rem;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar {
+  width: 72px;
+  transition: width .25s ease;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar.expanded {
+  width: 280px;
 }
 
 .menu-item {
   color: black;
   padding: 1rem 1.25rem;
-  font-size: 1.2rem;
   transition: all .25s ease;
 }
 
@@ -95,44 +124,6 @@
 
 .menu-item span {
   color: black;
-}
-
-/*cruz*/
-:host ::ng-deep .close-btn .p-button-icon {
-  color: darkorange;
-}
-
-:host ::ng-deep .close-btn .p-button:hover {
-  color: #ea580c;
-  background: #fff7ed;
-}
-
-/*nombres abajo*/
-.user-info {
-  display: flex;
-  align-items: center;
-  border-radius: 12px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgb(16 185 129 / 0.63);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-name {
-  font-weight: 600;
-  color: black;
-}
-
-.user-role {
-  font-size: 0.85rem;
-  color: #6b7280;
 }
 
 /*sub menus*/
@@ -160,7 +151,6 @@
 
 .submenu-item i {
   color: darkorange;
-  font-size: 1rem;
 }
 
 .submenu-item span {
@@ -178,26 +168,9 @@
 }
 
 /*top bar*/
-.topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
 .username {
   font-weight: 500;
   color: white;
-}
-
-.logout-topbar {
-  color: white;
-  display: flex;
-  align-items: center;
-}
-
-.logout-topbar i {
-  font-size: 1.3rem;
 }
 
 .drawer-trigger {
@@ -207,4 +180,17 @@
   width: 10px;
   height: 100vh;
   z-index: 999;
+}
+
+.menu-item,
+.submenu-item {
+  font-size: .95rem;
+  font-weight: 500;
+}
+
+.logout-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  cursor: pointer;
 }

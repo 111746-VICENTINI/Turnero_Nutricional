@@ -1,12 +1,11 @@
 import {Component, inject, OnInit} from '@angular/core';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
-import { DrawerModule } from 'primeng/drawer';
 import { RippleModule } from 'primeng/ripple';
 import { StyleClassModule } from 'primeng/styleclass';
 import {NavigationEnd, Router, RouterLink, RouterOutlet} from '@angular/router';
 import {AuthService} from '../../core/services/auth-service';
-import {CommonModule, NgOptimizedImage} from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {filter} from 'rxjs';
 
 @Component({
@@ -14,15 +13,13 @@ import {filter} from 'rxjs';
   standalone: true,
   imports: [CommonModule, RouterOutlet, AvatarModule,
     RouterLink,
-    ButtonModule, DrawerModule, RippleModule, StyleClassModule, NgOptimizedImage],
+    ButtonModule, RippleModule, StyleClassModule],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
 })
 export class Drawer implements OnInit{
-  visible = false;
-  usersMenu = false;
-  patientsMenu = false;
-  professionalsMenu = false;
+  sidebarExpanded = true;
+  openedMenu: string | null = null;
 
   authService = inject(AuthService);
   router = inject(Router);
@@ -37,16 +34,19 @@ export class Drawer implements OnInit{
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
-        this.visible = false;
-
-        this.usersMenu = false;
-        this.patientsMenu = false;
-        this.professionalsMenu = false;
+        this.sidebarExpanded = false;
       });
   }
 
+  toggleMenu(menu: string): void {
+    this.openedMenu =
+      this.openedMenu === menu
+        ? null
+        : menu;
+  }
+
   logout() {
-    this.visible = false;
+    this.sidebarExpanded = false;
     this.authService.logout();
   }
 

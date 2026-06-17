@@ -1,8 +1,6 @@
 package nutricentro.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,8 +16,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class MedicalHistoryEntity extends BaseEntity{
 
-    @NotNull(message = "La fecha es obligatoria")
-    @NotBlank(message = "La fecha es obligatoria")
+    @Column(nullable = false)
     private Date consultationDate;
     private String consultationReason;
     private String anthropometry;
@@ -32,9 +29,9 @@ public class MedicalHistoryEntity extends BaseEntity{
 
     @OneToOne
     @JoinColumn(name = "patient_id")
-    private PatientEntity patientId;
+    private PatientEntity patient;
 
     @ManyToOne
     @JoinColumn(name = "professional_id")
-    private ProfessionalEntity professionalId;
+    private ProfessionalEntity professional;
 }

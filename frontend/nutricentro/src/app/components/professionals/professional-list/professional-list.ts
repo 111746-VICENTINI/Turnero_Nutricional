@@ -33,7 +33,7 @@ export class ProfessionalList {
     { field: 'firstName', header: 'Nombre' },
     { field: 'specialty', header: 'Especialidad' },
     { field: 'email', header: 'Email' },
-    { field: 'status', header: 'Activo' }
+    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true, }
   ];
 
   actions: TableActionConfig<ProfessionalResponseDTO>[] = [
@@ -63,8 +63,18 @@ export class ProfessionalList {
     })
       .subscribe({
       next: (response) => {
-          this.professionals = response.content;
-          this.totalRecords = response.totalElements;
+        if (!response) {
+          this.professionals = [];
+          this.totalRecords = 0;
+          return;
+        }
+
+        this.professionals = (response.content ?? []).map(p => ({
+          ...p,
+          specialty: p.specialties?.map(s => s.name).join(', ')
+        }));
+
+        this.totalRecords = response.totalElements ?? 0;
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los profesionales' })
     });

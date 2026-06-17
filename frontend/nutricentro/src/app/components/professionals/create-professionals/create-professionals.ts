@@ -7,6 +7,7 @@ import {MessageService} from 'primeng/api';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} from '../models/professional-model';
 import {ProfessionalService} from '../services/professional-service';
+import {SpecialtyService} from '../specialties/services/specialty-service';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -30,11 +31,14 @@ export class CreateProfessionals implements OnInit {
   initialValues: Record<string, any> = {};
 
   private professionalService = inject(ProfessionalService);
+  private specialtyService = inject(SpecialtyService);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   ngOnInit(): void {
+    this.loadSpecialties();
+
     const id = this.route.snapshot.paramMap.get('id');
     const routePath = this.route.snapshot.routeConfig?.path || '';
 
@@ -67,20 +71,23 @@ export class CreateProfessionals implements OnInit {
       {
         name: 'document',
         label: 'Documento',
-        type: 'text',
+        type: 'number',
         required: true,
+        minLength: 7,
+        maxLength: 8,
         autocomplete: 'document'
       },
       {
-        name: 'specialty',
+        name: 'specialtyIds',
         label: 'Especialidad',
         type: 'multiselect',
+        options: this.specialties,
         required: true,
-        autocomplete: 'specialty'
+        autocomplete: 'specialtyIds'
       },
       {
         name: 'tuition',
-        label: 'Matricula',
+        label: 'Matrícula',
         type: 'text',
         required: true,
         autocomplete: 'tuition'
@@ -89,6 +96,7 @@ export class CreateProfessionals implements OnInit {
         name: 'email',
         label: 'Email',
         type: 'email',
+        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
         required: false,
         autocomplete: 'email'
       },
@@ -96,6 +104,8 @@ export class CreateProfessionals implements OnInit {
         name: 'mobile',
         label: 'Número de teléfono',
         type: 'number',
+        minLength: 6,
+        maxLength: 20,
         required: false,
         autocomplete: 'mobile'
       },
@@ -103,18 +113,17 @@ export class CreateProfessionals implements OnInit {
         name: 'birthDate',
         label: 'Fecha de cumpleaños',
         type: 'date',
-        required: false,
+        required: true,
         autocomplete: 'birthDate'
       },
       {
         name: 'gender',
-        label: 'Genéro',
+        label: 'Género',
         type: 'select',
         options: this.gender,
         required: false,
         autocomplete: 'gender'
-      },
-
+      }
     ];
 
     if (this.mode !== 'create') {
@@ -126,6 +135,8 @@ export class CreateProfessionals implements OnInit {
       });
     }
   }
+
+  specialties : { label: string; value: number }[] = [];
 
   gender = [
     { label: 'Femenino', value: 'FEMALE' },
@@ -164,17 +175,41 @@ export class CreateProfessionals implements OnInit {
           mobile: professionals.mobile,
           gender: professionals.gender,
           birthDate: professionals.birthDate,
-          specialty: professionals.specialty
+          tuition: professionals.tuition,
+          document: professionals.document,
+          specialtyIds: professionals.specialties.map(s => s.id)
         };
       },
       error: () => {
         this.showError('No se pudieron cargar los profesionales.');
+      }
+    });
+  }
+
+  loadSpecialties(): void {
+    this.specialtyService.getAllSpecialties().subscribe({
+      next: (specialties) => {
+        this.specialties = specialties
+          .filter(s => s.isActive)
+          .map(s => ({
+            label: s.name,
+            value: s.id
+          }));
+
+        this.buildFields();
       },
+      error: () => {
+        this.showError('No se pudieron cargar las especialidades.');
+      }
     });
   }
 
   saveProfessional(formData: Record<string, any>): void {
     this.saving = true;
+
+    const birthDate = new Date(formData['birthDate'])
+      .toISOString()
+      .split('T')[0];
 
     if (this.mode !== 'create') {
       const request: ProfessionalUpdateDTO = {
@@ -184,16 +219,18 @@ export class CreateProfessionals implements OnInit {
         email: formData['email'],
         mobile: formData['mobile'],
         gender: formData['gender'],
-        birthDate: formData['birthDate'],
         registration: formData['registration'],
-        specialty: formData['specialty']
+        specialtyIds: formData['specialtyIds'],
+        tuition: formData['tuition'],
+        birthDate,
+        document: formData['document'],
       };
 
       this.professionalService.updateProfessional(this.professionalId!, request).subscribe({
         next: () => {
           this.saving = false;
           this.showSuccess('Profesional actualizado correctamente.');
-          this.router.navigate(['/professional']);
+          this.goBack();
         },
         error: () => {
           this.saving = false;
@@ -211,10 +248,9 @@ export class CreateProfessionals implements OnInit {
       email: formData['email'],
       mobile: formData['mobile'],
       gender: formData['gender'],
-      birthDate: formData['birthDate'],
+      birthDate,
       registration: formData['registration'],
-      specialty: formData['specialty'],
-      age: formData['age'],
+      specialtyIds: formData['specialtyIds'],
       document: formData['document'],
       tuition: formData['tuition']
     };
@@ -248,7 +284,7 @@ export class CreateProfessionals implements OnInit {
       mobile: this.selectedProfessional?.mobile,
       gender: this.selectedProfessional?.gender,
       registration: this.selectedProfessional?.registration,
-      specialty: this.selectedProfessional?.specialty
+      specialtyIds: this.selectedProfessional?.specialties.map(s => s.id)
     };
 
     this.mode = 'view';
@@ -268,7 +304,7 @@ export class CreateProfessionals implements OnInit {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
   }
 
-  editModeUser(): void {
+  editModeProfessional(): void {
     this.mode = 'edit';
     this.isFormEditable = true;
   }

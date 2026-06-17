@@ -1,10 +1,11 @@
+import {SpecialtyOnlyNameDTO} from '../specialties/models/specialty-model';
+
 export interface ProfessionalRequestDTO {
   firstName: string,
   lastName: string,
-  age: string,
   birthDate: string,
   document: number,
-  specialty: string,
+  specialtyIds: number[],
   tuition: string,
   mobile: string,
   gender: string, //GenderType gender;
@@ -22,8 +23,10 @@ export interface ProfessionalResponseDTO {
   gender: string, //GenderType gender;
   email: string,
   registration: string,
+  tuition: string,
+  document: number,
   status: string, //personStatus
-  specialty: string
+  specialties: SpecialtyOnlyNameDTO[]
 }
 
 export interface ProfessionalUpdateDTO {
@@ -35,5 +38,7 @@ export interface ProfessionalUpdateDTO {
   email: string,
   registration: string,
   status: string //personStatus
-  specialty: string
+  document: number,
+  tuition: string,
+  specialtyIds: number[];
 }

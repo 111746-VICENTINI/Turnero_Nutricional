@@ -26,6 +26,8 @@ public class ProfessionalResponseDTO {
     private String email;
     private String state;
     private Integer document;
+    private String tuition;
+    private String registration;
     private PersonStatus status;
     private List<SpecialtyOnlyNameDTO> specialties;
 }

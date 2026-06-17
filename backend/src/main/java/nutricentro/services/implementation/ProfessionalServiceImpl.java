@@ -120,6 +120,10 @@ public class ProfessionalServiceImpl implements ProfessionalService {
                 .lastName(saved.getLastName())
                 .mobile(saved.getMobile())
                 .gender(saved.getGender())
+                .document(saved.getDocument())
+                .birthDate(saved.getBirthDate())
+                .tuition(saved.getTuition())
+                .registration(saved.getRegistration())
                 .status(saved.getStatus() != null ? saved.getStatus() : null)
                 .specialties(saved.getSpecialties().stream()
                         .map(s -> SpecialtyOnlyNameDTO.builder()
@@ -131,6 +135,9 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     private Integer calculateAge(LocalDate birthDate){
+        if (birthDate == null) {
+            return null;
+        }
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
 

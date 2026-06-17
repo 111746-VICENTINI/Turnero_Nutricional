@@ -9,7 +9,7 @@ import {PageResponse} from '../../../core/model/paginacion-general';
 })
 export class PatientService {
   private http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/patient`;
+  private readonly apiUrl = `${environment.apiUrl}/patient`;
 
   createPatient(request: PatientRequestDTO) {
     return this.http.post<PatientResponseDTO>(

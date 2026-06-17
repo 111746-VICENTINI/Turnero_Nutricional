@@ -11,7 +11,7 @@ import {environment} from '../../enviroment/enviroment';
 export class AuthService {
   private router = inject(Router);
   private http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/auth`;
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
   private sessionExpiredMessage = signal<string | null>(null);

@@ -9,7 +9,7 @@ import {PageResponse} from '../../../core/model/paginacion-general';
 })
 export class ProfessionalService {
   private http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/professional`;
+  private readonly apiUrl = `${environment.apiUrl}/professional`;
 
   createProfessional(request: ProfessionalRequestDTO){
     return this.http.post<ProfessionalResponseDTO>(

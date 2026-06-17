@@ -8,7 +8,7 @@ import {RoleResponseDTO} from '../model/login-model';
 })
 export class RoleService {
   private http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/roles`;
+  private readonly apiUrl = `${environment.apiUrl}/roles`;
 
   // createRole(request: RoleRequestDTO) {
   //   return this.http.post<RoleResponseDTO>(

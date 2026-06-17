@@ -14,14 +14,14 @@ import java.util.Collection;
 public interface AppointmentRepository extends JpaRepository<AppointmentEntity, Long>,
         JpaSpecificationExecutor<AppointmentEntity> {
 
-    boolean existsByProfessionalProfessionalIdAndDateAndTimeAndStatusNotIn(
+    boolean existsByProfessionalIdAndDateAndTimeAndStatusNotIn(
             Long professionalId,
             LocalDate date,
             LocalTime time,
             Collection<AppointmentStatus> status
     );
 
-    boolean existsByProfessionalProfessionalIdAndDateAndTimeAndStatusNotInAndIdNot(
+    boolean existsByProfessionalIdAndDateAndTimeAndStatusNotInAndIdNot(
             Long professionalId,
             LocalDate date,
             LocalTime time,

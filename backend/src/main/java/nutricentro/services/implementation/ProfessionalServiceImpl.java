@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.professionals.ProfessionalRequestDTO;
 import nutricentro.dtos.professionals.ProfessionalResponseDTO;
 import nutricentro.dtos.professionals.ProfessionalUpdateDTO;
+import nutricentro.dtos.specialties.SpecialtyOnlyNameDTO;
 import nutricentro.entities.ProfessionalEntity;
 import nutricentro.entities.SpecialtyEntity;
 import nutricentro.enums.GenderType;
@@ -120,7 +121,12 @@ public class ProfessionalServiceImpl implements ProfessionalService {
                 .mobile(saved.getMobile())
                 .gender(saved.getGender())
                 .status(saved.getStatus() != null ? saved.getStatus() : null)
-                .specialties(saved.getSpecialties().stream().map(SpecialtyEntity::getName).toList())
+                .specialties(saved.getSpecialties().stream()
+                        .map(s -> SpecialtyOnlyNameDTO.builder()
+                                .id(s.getId())
+                                .name(s.getName())
+                                .build())
+                        .toList())
                 .build();
     }
 

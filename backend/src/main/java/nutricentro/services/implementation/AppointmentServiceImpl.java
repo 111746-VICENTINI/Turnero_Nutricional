@@ -193,9 +193,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         boolean hasConflict = appointmentId == null
-                ? appointmentRepository.existsByProfessionalProfessionalIdAndDateAndTimeAndStatusNotIn(
+                ? appointmentRepository.existsByProfessionalIdAndDateAndTimeAndStatusNotIn(
                 professionalId, date, time, NON_BLOCKING_STATUSES)
-                : appointmentRepository.existsByProfessionalProfessionalIdAndDateAndTimeAndStatusNotInAndIdNot(
+                : appointmentRepository.existsByProfessionalIdAndDateAndTimeAndStatusNotInAndIdNot(
                 professionalId, date, time, NON_BLOCKING_STATUSES, appointmentId);
 
         if (hasConflict) {

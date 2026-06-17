@@ -13,6 +13,8 @@ import {ListPatients} from './components/patients/list-patients/list-patients';
 import {ProfessionalList} from './components/professionals/professional-list/professional-list';
 import {CreateProfessionals} from './components/professionals/create-professionals/create-professionals';
 import {CreatePatients} from './components/patients/create-patients';
+import {CreateSpecialty} from './components/professionals/specialties/create-specialty/create-specialty';
+import {ListSpecialties} from './components/professionals/specialties/list-specialties/list-specialties';
 
 export const routes: Routes = [
   {
@@ -110,6 +112,31 @@ export const routes: Routes = [
         component: CreateProfessionals,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      // ESPECIALIDADES
+      {
+        path: 'specialty',
+        component: ListSpecialties,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
+      },
+      {
+        path: 'specialty/create',
+        component: CreateSpecialty,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
+      },
+      {
+        path: 'specialty/:id',
+        component: CreateSpecialty,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
+      },
+      {
+        path: 'specialty/:id/edit',
+        component: CreateSpecialty,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] }
       },
       // AGENDA-TURNOS
       {

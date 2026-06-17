@@ -42,6 +42,6 @@ public class PatientEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PersonStatus status;
 
-    @OneToOne(mappedBy = "patientId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private MedicalHistoryEntity medicalHistory;
 }

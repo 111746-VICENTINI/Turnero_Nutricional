@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
@@ -22,4 +23,5 @@ public class PatientResponseDTO {
     private Integer age;
     private Integer document;
     private PersonStatus status;
+    private GenderType gender;
 }

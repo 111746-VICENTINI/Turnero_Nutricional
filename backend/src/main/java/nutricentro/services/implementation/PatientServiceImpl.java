@@ -46,7 +46,7 @@ public class PatientServiceImpl implements PatientService {
         patientEntity.setEmail(patient.getEmail());
         patientEntity.setDocument(patient.getDocument());
         patientEntity.setAddress(patient.getAddress());
-        patientEntity.setGender(GenderType.valueOf(patient.getGender().toLowerCase()));
+        patientEntity.setGender(patient.getGender());
         patientEntity.setStatus(PersonStatus.ACTIVE);
         patientEntity.setMobile(patient.getMobile());
         patientEntity.setBirthDate(patient.getBirthDate());
@@ -70,7 +70,7 @@ public class PatientServiceImpl implements PatientService {
         patientEntity.setLastName(patient.getLastName());
         patientEntity.setEmail(patient.getEmail());
         patientEntity.setDocument(patient.getDocument());
-        patientEntity.setGender(GenderType.valueOf(patient.getGender().toLowerCase()));
+        patientEntity.setGender(patient.getGender());
         patientEntity.setMobile(patient.getMobile());
         patientEntity.setStatus(patient.getStatus());
         patientEntity.setBirthDate(patient.getBirthDate());
@@ -92,6 +92,9 @@ public class PatientServiceImpl implements PatientService {
 
     private PatientResponseDTO toResponse(PatientEntity saved) {
         return PatientResponseDTO.builder()
+                .id(saved.getId())
+                .gender(saved.getGender())
+                .document(saved.getDocument())
                 .firstName(saved.getFirstName())
                 .lastName(saved.getLastName())
                 .email(saved.getEmail())
@@ -103,6 +106,9 @@ public class PatientServiceImpl implements PatientService {
     }
 
     private Integer calculateAge(LocalDate birthDate){
+        if (birthDate == null) {
+            return null;
+        }
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
 

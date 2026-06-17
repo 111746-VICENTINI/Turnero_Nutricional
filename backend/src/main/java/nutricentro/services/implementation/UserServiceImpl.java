@@ -1,6 +1,7 @@
 package nutricentro.services.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Join;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.users.RegisterRequestDTO;
 import nutricentro.dtos.users.UpdateUserDTO;
@@ -11,6 +12,9 @@ import nutricentro.exception.ApiException;
 import nutricentro.repositories.UserRepository;
 import nutricentro.services.RoleService;
 import nutricentro.services.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -89,11 +93,60 @@ public class UserServiceImpl implements UserService {
 		userRepository.save(user);
 	}
 
+	@Override
+	public Page<UserResponseDTO> searchUsers(String search, String role, Boolean isActive, Pageable pageable) {
+		Specification<UserEntity> spec = Specification.where(bySearch(search))
+						.and(byRole(role))
+						.and(byActive(isActive));
+
+		return userRepository.findAll(spec, pageable).map(this::toResponse);
+	}
+
 	private UserResponseDTO toResponse(UserEntity user) {
 		Set<String> roles = user.getRoles().stream()
 				.map(RoleEntity::getName)
 				.collect(Collectors.toSet());
 
 		return new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(), user.getIsActive(), roles);
+	}
+
+	public static Specification<UserEntity> bySearch(String search) {
+		return (root, query, cb) -> {
+			if (search == null || search.isBlank()) {
+				return cb.conjunction();
+			}
+
+			String pattern = "%" + search.toLowerCase() + "%";
+
+			return cb.or(
+					cb.like(cb.lower(root.get("username")), pattern),
+					cb.like(cb.lower(root.get("email")), pattern)
+			);
+		};
+	}
+
+	public static Specification<UserEntity> byRole(String role) {
+		return (root, query, cb) -> {
+			if (role == null || role.isBlank()) {
+				return cb.conjunction();
+			}
+
+			Join<UserEntity, RoleEntity> roles =
+					root.join("roles");
+
+			return cb.equal(
+					cb.upper(roles.get("name")),
+					role.toUpperCase()
+			);
+		};
+	}
+
+	public static Specification<UserEntity> byActive(Boolean active) {
+		if (active == null) {
+			return (root, query, cb) -> cb.conjunction();
+		}
+
+		return (root, query, cb) ->
+				cb.equal(root.get("isActive"), active);
 	}
 }

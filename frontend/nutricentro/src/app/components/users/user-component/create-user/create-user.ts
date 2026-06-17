@@ -12,7 +12,7 @@ import {
   UserResponseDTO,
 } from '../../../../core/model/login-model';
 import { RoleService } from '../../../../core/services/role-service';
-import { UserService } from '../../../../core/services/user-service';
+import { UserService } from '../services/user-service';
 import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
 import {FormGeneric} from '../../../../shared/components/form-generic/form-generic';
 

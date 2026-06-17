@@ -5,7 +5,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { UserResponseDTO } from '../../../../core/model/login-model';
-import { UserService } from '../../../../core/services/user-service';
+import { UserService } from '../services/user-service';
 import { TableGeneric } from '../../../../shared/components/table-generic/table-generic';
 import {
   TableActionConfig,
@@ -71,9 +71,14 @@ export class UsersList implements OnInit {
     })
       .subscribe({
         next: response => {
+          if (!response) {
+            this.users = [];
+            this.totalRecords = 0;
+            return;
+          }
 
-          this.users = response.content;
-          this.totalRecords = response.totalElements;
+          this.users = response.content ?? [];
+          this.totalRecords = response.totalElements ?? 0;
         }
       });
   }

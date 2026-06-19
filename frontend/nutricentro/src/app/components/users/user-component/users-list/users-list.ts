@@ -41,7 +41,13 @@ export class UsersList implements OnInit {
       field: 'roles',
       header: 'Roles',
       type: 'custom',
-      formatFn: (roles: string[]) => roles?.join(', ') || '-',
+      formatFn: (roles: string[]) =>
+      {
+        if (!roles || roles.length === 0) return '-';
+        return roles
+          .map(role => this.roleTranslations[role.toUpperCase()] || role)
+          .join(', ');
+      },
     },
   ];
 
@@ -110,4 +116,10 @@ export class UsersList implements OnInit {
 
     this.loadUsers(page, event.rows);
   }
+
+  private roleTranslations: Record<string, string> = {
+    'ADMIN': 'Administrador',
+    'SECRETARY': 'Secretaria',
+    'PROFESSIONAL': 'Profesional'
+  };
 }

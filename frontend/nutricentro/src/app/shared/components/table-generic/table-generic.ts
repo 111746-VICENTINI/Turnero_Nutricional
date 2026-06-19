@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import {ConfirmationService, MenuItem, MessageService} from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -13,6 +13,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import {TableActionConfig, TableColumnConfig} from './model/table-model';
 import {TableState} from '../../../core/model/paginacion-general';
+import {Menu, MenuModule} from 'primeng/menu';
 
 @Component({
   selector: 'app-table-generic',
@@ -27,6 +28,7 @@ import {TableState} from '../../../core/model/paginacion-general';
     ConfirmDialogModule,
     ToastModule,
     TagModule,
+    MenuModule,
     TooltipModule,
   ],
   templateUrl: './table-generic.html',
@@ -67,6 +69,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   @Output() selectionChange = new EventEmitter<T[]>();
   @Output() tableStateChange = new EventEmitter<TableState>();
 
+  menuItems: MenuItem[] = [];
   globalFilter = '';
   filteredData: T[] = [];
   first = 0;
@@ -266,5 +269,18 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
         rows: this.rows
       });
     }
+  }
+
+  openActionMenu(event: Event, row: T, menu: Menu): void {
+    this.menuItems = this.actions
+      .filter(action => this.isActionVisible(action, row))
+      .map(action => ({
+        label: action.label,
+        icon: action.icon,
+        disabled: !this.isActionEnabled(action, row),
+        command: () => this.performAction(action, row)
+      }));
+
+    menu.toggle(event);
   }
 }

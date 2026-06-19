@@ -5,6 +5,7 @@
   ]">
   <p-toast></p-toast>
   <p-confirmDialog [style]="{ width: 'min(32rem, 92vw)' }"></p-confirmDialog>
+  <p-menu #actionMenu [popup]="true" [model]="menuItems" appendTo="body"></p-menu>
 
   @if (title || subtitle || showGlobalFilter) {
     <div class="table-toolbar">
@@ -135,24 +136,19 @@
 
         @if (actions.length > 0) {
           <td>
-            <div class="actions-cell">
-              @for (action of actions; track action.field) {
-                @if (isActionVisible(action, row)) {
+            <div class="actions-cell" style="display: flex; justify-content: center;">
                   <p-button
-                    [icon]="action.icon || 'pi pi-pencil'"
-                    [severity]="action.severity || 'info'"
+                    icon="pi pi-ellipsis-v"
+                    severity="secondary"
+                    (onClick)="openActionMenu($event, row, actionMenu)"
+                    pTooltip="Opciones"
+                    tooltipPosition="left"
                     [outlined]="true"
                     [rounded]="true"
                     [text]="true"
                     type="button"
-                    [disabled]="!isActionEnabled(action, row)"
-                    (onClick)="performAction(action, row)"
-                    [pTooltip]="action.label"
-                    tooltipPosition="top"
                     styleClass="action-button"
                   ></p-button>
-                }
-              }
             </div>
           </td>
         }

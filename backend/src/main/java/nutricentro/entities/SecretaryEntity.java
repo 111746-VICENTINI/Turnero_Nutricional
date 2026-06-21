@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "secretaries")
 @Data
@@ -29,7 +31,7 @@ public class SecretaryEntity extends BaseEntity {
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Column(nullable = false)
-    private Integer birthDate;
+    private LocalDate birthDate;
 
     @NotNull(message = "El dni es obligatorio")
     @Column(nullable = false)

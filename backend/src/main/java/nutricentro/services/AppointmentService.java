@@ -9,12 +9,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public interface AppointmentService {
     AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto);
-    List<AppointmentResponseDTO> getAllAppointments();
     AppointmentResponseDTO getAppointmentById(Long id);
     AppointmentResponseDTO updateAppointment(Long id, AppointmentUpdateDTO dto);
     void deleteAppointment(Long id);

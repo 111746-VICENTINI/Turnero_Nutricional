@@ -32,12 +32,6 @@ public class AppointmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.createAppointment(dto));
     }
 
-    @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
-    public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointment() {
-        return ResponseEntity.ok(appointmentService.getAllAppointments());
-    }
-
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<Page<AppointmentResponseDTO>> searchAppointments(
@@ -87,14 +81,14 @@ public class AppointmentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
     public ResponseEntity<AppointmentResponseDTO> updateAppointment(@PathVariable Long id,
                                                      @Valid @RequestBody AppointmentUpdateDTO dto) {
         return ResponseEntity.ok(appointmentService.updateAppointment(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
     public ResponseEntity<Void> deleteAppointment(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);
         return ResponseEntity.noContent().build();

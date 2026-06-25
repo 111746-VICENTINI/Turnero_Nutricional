@@ -12,9 +12,10 @@ import {CreateUser} from './components/users/user-component/create-user/create-u
 import {ListPatients} from './components/patients/list-patients/list-patients';
 import {ProfessionalList} from './components/professionals/professional-list/professional-list';
 import {CreateProfessionals} from './components/professionals/create-professionals/create-professionals';
-import {CreatePatients} from './components/patients/create-patients';
+import {CreatePatients} from './components/patients/create-patients/create-patients';
 import {CreateSpecialty} from './components/professionals/specialties/create-specialty/create-specialty';
 import {ListSpecialties} from './components/professionals/specialties/list-specialties/list-specialties';
+import {ListAppointments} from './components/appointments/list-appointments/list-appointments';
 
 export const routes: Routes = [
   {
@@ -141,19 +142,19 @@ export const routes: Routes = [
       // AGENDA-TURNOS
       {
         path: 'agenda',
-        component: Calendar,
+        component: ListAppointments,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       // HISTORIAL CLINICO
       {
-        path: 'history',
+        path: 'medical-history',
         component: HistoryClinical,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'PROFESSIONAL'] }
       },
       {
-        path: 'history/:patientId',
+        path: 'medical-history/:id',
         component: HistoryClinical,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'PROFESSIONAL'] }

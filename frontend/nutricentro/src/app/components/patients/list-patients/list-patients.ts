@@ -33,11 +33,12 @@ export class ListPatients {
     { field: 'firstName', header: 'Nombre' },
     { field: 'age', header: 'Edad' },
     { field: 'email', header: 'Email' },
-    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true, }
+    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true }
   ];
 
   actions: TableActionConfig<PatientResponseDTO>[] = [
     { field: 'view', label: 'Ver', icon: 'pi pi-eye', severity: 'secondary' },
+    { field: 'history', label: 'Historial', icon: 'pi pi-book', severity: 'secondary' },
     { field: 'edit', label: 'Editar', icon: 'pi pi-pencil', severity: 'info' },
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
@@ -74,6 +75,10 @@ export class ListPatients {
 
   viewPatient(patient: PatientResponseDTO): void {
     this.router.navigate(['/patient', patient.id]);
+  }
+
+  viewHistory(patient: PatientResponseDTO): void {
+    this.router.navigate(['/medical-history', patient.id]);
   }
 
   deletePatient(patient: PatientResponseDTO): void {

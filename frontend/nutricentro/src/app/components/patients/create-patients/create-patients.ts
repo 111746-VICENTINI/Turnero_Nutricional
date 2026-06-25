@@ -3,10 +3,10 @@ import {ActivatedRoute, Router} from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { FormGeneric } from '../../shared/components/form-generic/form-generic';
-import { GenericFormField } from '../../shared/components/form-generic/model/form-model';
-import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from './models/patient-model';
-import { PatientService } from './services/patient-service';
+import { FormGeneric } from '../../../shared/components/form-generic/form-generic';
+import { GenericFormField } from '../../../shared/components/form-generic/model/form-model';
+import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/patient-model';
+import { PatientService } from '../services/patient-service';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -123,7 +123,7 @@ export class CreatePatients implements OnInit {
 
   get pageTitle(): string {
     if (this.mode === 'create') {
-      return 'Nuevo paciente';
+      return 'Crear paciente';
     }
 
     return this.mode === 'view' ? 'Ver paciente' : 'Editar paciente';
@@ -258,5 +258,9 @@ export class CreatePatients implements OnInit {
   editModePatient(): void {
     this.mode = 'edit';
     this.isFormEditable = true;
+  }
+
+  goToHistory(): void {
+    this.router.navigate(['/medical-history', this.patientId]);
   }
 }

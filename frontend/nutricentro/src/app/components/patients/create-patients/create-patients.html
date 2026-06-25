@@ -6,6 +6,13 @@
 
     @if (mode === 'view') {
       <p-button
+        label="Historial Clínico"
+        icon="pi pi-book"
+        styleClass="text-xl"
+        (onClick)="goToHistory()">
+      </p-button>
+
+      <p-button
         icon="pi pi-pencil"
         label="Editar"
         styleClass="text-xl"

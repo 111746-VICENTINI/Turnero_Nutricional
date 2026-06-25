@@ -42,14 +42,13 @@
                   pRipple
                   (click)="toggleMenu('users')"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-user"></i>
+                  <i class="pi pi-users"></i>
                   @if(sidebarExpanded){
                     <span>Gestión de usuarios</span>
                   }
                   @if(sidebarExpanded){
                     <i [class]="openedMenu === 'users' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                   }
-<!--                  <i [class]="openedMenu === 'users' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>-->
                 </a>
               </li>
             }
@@ -65,16 +64,6 @@
                     <span>Listado de usuarios</span>
                   </a>
                 </li>
-
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/users/create"
-                    class="submenu-item">
-                    <i class="pi pi-user-plus"></i>
-                    <span>Crear usuario</span>
-                  </a>
-                </li>
               </ul>
             }
 
@@ -85,7 +74,7 @@
                   pRipple
                   (click)="toggleMenu('professional')"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-user-plus"></i>
+                  <i class="pi pi-id-card"></i>
                   @if(sidebarExpanded){
                     <span>Gestión de profesionales</span>
                   }
@@ -105,16 +94,6 @@
                     <span>Listado de profesionales</span>
                   </a>
                 </li>
-
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/professional/create"
-                    class="submenu-item">
-                    <i class="pi pi-user-plus"></i>
-                    <span>Crear profesional</span>
-                  </a>
-                </li>
               </ul>
             }
 
@@ -125,7 +104,7 @@
                   pRipple
                   (click)="toggleMenu('patient')"
                   class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-users"></i>
+                  <i class="pi pi-user"></i>
                   @if (sidebarExpanded) {
                     <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Pacientes' : 'Gestión de pacientes' }}</span>
                   }
@@ -153,7 +132,7 @@
                     routerLink="/patient/create"
                     class="submenu-item">
                     <i class="pi pi-user-plus"></i>
-                    <span>Crear paciente</span>
+                    <span>Nuevo paciente</span>
                   </a>
                 </li>
               </ul>
@@ -171,26 +150,56 @@
                     <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Turnos' : 'Agenda de turnos' }}</span>
 
                   }
+
+                  <i [class]="openedMenu === 'agenda' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
                 </a>
               </li>
+            }
+            @if(sidebarExpanded && openedMenu === 'agenda'){
+              <ul class="submenu">
+                <li>
+                  <a
+                    pRipple
+                    routerLink="/agenda"
+                    class="submenu-item">
+                    <i class="pi pi-list"></i>
+                    <span>Historial</span>
+                  </a>
+                </li>
+              </ul>
             }
 
             <!-- HISTORIAL CLINICO -->
-            @if (isAdmin() || isProfessional()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('history')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-file-edit"></i>
-                  @if(sidebarExpanded){
-                    <span>Historial clínico</span>
-                  }
-                </a>
-              </li>
-            }
+<!--            @if (isAdmin() || isProfessional()) {-->
+<!--              <li>-->
+<!--                <a-->
+<!--                  pRipple-->
+<!--                  (click)="toggleMenu('medical-history')"-->
+<!--                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">-->
+<!--                  <i class="pi pi-file-edit"></i>-->
+<!--                  @if(sidebarExpanded){-->
+<!--                    <span>Historial clínico</span>-->
+<!--                  }-->
 
-            <!-- CONFIGURACIONES - ESPECIALIDADES -->
+<!--                  <i [class]="openedMenu === 'medical-history' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>-->
+<!--                </a>-->
+<!--              </li>-->
+<!--            }-->
+<!--            @if(sidebarExpanded && openedMenu === 'medical-history'){-->
+<!--              <ul class="submenu">-->
+<!--                <li>-->
+<!--                  <a-->
+<!--                    pRipple-->
+<!--                    routerLink="/medical-history"-->
+<!--                    class="submenu-item">-->
+<!--                    <i class="pi pi-list"></i>-->
+<!--                    <span>Historial</span>-->
+<!--                  </a>-->
+<!--                </li>-->
+<!--              </ul>-->
+<!--            }-->
+
+                <!-- CONFIGURACIONES - ESPECIALIDADES -->
             @if (isAdmin()) {
               <li>
                 <a
@@ -214,17 +223,7 @@
                     routerLink="/specialty"
                     class="submenu-item">
                     <i class="pi pi-list"></i>
-                    <span>Listado de especialidades</span>
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/specialty/create"
-                    class="submenu-item">
-                    <i class="pi pi-cog"></i>
-                    <span>Crear especialidad</span>
+                    <span>Especialidades</span>
                   </a>
                 </li>
               </ul>

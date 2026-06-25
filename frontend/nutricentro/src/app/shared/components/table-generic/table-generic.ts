@@ -66,6 +66,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   @Output() onDelete = new EventEmitter<T>();
   @Output() onEdit = new EventEmitter<T>();
   @Output() onView = new EventEmitter<T>();
+  @Output() onHistory = new EventEmitter<T>();
   @Output() selectionChange = new EventEmitter<T[]>();
   @Output() tableStateChange = new EventEmitter<TableState>();
 
@@ -180,6 +181,11 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     }
 
     if (action.field === 'view') {
+      this.onView.emit(row);
+      return;
+    }
+
+    if (action.field === 'history') {
       this.onView.emit(row);
       return;
     }

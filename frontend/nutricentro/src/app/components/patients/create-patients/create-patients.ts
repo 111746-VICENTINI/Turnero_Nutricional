@@ -7,6 +7,9 @@ import { FormGeneric } from '../../../shared/components/form-generic/form-generi
 import { GenericFormField } from '../../../shared/components/form-generic/model/form-model';
 import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/patient-model';
 import { PatientService } from '../services/patient-service';
+import {Gender_Options} from '../../../shared/constants/genders';
+import {PERSON_STATUS_OPTIONS} from '../../../shared/constants/person-status';
+import {toIsoLocalDate} from '../../../shared/utils/date-utils';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -53,6 +56,8 @@ export class CreatePatients implements OnInit {
         label: 'Nombre',
         type: 'text',
         required: true,
+        minLength: 3,
+        maxLength: 100,
         autocomplete: 'firstName'
       },
       {
@@ -60,6 +65,8 @@ export class CreatePatients implements OnInit {
         label: 'Apellido',
         type: 'text',
         required: true,
+        minLength: 3,
+        maxLength: 100,
         autocomplete: 'lastName'
       },
       {
@@ -75,7 +82,6 @@ export class CreatePatients implements OnInit {
         name: 'email',
         label: 'Email',
         type: 'email',
-        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
         required: false,
         autocomplete: 'email'
       },
@@ -90,7 +96,7 @@ export class CreatePatients implements OnInit {
       },
       {
         name: 'birthDate',
-        label: 'Fecha de cumpleaños',
+        label: 'Fecha de nacimiento',
         type: 'date',
         required: true,
         autocomplete: 'birthDate'
@@ -99,7 +105,7 @@ export class CreatePatients implements OnInit {
         name: 'gender',
         label: 'Género',
         type: 'select',
-        options: this.gender,
+        options: Gender_Options,
         required: false,
         autocomplete: 'gender'
       }
@@ -109,17 +115,11 @@ export class CreatePatients implements OnInit {
       this.fields.push({
         name: 'status',
         label: 'Paciente activo',
-        type: 'checkbox'
+        type: 'select',
+        options: PERSON_STATUS_OPTIONS
       });
     }
   }
-
-  gender = [
-    { label: 'Femenino', value: 'FEMALE' },
-    { label: 'Masculino', value: 'MALE' },
-    { label: 'No binario', value: 'NON_BINARY' },
-    { label: 'Prefiero no decirlo', value: 'PREFER_NOT_TO_SAY' }
-  ];
 
   get pageTitle(): string {
     if (this.mode === 'create') {
@@ -160,12 +160,7 @@ export class CreatePatients implements OnInit {
     this.saving = true;
     console.log('gender recibido:', formData['gender']);
     console.log(typeof formData['gender']);
-    const birthDate = new Date(formData['birthDate'])
-      .toISOString()
-      .split('T')[0];
-
-    // const gender = formData['gender'] ? String(formData['gender'])
-    //     .toUpperCase() : null;
+    const birthDate = toIsoLocalDate(formData['birthDate']);
 
     if (this.mode !== 'create') {
       const request: PatientUpdateDTO = {
@@ -235,7 +230,8 @@ export class CreatePatients implements OnInit {
       email: this.selectedPatient?.email,
       mobile: this.selectedPatient?.mobile,
       gender: this.selectedPatient?.gender,
-      address: this.selectedPatient?.address
+      address: this.selectedPatient?.address,
+      birthDate: this.selectedPatient?.birthDate
     };
 
     this.mode = 'view';

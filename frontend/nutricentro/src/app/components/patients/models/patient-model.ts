@@ -1,12 +1,15 @@
+import {GenderType} from '../../../shared/constants/genders';
+import {PersonStatus} from '../../../shared/constants/person-status';
+
 export interface PatientRequestDTO {
   firstName: string,
   lastName: string,
   birthDate: string,
   document: number,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
-  status: string, //personStatus
+  status: PersonStatus,
   address?: string
 }
 
@@ -18,9 +21,9 @@ export interface PatientResponseDTO {
   age: string,
   document: number,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
-  status: string, //personStatus
+  status: PersonStatus,
   address?: string
 }
 
@@ -30,8 +33,8 @@ export interface PatientUpdateDTO {
   birthDate: string,
   document: number,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
-  status: string, //personStatus
+  status: PersonStatus,
   address?: string
 }

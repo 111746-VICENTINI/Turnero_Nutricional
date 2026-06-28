@@ -2,7 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from '../../../enviroment/enviroment';
 import {PatientRequestDTO, PatientResponseDTO, PatientUpdateDTO} from '../models/patient-model';
-import {PageResponse} from '../../../core/model/paginacion-general';
+import {PageResponse} from '../../../core/models/paginacion-general';
 
 @Injectable({
   providedIn: 'root',

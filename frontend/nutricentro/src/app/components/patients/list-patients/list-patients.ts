@@ -6,8 +6,11 @@ import {PatientResponseDTO} from '../models/patient-model';
 import {PatientService} from '../services/patient-service';
 import {MessageService} from 'primeng/api';
 import {Router} from '@angular/router';
-import {TableActionConfig, TableColumnConfig} from '../../../shared/components/table-generic/model/table-model';
-import {TableState} from '../../../core/model/paginacion-general';
+import {TableActionConfig, TableColumnConfig, TableFilterConfig} from '../../../shared/components/table-generic/model/table-model';
+import {TableState} from '../../../core/models/paginacion-general';
+import {Gender_Options, GenderType} from '../../../shared/constants/genders';
+import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/constants/person-status';
+import {getLabel} from '../../../shared/utils/utils-enum';
 
 @Component({
   selector: 'app-list-patients',
@@ -33,7 +36,9 @@ export class ListPatients {
     { field: 'firstName', header: 'Nombre' },
     { field: 'age', header: 'Edad' },
     { field: 'email', header: 'Email' },
-    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true }
+    { field: 'status', header: 'Activo', type: 'custom', alignCenter: true,
+      formatFn: value => getLabel(value as PersonStatus, PERSON_STATUS_LABELS),
+      tagSeverityFn: value => value === PersonStatus.ACTIVE ? 'success' : 'danger' }
   ];
 
   actions: TableActionConfig<PatientResponseDTO>[] = [
@@ -43,10 +48,31 @@ export class ListPatients {
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
 
+  filterConfigs: TableFilterConfig[] = [
+    {
+      field: 'status',
+      label: 'Estado',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        ...PERSON_STATUS_OPTIONS
+      ]
+    },
+    {
+      field: 'gender',
+      label: 'Género',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        ...Gender_Options
+      ]
+    }
+  ];
+
   filters: {
     search?: string;
-    gender?: string;
-    status?: string;
+    gender?: GenderType;
+    status?: PersonStatus;
   } = {
     search: ''
   };
@@ -97,9 +123,13 @@ export class ListPatients {
   }
 
   onTableChange(event: TableState): void {
-    if (event.search !== undefined) {
-      this.filters.search = event.search;
-    }
+    const filters = event.filters ?? {};
+
+    this.filters = {
+      search: event.search || filters['lastName'] || filters['firstName'] || filters['email'] || filters['age'] || '',
+      gender: filters['gender'],
+      status: filters['status']
+    };
 
     const page = Math.floor(event.first / event.rows);
 

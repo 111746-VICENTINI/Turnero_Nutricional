@@ -40,6 +40,18 @@
   width: 100%;
 }
 
+.readonly-value {
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #111827;
+  display: flex;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.75rem;
+  width: 100%;
+}
+
 .checkbox-wrapper,
 .radio-wrapper {
   display: flex;

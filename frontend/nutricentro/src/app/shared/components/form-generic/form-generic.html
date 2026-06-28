@@ -23,6 +23,9 @@
         }
 
         <div class="control-container">
+          @if (readonly) {
+            <div class="readonly-value">{{ getDisplayValue(field) }}</div>
+          } @else {
           @switch (field.type) {
             @case ('text') {
               <input
@@ -156,6 +159,10 @@
                 [id]="field.name"
                 [formControlName]="field.name"
                 dateFormat="dd/mm/yy"
+                placeholder="dd/mm/yyyy"
+                pInputMask="99/99/9999"
+                [keepInvalid]="true"
+                [readonlyInput]="false"
                 [showIcon]="true"
                 class="w-full"
                 styleClass="w-full"
@@ -168,6 +175,10 @@
                 [id]="field.name"
                 [formControlName]="field.name"
                 dateFormat="dd/mm/yy"
+                placeholder="dd/mm/yyyy"
+                pInputMask="99/99/9999"
+                [keepInvalid]="true"
+                [readonlyInput]="false"
                 [showIcon]="true"
                 [showTime]="true"
                 hourFormat="24"
@@ -189,6 +200,7 @@
                 [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
               ></p-datepicker>
             }
+          }
           }
         </div>
 

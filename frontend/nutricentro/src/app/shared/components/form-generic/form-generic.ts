@@ -12,6 +12,8 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { GenericFormField } from './model/form-model';
+import { formatLocalDate, parseLocalDate, parseLocalTime, toIsoLocalDate, toIsoLocalTime } from '../../utils/date-utils';
+import {InputMaskDirective} from 'primeng/inputmask';
 
 @Component({
   selector: 'app-form-generic',
@@ -28,6 +30,7 @@ import { GenericFormField } from './model/form-model';
     DatePickerModule,
     InputNumberModule,
     TooltipModule,
+    InputMaskDirective,
   ],
   templateUrl: './form-generic.html',
   styleUrl: './form-generic.css',
@@ -105,12 +108,14 @@ export class FormGeneric implements OnChanges {
         validators.push(Validators.pattern(field.pattern));
       }
 
-      const value =
+      const rawValue =
         this.initialValues[field.name] !== undefined
           ? this.initialValues[field.name]
           : field.type === 'checkbox'
             ? false
             : null;
+
+      const value = this.normalizeInitialValue(field, rawValue);
 
       group[field.name] = new FormControl({ value, disabled: field.disabled }, validators);
     });
@@ -141,7 +146,9 @@ export class FormGeneric implements OnChanges {
     if (errors['maxlength']) return `Máximo ${errors['maxlength'].requiredLength} caracteres.`;
     if (errors['min']) return `El valor mínimo es ${errors['min'].min}.`;
     if (errors['max']) return `El valor máximo es ${errors['max'].max}.`;
-    if (errors['pattern']) return 'Formato inválido.';
+    if (errors['pattern']) {
+      return field.hint ?? 'Formato inválido.';
+    }
 
     return 'Campo inválido.';
   }
@@ -152,12 +159,80 @@ export class FormGeneric implements OnChanges {
       return;
     }
 
-    this.formSubmit.emit(this.form.getRawValue());
+    this.formSubmit.emit(this.normalizeSubmitValue(this.form.getRawValue()));
   }
 
   onCancel(): void {
-    this.form.reset(this.initialValues);
+    const values = this.fields.reduce<Record<string, any>>((acc, field) => {
+      acc[field.name] = this.normalizeInitialValue(field, this.initialValues[field.name]);
+      return acc;
+    }, {});
+
+    this.form.reset(values);
     this.formCancel.emit();
+  }
+
+  private normalizeInitialValue(field: GenericFormField, value: any): any {
+    if (field.type === 'date') {
+      return parseLocalDate(value);
+    }
+
+    if (field.type === 'time') {
+      return parseLocalTime(value);
+    }
+
+    return value;
+  }
+
+  private normalizeSubmitValue(values: Record<string, any>): Record<string, any> {
+    const normalized = { ...values };
+
+    this.fields.forEach((field) => {
+      if (field.type === 'date') {
+        normalized[field.name] = toIsoLocalDate(values[field.name]);
+      }
+
+      if (field.type === 'time') {
+        normalized[field.name] = toIsoLocalTime(values[field.name]);
+      }
+    });
+
+    return normalized;
+  }
+
+  getDisplayValue(field: GenericFormField): string {
+    const value = this.form.get(field.name)?.value;
+
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+
+    if (field.type === 'date') {
+      return formatLocalDate(value);
+    }
+
+    if (field.type === 'time') {
+      return toIsoLocalTime(value).slice(0, 5);
+    }
+
+    if (field.type === 'checkbox') {
+      return value ? 'Activo' : 'Inactivo';
+    }
+
+    if (field.type === 'select') {
+      return field.options?.find((option) => option.value === value)?.label ?? String(value);
+    }
+
+    if (field.type === 'multiselect') {
+      const values = Array.isArray(value) ? value : [value];
+      const labels = values.map((item) =>
+        field.options?.find((option) => option.value === item)?.label ?? String(item)
+      );
+
+      return labels.length ? labels.join(', ') : '-';
+    }
+
+    return String(value);
   }
 
 }

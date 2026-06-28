@@ -1,0 +1,61 @@
+<div class="clinical-tabs">
+  <p-tabs value="summary">
+    <p-tablist>
+      <p-tab value="summary">Resumen</p-tab>
+      <p-tab value="nutrition">Nutrición</p-tab>
+      <p-tab value="clinical">Datos clínicos</p-tab>
+      <p-tab value="laboratory">Laboratorio</p-tab>
+      <p-tab value="anthropometry">Antropometría</p-tab>
+      <p-tab value="plans">Plan alimentario</p-tab>
+      <p-tab value="consultations">Consultas</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="summary">
+        <app-tab-patient-summary [patient]="patient" [history]="history"></app-tab-patient-summary>
+      </p-tabpanel>
+
+      <p-tabpanel value="nutrition">
+        <app-tab-nutritional-data
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-nutritional-data>
+      </p-tabpanel>
+
+      <p-tabpanel value="clinical">
+        <app-tab-clinical-data
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-clinical-data>
+      </p-tabpanel>
+
+      <p-tabpanel value="laboratory">
+        <app-tab-laboratory
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-laboratory>
+      </p-tabpanel>
+
+      <p-tabpanel value="anthropometry">
+        <app-tab-anthropometry
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-anthropometry>
+      </p-tabpanel>
+
+      <p-tabpanel value="plans">
+        <app-tab-plans
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-plans>
+      </p-tabpanel>
+
+      <p-tabpanel value="consultations">
+        <app-tab-consultations
+          [history]="history"
+          (saved)="notifyChange()">
+        </app-tab-consultations>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</div>

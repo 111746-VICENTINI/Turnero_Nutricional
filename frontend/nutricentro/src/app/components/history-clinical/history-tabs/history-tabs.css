@@ -1,0 +1,26 @@
+.clinical-tabs {
+  overflow: hidden;
+  border: 1px solid #dbe4ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+:host ::ng-deep .p-tabs-tablist {
+  gap: 0.25rem;
+  padding: 0.6rem 0.7rem 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e6edf0;
+  overflow-x: auto;
+}
+
+:host ::ng-deep .p-tabs-tab {
+  white-space: nowrap;
+}
+
+:host ::ng-deep .p-tabpanels {
+  padding: 0;
+}
+
+:host ::ng-deep .p-tabpanel {
+  padding: 0;
+}

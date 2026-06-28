@@ -2,7 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from '../../../enviroment/enviroment';
 import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} from '../models/professional-model';
-import {PageResponse} from '../../../core/model/paginacion-general';
+import {PageResponse} from '../../../core/models/paginacion-general';
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +35,7 @@ export class ProfessionalService {
   }
 
   deleteProfessional(id: number){
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.patch<void>(`${this.apiUrl}/${id}`, {});
   }
 
   searchProfessionals(filters: {

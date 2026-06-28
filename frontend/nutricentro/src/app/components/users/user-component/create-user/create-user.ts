@@ -10,7 +10,7 @@ import {
   RoleResponseDTO,
   UpdateUserDTO,
   UserResponseDTO,
-} from '../../../../core/model/login-model';
+} from '../../../../core/models/login-model';
 import { RoleService } from '../../../../core/services/role-service';
 import { UserService } from '../services/user-service';
 import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';

@@ -1,8 +1,8 @@
 import {inject, Injectable} from '@angular/core';
-import {RegisterRequestDTO, UpdateUserDTO, UserResponseDTO} from '../../../../core/model/login-model';
+import {RegisterRequestDTO, UpdateUserDTO, UserResponseDTO} from '../../../../core/models/login-model';
 import {environment} from '../../../../enviroment/enviroment';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {PageResponse} from '../../../../core/model/paginacion-general';
+import {PageResponse} from '../../../../core/models/paginacion-general';
 
 @Injectable({
   providedIn: 'root',

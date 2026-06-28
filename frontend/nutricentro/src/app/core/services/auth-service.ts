@@ -2,7 +2,7 @@ import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {Observable, tap} from 'rxjs';
-import {AuthRequestDTO, AuthResponseDTO, UserResponseDTO} from '../model/login-model';
+import {AuthRequestDTO, AuthResponseDTO, UserResponseDTO} from '../models/login-model';
 import {environment} from '../../enviroment/enviroment';
 
 @Injectable({

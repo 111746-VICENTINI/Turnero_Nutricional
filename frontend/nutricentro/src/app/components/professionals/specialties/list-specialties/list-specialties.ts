@@ -5,7 +5,7 @@ import {Toast} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
 import {Router} from '@angular/router';
 import {TableActionConfig, TableColumnConfig} from '../../../../shared/components/table-generic/model/table-model';
-import {TableState} from '../../../../core/model/paginacion-general';
+import {TableState} from '../../../../core/models/paginacion-general';
 import {SpecialtyResponseDTO} from '../models/specialty-model';
 import {SpecialtyService} from '../services/specialty-service';
 

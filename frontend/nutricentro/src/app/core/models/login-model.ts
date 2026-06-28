@@ -1,7 +1,9 @@
+import {PersonStatus} from '../../shared/constants/person-status';
+
 export interface UserResponseDTO {
   id: number | string,
   username: string,
-  isActive: boolean,
+  isActive: PersonStatus,
   email: string;
   roles: string[];
 }
@@ -27,7 +29,7 @@ export interface RegisterRequestDTO {
 export interface UpdateUserDTO {
   username: string;
   email: string;
-  isActive: boolean;
+  isActive: PersonStatus;
   roles: string[];
 }
 

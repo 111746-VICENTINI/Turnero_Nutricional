@@ -12,4 +12,5 @@ export interface TableState {
   sortField?: string;
   sortOrder?: number;
   search?: string;
+  filters?: Record<string, any>;
 }

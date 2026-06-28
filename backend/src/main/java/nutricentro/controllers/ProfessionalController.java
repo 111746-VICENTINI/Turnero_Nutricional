@@ -32,13 +32,13 @@ public class ProfessionalController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<List<ProfessionalResponseDTO>> getAllProfessionals() {
         return ResponseEntity.ok(professionalService.getAllProfessionals());
     }
 
     @GetMapping("{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<ProfessionalResponseDTO> getProfessionalById(@PathVariable Long id) {
         return ResponseEntity.ok(professionalService.getProfessionalById(id));
     }
@@ -57,8 +57,15 @@ public class ProfessionalController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteByDeleteMethod(@PathVariable Long id) {
+        professionalService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<Page<ProfessionalResponseDTO>>searchProfessionals(
 
             @RequestParam(required = false)

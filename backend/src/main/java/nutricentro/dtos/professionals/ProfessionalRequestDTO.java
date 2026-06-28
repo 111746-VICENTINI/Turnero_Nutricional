@@ -1,5 +1,6 @@
 package nutricentro.dtos.professionals;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,6 +28,7 @@ public class ProfessionalRequestDTO {
     @NotNull(message = "El apellido es obligatorio")
     private String lastName;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     @NotNull(message = "El dni es obligatorio")

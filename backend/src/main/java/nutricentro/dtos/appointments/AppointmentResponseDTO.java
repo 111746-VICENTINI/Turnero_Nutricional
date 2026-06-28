@@ -1,5 +1,6 @@
 package nutricentro.dtos.appointments;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.time.LocalTime;
 @Builder
 public class AppointmentResponseDTO {
     private Long id;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     private LocalTime time;
     private AppointmentStatus status;

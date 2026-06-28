@@ -1,5 +1,6 @@
 package nutricentro.dtos.appointments;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import java.time.LocalTime;
 @Builder
 public class AppointmentRequestDTO {
     @NotNull(message = "La fecha del turno es obligatoria")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
     @NotNull(message = "La hora del turno es obligatoria")

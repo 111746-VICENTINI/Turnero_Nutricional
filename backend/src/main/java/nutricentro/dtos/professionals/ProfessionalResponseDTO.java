@@ -1,5 +1,6 @@
 package nutricentro.dtos.professionals;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class ProfessionalResponseDTO {
     private String firstName;
     private String lastName;
     private Integer age;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
     private String mobile;
     private GenderType gender;

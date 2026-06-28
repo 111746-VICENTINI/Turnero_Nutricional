@@ -47,6 +47,8 @@ export class UserService {
     search?: string;
     role?: string;
     isActive?: boolean;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
     page?: number;
     size?: number;
   }) {

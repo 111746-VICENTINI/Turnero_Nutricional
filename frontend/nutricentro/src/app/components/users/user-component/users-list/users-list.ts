@@ -4,14 +4,15 @@ import { Button } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { UserResponseDTO } from '../../../../core/model/login-model';
+import { UserResponseDTO } from '../../../../core/models/login-model';
 import { UserService } from '../services/user-service';
 import { TableGeneric } from '../../../../shared/components/table-generic/table-generic';
 import {
   TableActionConfig,
   TableColumnConfig,
+  TableFilterConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
-import {TableState} from '../../../../core/model/paginacion-general';
+import {TableState} from '../../../../core/models/paginacion-general';
 
 @Component({
   selector: 'app-users-list',
@@ -41,6 +42,7 @@ export class UsersList implements OnInit {
       field: 'roles',
       header: 'Roles',
       type: 'custom',
+      sortable: false,
       formatFn: (roles: string[]) =>
       {
         if (!roles || roles.length === 0) return '-';
@@ -57,12 +59,40 @@ export class UsersList implements OnInit {
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
 
+  filterConfigs: TableFilterConfig[] = [
+    {
+      field: 'isActive',
+      label: 'Estado',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        { label: 'Activo', value: true },
+        { label: 'Inactivo', value: false }
+      ]
+    },
+    {
+      field: 'roles',
+      label: 'Rol',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        { label: 'Administrador', value: 'ADMIN' },
+        { label: 'Secretaria', value: 'SECRETARY' },
+        { label: 'Profesional', value: 'PROFESSIONAL' }
+      ]
+    }
+  ];
+
   filters: {
     search?: string;
     role?: string;
     isActive?: boolean;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
   } = {
-    search: ''
+    search: '',
+    sortBy: 'username',
+    direction: 'asc'
   };
 
   ngOnInit(): void {
@@ -82,7 +112,6 @@ export class UsersList implements OnInit {
             this.totalRecords = 0;
             return;
           }
-
           this.users = response.content ?? [];
           this.totalRecords = response.totalElements ?? 0;
         }
@@ -108,10 +137,15 @@ export class UsersList implements OnInit {
   }
 
   onTableChange(event: TableState): void {
-    if (event.search !== undefined) {
-      this.filters.search = event.search;
-    }
+    const filters = event.filters ?? {};
 
+    this.filters = {
+      search: event.search,
+      role: this.normalizeRoleFilter(filters['roles']),
+      isActive: filters['isActive'],
+      sortBy: this.mapSortField(event.sortField),
+      direction: event.sortOrder === -1 ? 'desc' : 'asc'
+    };
     const page = Math.floor(event.first / event.rows);
 
     this.loadUsers(page, event.rows);
@@ -122,4 +156,21 @@ export class UsersList implements OnInit {
     'SECRETARY': 'Secretaria',
     'PROFESSIONAL': 'Profesional'
   };
+
+  private normalizeRoleFilter(value: any): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const normalized = String(value).toUpperCase();
+    const match = Object.entries(this.roleTranslations)
+      .find(([role, label]) => role.includes(normalized) || label.toUpperCase().includes(normalized));
+
+    return match?.[0] ?? normalized;
+  }
+
+  private mapSortField(field: string | undefined): string {
+    const allowedFields = ['username', 'email', 'isActive'];
+    return field && allowedFields.includes(field) ? field : 'username';
+  }
 }

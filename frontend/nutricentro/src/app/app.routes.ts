@@ -16,6 +16,7 @@ import {CreatePatients} from './components/patients/create-patients/create-patie
 import {CreateSpecialty} from './components/professionals/specialties/create-specialty/create-specialty';
 import {ListSpecialties} from './components/professionals/specialties/list-specialties/list-specialties';
 import {ListAppointments} from './components/appointments/list-appointments/list-appointments';
+import {CreateAppointments} from './components/appointments/create-appointments/create-appointments';
 
 export const routes: Routes = [
   {
@@ -145,6 +146,24 @@ export const routes: Routes = [
         component: ListAppointments,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'agenda/create',
+        component: CreateAppointments,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY'] }
+      },
+      {
+        path: 'agenda/:id',
+        component: CreateAppointments,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'agenda/:id/edit',
+        component: CreateAppointments,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY'] }
       },
       // HISTORIAL CLINICO
       {

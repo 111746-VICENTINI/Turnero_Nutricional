@@ -4,18 +4,7 @@
     class="sidebar"
     [class.expanded]="sidebarExpanded"
     (mouseenter)="sidebarExpanded = true"
-    (mouseleave)="sidebarExpanded = false">
-
-          <div class="brand-block">
-<!--            <img-->
-<!--              ngSrc="/images/LogoNutriCentro.jpg"-->
-<!--              alt="NutriCentro"-->
-<!--              class="brand-logo"-->
-<!--              height="432"-->
-<!--              width="432"-->
-<!--            >-->
-            <span class="drawer-brand">Nutri Centro</span>
-          </div>
+    (mouseleave)="!sidebarPinned && (sidebarExpanded = false)">
 
         <div class="menu-panel">
           <ul class="list-none p-2 m-0">
@@ -245,7 +234,23 @@
   <div class="content-wrapper">
 
     <div class="topbar">
-      <span class="username">{{getFullName()}}</span>
+      <div class="topbar-left">
+        <p-button
+          icon="pi pi-bars"
+          [text]="true"
+          (onClick)="toggleSidebar()"
+          styleClass="topbar-menu-button">
+        </p-button>
+
+        <span class="topbar-brand">Nutri Centro</span>
+      </div>
+
+      <div class="topbar-right">
+        <span class="username"> {{ getFullName() }} </span>
+        <i class="pi pi-user"></i>
+
+        <i class="pi pi-bell"></i>
+      </div>
     </div>
 
     <div class="main-content">

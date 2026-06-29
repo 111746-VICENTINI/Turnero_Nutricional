@@ -12,13 +12,13 @@ import {filter} from 'rxjs';
   selector: 'app-drawer',
   standalone: true,
   imports: [CommonModule, RouterOutlet, AvatarModule,
-    RouterLink,
-    ButtonModule, RippleModule, StyleClassModule],
+    RouterLink, ButtonModule, RippleModule, StyleClassModule],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
 })
 export class Drawer implements OnInit{
   sidebarExpanded = true;
+  sidebarPinned = false;
   openedMenu: string | null = null;
 
   authService = inject(AuthService);
@@ -34,8 +34,15 @@ export class Drawer implements OnInit{
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
-        this.sidebarExpanded = false;
+        if (!this.sidebarPinned) {
+          this.sidebarExpanded = false;
+        }
       });
+  }
+
+  toggleSidebar(): void {
+    this.sidebarPinned = !this.sidebarPinned;
+    this.sidebarExpanded = this.sidebarPinned;
   }
 
   toggleMenu(menu: string): void {

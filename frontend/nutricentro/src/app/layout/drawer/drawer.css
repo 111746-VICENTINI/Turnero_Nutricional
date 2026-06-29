@@ -13,11 +13,36 @@
 .topbar {
   align-items: center;
   background-color: #10b981;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: white;
   display: flex;
-  padding: 1rem;
   flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  z-index: 100;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  padding:0 1.25rem;
+}
+
+.topbar-left{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+
+.topbar-brand{
+  font-size:1.35rem;
+  font-weight:700;
+  letter-spacing:.3px;
 }
 
 .drawer-content {
@@ -48,12 +73,12 @@
 }
 
 .drawer-brand {
-  align-items: center;
+  align-items: start;
   display: flex;
   justify-content: center;
   padding: 0 1rem 1rem 5rem;
   margin-top: 1rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: black;
   font-size: 1.75rem;
   font-weight: 700;
 }
@@ -69,8 +94,6 @@
 }
 
 .main-content {
-  flex: 1;
-  overflow: auto;
   padding: 1rem;
 }
 
@@ -79,6 +102,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  margin-top:64px;
+  margin-left: 72px;
+  transition: margin-left .25s ease;
 }
 
 .sidebar {
@@ -86,14 +112,17 @@
   transition: width .25s ease;
   background: white;
   border-right: 1px solid #e5e7eb;
-  height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  position: sticky;
-  top: 0;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  border-right: 1px solid #e5e7eb;
 }
 
 .sidebar.expanded {
@@ -170,6 +199,7 @@
 /*top bar*/
 .username {
   font-weight: 500;
+  font-size:.95rem;
   color: white;
 }
 
@@ -193,4 +223,12 @@
   align-items: center;
   gap: .75rem;
   cursor: pointer;
+}
+
+:host ::ng-deep .topbar-menu-button{
+  color:white !important;
+}
+
+:host ::ng-deep .topbar-menu-button:hover{
+  background:rgba(255,255,255,.12) !important;
 }

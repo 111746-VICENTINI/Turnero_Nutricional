@@ -42,6 +42,9 @@ export class PatientService {
     search?: string;
     gender?: string;
     status?: string;
+    professionalId?: number;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
     page?: number;
     size?: number;
   }){

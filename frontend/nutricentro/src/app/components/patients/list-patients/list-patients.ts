@@ -11,6 +11,7 @@ import {TableState} from '../../../core/models/paginacion-general';
 import {Gender_Options, GenderType} from '../../../shared/constants/genders';
 import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/constants/person-status';
 import {getLabel} from '../../../shared/utils/utils-enum';
+import {ProfessionalService} from '../../professionals/services/professional-service';
 
 @Component({
   selector: 'app-list-patients',
@@ -28,13 +29,14 @@ export class ListPatients {
   totalRecords = 0;
 
   private patientService = inject(PatientService);
+  private professionalService = inject(ProfessionalService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
   columns: TableColumnConfig<PatientResponseDTO>[] = [
     { field: 'lastName', header: 'Apellido' },
     { field: 'firstName', header: 'Nombre' },
-    { field: 'age', header: 'Edad' },
+    { field: 'age', header: 'Edad', sortable: false },
     { field: 'email', header: 'Email' },
     { field: 'status', header: 'Activo', type: 'custom', alignCenter: true,
       formatFn: value => getLabel(value as PersonStatus, PERSON_STATUS_LABELS),
@@ -66,6 +68,12 @@ export class ListPatients {
         { label: 'Todos', value: null },
         ...Gender_Options
       ]
+    },
+    {
+      field: 'professionalId',
+      label: 'Profesional',
+      placeholder: 'Todos',
+      options: [{ label: 'Todos', value: null }]
     }
   ];
 
@@ -73,12 +81,39 @@ export class ListPatients {
     search?: string;
     gender?: GenderType;
     status?: PersonStatus;
+    professionalId?: number;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
   } = {
-    search: ''
+    search: '',
+    sortBy: 'lastName',
+    direction: 'asc'
   };
 
   ngOnInit(): void {
+    this.loadProfessionalFilters();
     this.loadPatients();
+  }
+
+  loadProfessionalFilters(): void {
+    this.professionalService.getAllProfessionals().subscribe({
+      next: (professionals) => {
+        this.filterConfigs = this.filterConfigs.map((filter) =>
+          filter.field === 'professionalId'
+            ? {
+              ...filter,
+              options: [
+                { label: 'Todos', value: null },
+                ...professionals.map((professional) => ({
+                  label: `${professional.lastName}, ${professional.firstName}`,
+                  value: professional.id
+                }))
+              ]
+            }
+            : filter
+        );
+      }
+    });
   }
 
   loadPatients(page=0, size=10): void {
@@ -126,13 +161,21 @@ export class ListPatients {
     const filters = event.filters ?? {};
 
     this.filters = {
-      search: event.search || filters['lastName'] || filters['firstName'] || filters['email'] || filters['age'] || '',
+      search: event.search,
       gender: filters['gender'],
-      status: filters['status']
+      status: filters['status'],
+      professionalId: filters['professionalId'],
+      sortBy: this.mapSortField(event.sortField),
+      direction: event.sortOrder === -1 ? 'desc' : 'asc'
     };
 
     const page = Math.floor(event.first / event.rows);
 
     this.loadPatients(page, event.rows);
+  }
+
+  private mapSortField(field: string | undefined): string {
+    const allowedFields = ['lastName', 'firstName', 'email', 'document', 'birthDate', 'status', 'gender'];
+    return field && allowedFields.includes(field) ? field : 'lastName';
   }
 }

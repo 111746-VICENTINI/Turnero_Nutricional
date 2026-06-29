@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -54,6 +54,7 @@ export class FormGeneric implements OnChanges {
   @Output() formCancel = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
   disabled?: boolean;
+  today = new Date();
 
   form = new FormGroup({});
 
@@ -77,7 +78,7 @@ export class FormGeneric implements OnChanges {
     const group: Record<string, FormControl> = {};
 
     this.fields.forEach((field) => {
-      const validators = [];
+      const validators: ValidatorFn[] = [];
 
       if (field.required) {
         validators.push(Validators.required);
@@ -94,6 +95,10 @@ export class FormGeneric implements OnChanges {
         if (field.max !== undefined) {
           validators.push(Validators.max(field.max));
         }
+      }
+
+      if (field.type === 'date') {
+        validators.push(this.dateValidator(field));
       }
 
       if (field.minLength) {
@@ -146,6 +151,8 @@ export class FormGeneric implements OnChanges {
     if (errors['maxlength']) return `Máximo ${errors['maxlength'].requiredLength} caracteres.`;
     if (errors['min']) return `El valor mínimo es ${errors['min'].min}.`;
     if (errors['max']) return `El valor máximo es ${errors['max'].max}.`;
+    if (errors['invalidDate']) return 'Ingresá una fecha válida.';
+    if (errors['futureDate']) return 'La fecha no puede ser futura.';
     if (errors['pattern']) {
       return field.hint ?? 'Formato inválido.';
     }
@@ -198,6 +205,47 @@ export class FormGeneric implements OnChanges {
     });
 
     return normalized;
+  }
+
+  private dateValidator(field: GenericFormField): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
+      }
+
+      const date = parseLocalDate(control.value);
+
+      if (!date) {
+        return { invalidDate: true };
+      }
+
+      if (this.shouldRejectFutureDate(field) && this.stripTime(date) > this.stripTime(this.today)) {
+        return { futureDate: true };
+      }
+
+      return null;
+    };
+  }
+
+  getMaxDate(field: GenericFormField): Date | undefined {
+    if (field.maxDate) {
+      return field.maxDate;
+    }
+
+    return this.shouldRejectFutureDate(field) ? this.today : undefined;
+  }
+
+  private shouldRejectFutureDate(field: GenericFormField): boolean {
+    const normalizedName = field.name.toLowerCase();
+    const normalizedLabel = field.label.toLowerCase();
+
+    return field.allowFuture === false ||
+      normalizedName.includes('birth') ||
+      normalizedLabel.includes('nacimiento');
+  }
+
+  private stripTime(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   getDisplayValue(field: GenericFormField): string {

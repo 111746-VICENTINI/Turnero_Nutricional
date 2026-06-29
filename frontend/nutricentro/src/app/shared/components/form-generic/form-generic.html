@@ -163,6 +163,7 @@
                 pInputMask="99/99/9999"
                 [keepInvalid]="true"
                 [readonlyInput]="false"
+                [maxDate]="getMaxDate(field)"
                 [showIcon]="true"
                 class="w-full"
                 styleClass="w-full"
@@ -237,7 +238,7 @@
         severity="success"
         type="submit"
         [loading]="isSubmitting"
-        [disabled]="form.invalid || form.pristine"
+        [disabled]="form.invalid || isSubmitting"
       ></p-button>
     </div>
   }

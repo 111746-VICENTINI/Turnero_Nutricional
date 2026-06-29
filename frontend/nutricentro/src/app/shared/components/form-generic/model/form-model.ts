@@ -32,6 +32,9 @@ export interface GenericFormField {
   maxLength?: number;
   min?: number;
   max?: number;
+  minDate?: Date;
+  maxDate?: Date;
+  allowFuture?: boolean;
   pattern?: string | RegExp;
   errorMessage?: string;
   rows?: number;

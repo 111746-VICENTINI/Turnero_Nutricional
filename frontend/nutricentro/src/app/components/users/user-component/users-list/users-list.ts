@@ -13,6 +13,7 @@ import {
   TableFilterConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
 import {TableState} from '../../../../core/models/paginacion-general';
+import {PERSON_STATUS_OPTIONS} from '../../../../shared/constants/person-status';
 
 @Component({
   selector: 'app-users-list',
@@ -66,8 +67,7 @@ export class UsersList implements OnInit {
       placeholder: 'Todos',
       options: [
         { label: 'Todos', value: null },
-        { label: 'Activo', value: true },
-        { label: 'Inactivo', value: false }
+        ...PERSON_STATUS_OPTIONS
       ]
     },
     {

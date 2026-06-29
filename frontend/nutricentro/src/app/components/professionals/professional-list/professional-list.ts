@@ -3,11 +3,16 @@ import {Button} from 'primeng/button';
 import {TableGeneric} from '../../../shared/components/table-generic/table-generic';
 import {MessageService} from 'primeng/api';
 import {Router} from '@angular/router';
-import {TableActionConfig, TableColumnConfig} from '../../../shared/components/table-generic/model/table-model';
+import {TableActionConfig, TableColumnConfig, TableFilterConfig} from '../../../shared/components/table-generic/model/table-model';
 import {ProfessionalResponseDTO} from '../models/professional-model';
 import {ProfessionalService} from '../services/professional-service';
 import {Toast} from 'primeng/toast';
-import {TableState} from '../../../core/model/paginacion-general';
+import {TableState} from '../../../core/models/paginacion-general';
+import {SpecialtyOnlyNameDTO} from '../specialties/models/specialty-model';
+import {Gender_Options} from '../../../shared/constants/genders';
+import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/constants/person-status';
+import {getLabel} from '../../../shared/utils/utils-enum';
+import {SpecialtyService} from '../specialties/services/specialty-service';
 
 @Component({
   selector: 'app-professional-list',
@@ -25,15 +30,19 @@ export class ProfessionalList {
   totalRecords = 0;
 
   private professionalService = inject(ProfessionalService);
+  private specialtyService = inject(SpecialtyService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
   columns: TableColumnConfig<ProfessionalResponseDTO>[] = [
     { field: 'lastName', header: 'Apellido' },
     { field: 'firstName', header: 'Nombre' },
-    { field: 'specialty', header: 'Especialidad' },
+    { field: 'specialties', header: 'Especialidad', type: 'custom', sortable: false,
+      formatFn: value => (value as SpecialtyOnlyNameDTO[]).map(s => s.name).join(', ') },
     { field: 'email', header: 'Email' },
-    { field: 'status', header: 'Activo', type: 'boolean', alignCenter: true, }
+    { field: 'status', header: 'Activo', type: 'custom', alignCenter: true,
+      formatFn: value => getLabel(value as PersonStatus, PERSON_STATUS_LABELS),
+      tagSeverityFn: value => value === PersonStatus.ACTIVE ? 'success' : 'danger' }
   ];
 
   actions: TableActionConfig<ProfessionalResponseDTO>[] = [
@@ -47,12 +56,65 @@ export class ProfessionalList {
     gender?: string;
     status?: string;
     specialtyId?: number;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
   } = {
-    search: ''
+    search: '',
+    sortBy: 'lastName',
+    direction: 'asc'
   };
 
+  filterConfigs: TableFilterConfig[] = [
+    {
+      field: 'status',
+      label: 'Estado',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        ...PERSON_STATUS_OPTIONS
+      ]
+    },
+    {
+      field: 'gender',
+      label: 'Género',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        ...Gender_Options
+      ]
+    },
+    {
+      field: 'specialtyId',
+      label: 'Especialidad',
+      placeholder: 'Todas',
+      options: [{ label: 'Todas', value: null }]
+    }
+  ];
+
   ngOnInit(): void {
+    this.loadSpecialtyFilters();
     this.loadProfessionals();
+  }
+
+  loadSpecialtyFilters(): void {
+    this.specialtyService.getAllSpecialties().subscribe({
+      next: (specialties) => {
+        this.filterConfigs = this.filterConfigs.map((filter) =>
+          filter.field === 'specialtyId'
+            ? {
+              ...filter,
+              options: [
+                { label: 'Todas', value: null },
+                ...specialties.map((specialty) => ({
+                  label: specialty.name,
+                  value: specialty.id
+                }))
+              ]
+            }
+            : filter
+        );
+      }
+    });
   }
 
   loadProfessionals(page = 0, size = 10): void {
@@ -104,12 +166,24 @@ export class ProfessionalList {
   }
 
   onTableChange(event: TableState): void {
-    if (event.search !== undefined) {
-      this.filters.search = event.search;
-    }
+    const filters = event.filters ?? {};
+
+    this.filters = {
+      search: event.search,
+      gender: filters['gender'],
+      status: filters['status'],
+      specialtyId: filters['specialtyId'],
+      sortBy: this.mapSortField(event.sortField),
+      direction: event.sortOrder === -1 ? 'desc' : 'asc'
+    };
 
     const page = Math.floor(event.first / event.rows);
 
     this.loadProfessionals(page, event.rows);
+  }
+
+  private mapSortField(field: string | undefined): string {
+    const allowedFields = ['lastName', 'firstName', 'email', 'status', 'gender', 'document', 'birthDate'];
+    return field && allowedFields.includes(field) ? field : 'lastName';
   }
 }

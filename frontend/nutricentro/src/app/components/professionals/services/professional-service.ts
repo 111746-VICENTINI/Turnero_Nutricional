@@ -43,6 +43,8 @@ export class ProfessionalService {
     gender?: string;
     status?: string;
     specialtyId?: number;
+    sortBy?: string;
+    direction?: 'asc' | 'desc';
     page?: number;
     size?: number;
   }) {

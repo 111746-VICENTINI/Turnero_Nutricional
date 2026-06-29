@@ -29,10 +29,77 @@
   align-items: center;
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .search-input {
   min-width: 16rem;
+}
+
+.filter-button-wrapper {
+  align-items: center;
+  display: inline-flex;
+  position: relative;
+}
+
+.indicator-badge {
+  align-items: center;
+  background: #008f8c;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #fff;
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 700;
+  height: 1.1rem;
+  justify-content: center;
+  min-width: 1.1rem;
+  padding: 0 0.25rem;
+  position: absolute;
+  right: -0.2rem;
+  top: -0.25rem;
+}
+
+.filter-button-wrapper.active ::ng-deep .p-button-icon {
+  color: #008f8c;
+}
+
+.filters-popover-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: min(28rem, 88vw);
+  min-width: min(22rem, 88vw);
+  padding: 0.85rem 1rem;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filter-field label {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.filter-actions {
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.85rem;
+}
+
+.empty-filters {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.w-full {
+  width: 100%;
 }
 
 .column-header {
@@ -101,6 +168,10 @@
   .search-container p-iconfield,
   .search-input {
     width: 100%;
+  }
+
+  .filter-actions {
+    flex-direction: column-reverse;
   }
 }
 

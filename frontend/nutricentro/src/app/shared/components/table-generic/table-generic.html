@@ -29,17 +29,40 @@
               (input)="onGlobalFilter($event)"
               [(ngModel)]="globalFilter"
               class="search-input"
+              aria-label="Buscar en tabla"
             />
           </p-iconField>
-          <p-button
-            icon="pi pi-times"
-            severity="secondary"
-            [text]="true"
-            type="button"
-            (onClick)="clear()"
-            pTooltip="Limpiar búsqueda"
-            tooltipPosition="top"
-          ></p-button>
+
+          @if (globalFilter || filtersActive()) {
+            <p-button
+              label="Limpiar"
+              icon="pi pi-times"
+              severity="secondary"
+              [outlined]="true"
+              type="button"
+              (onClick)="clear()"
+              pTooltip="Limpiar búsqueda y filtros"
+              tooltipPosition="top"
+            ></p-button>
+          }
+
+          @if (filterConfigs.length > 0) {
+            <span class="filter-button-wrapper" [class.active]="filtersActive()">
+              <p-button
+                icon="pi pi-filter"
+                severity="secondary"
+                [outlined]="true"
+                [text]="true"
+                type="button"
+                (onClick)="openFilterPanel($event)"
+                pTooltip="Filtros"
+                tooltipPosition="top"
+              ></p-button>
+              @if (filtersCount() > 0) {
+                <span class="indicator-badge" title="Filtros aplicados">{{ filtersCount() }}</span>
+              }
+            </span>
+          }
         </div>
       }
     </div>
@@ -47,7 +70,7 @@
 
   <p-table
     #dataTable
-    [value]="filteredData"
+    [value]="data"
     [paginator]="showPagination"
     [rows]="rows"
     [rowsPerPageOptions]="pageSizeOptions"
@@ -74,18 +97,27 @@
         }
 
         @for (column of columns; track column.field) {
-          <th
-            [pSortableColumn]="column.sortable === false ? undefined : column.field"
-            [style.width]="column.width"
-            [style.min-width]="column.minWidth || '10rem'"
-          >
-            <div class="column-header" [class.center]="column.alignCenter">
-              {{ column.header }}
-              @if (column.sortable !== false) {
+          @if (column.sortable === false) {
+            <th
+              [style.width]="column.width"
+              [style.min-width]="column.minWidth || '10rem'"
+            >
+              <div class="column-header" [class.center]="column.alignCenter">
+                {{ column.header }}
+              </div>
+            </th>
+          } @else {
+            <th
+              [pSortableColumn]="column.field"
+              [style.width]="column.width"
+              [style.min-width]="column.minWidth || '10rem'"
+            >
+              <div class="column-header" [class.center]="column.alignCenter">
+                {{ column.header }}
                 <p-sortIcon [field]="column.field"></p-sortIcon>
-              }
-            </div>
-          </th>
+              </div>
+            </th>
+          }
         }
 
         @if (actions.length > 0) {
@@ -112,23 +144,29 @@
                 ></p-tag>
               }
               @case ('date') {
-                {{ formatValue(getNestedProperty(row, column.field), 'date', column.formatFn, row) }}
+                {{ formatValue(getNestedProperty(row, column.field), column, row) }}
               }
               @case ('number') {
-                {{ formatValue(getNestedProperty(row, column.field), 'number', column.formatFn, row) }}
+                {{ formatValue(getNestedProperty(row, column.field), column, row) }}
               }
               @case ('custom') {
                 @if (column.tagSeverityFn) {
                   <p-tag
-                    [value]="formatValue(getNestedProperty(row, column.field), 'custom', column.formatFn, row)"
+                    [value]="formatValue(getNestedProperty(row, column.field), column, row)"
                     [severity]="column.tagSeverityFn(getNestedProperty(row, column.field), row)"
                   ></p-tag>
                 } @else {
-                  {{ formatValue(getNestedProperty(row, column.field), 'custom', column.formatFn, row) }}
+                  {{ formatValue(getNestedProperty(row, column.field), column, row) }}
                 }
               }
+              @case ('tag') {
+                <p-tag
+                  [value]="formatValue(getNestedProperty(row, column.field), column, row)"
+                  [severity]="column.tagSeverityFn?.(getNestedProperty(row, column.field), row)">
+                </p-tag>
+              }
               @default {
-                {{ formatValue(getNestedProperty(row, column.field), 'text', column.formatFn, row) }}
+                {{ formatValue(getNestedProperty(row, column.field), column, row) }}
               }
             }
           </td>
@@ -136,19 +174,19 @@
 
         @if (actions.length > 0) {
           <td>
-            <div class="actions-cell" style="display: flex; justify-content: center;">
-                  <p-button
-                    icon="pi pi-ellipsis-v"
-                    severity="secondary"
-                    (onClick)="openActionMenu($event, row, actionMenu)"
-                    pTooltip="Opciones"
-                    tooltipPosition="left"
-                    [outlined]="true"
-                    [rounded]="true"
-                    [text]="true"
-                    type="button"
-                    styleClass="action-button"
-                  ></p-button>
+            <div class="actions-cell">
+              <p-button
+                icon="pi pi-ellipsis-v"
+                severity="secondary"
+                (onClick)="openActionMenu($event, row, actionMenu)"
+                pTooltip="Opciones"
+                tooltipPosition="left"
+                [outlined]="true"
+                [rounded]="true"
+                [text]="true"
+                type="button"
+                styleClass="action-button"
+              ></p-button>
             </div>
           </td>
         }
@@ -170,4 +208,77 @@
       <span class="total-records">Total: {{ totalRecords }}</span>
     </ng-template>
   </p-table>
+
+  <p-popover #filterPopover [dismissable]="false">
+    <div class="filters-popover-content">
+      @if (filterConfigs.length > 0) {
+        @for (filter of filterConfigs; track filter.field) {
+          <div class="filter-field">
+            <label [for]="'filter_' + filter.field">{{ filter.label }}</label>
+
+            @switch (filter.type || 'select') {
+              @case ('text') {
+                <input
+                  pInputText
+                  [id]="'filter_' + filter.field"
+                  [placeholder]="filter.placeholder || filter.label"
+                  [(ngModel)]="columnFilters[filter.field]"
+                  class="w-full"
+                />
+              }
+              @case ('number') {
+                <p-inputNumber
+                  [inputId]="'filter_' + filter.field"
+                  [(ngModel)]="columnFilters[filter.field]"
+                  class="w-full"
+                  styleClass="w-full"
+                ></p-inputNumber>
+              }
+              @case ('date') {
+                <p-datepicker
+                  [inputId]="'filter_' + filter.field"
+                  [(ngModel)]="columnFilters[filter.field]"
+                  dateFormat="dd/mm/yy"
+                  [showIcon]="true"
+                  class="w-full"
+                  styleClass="w-full"
+                ></p-datepicker>
+              }
+              @default {
+                <p-select
+                  [id]="'filter_' + filter.field"
+                  [options]="filter.options || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  [placeholder]="filter.placeholder || filter.label"
+                  [(ngModel)]="columnFilters[filter.field]"
+                  class="w-full"
+                  styleClass="w-full"
+                ></p-select>
+              }
+            }
+          </div>
+        }
+
+        <div class="filter-actions">
+          <p-button
+            label="Limpiar"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            type="button"
+            (onClick)="clearFilters()"
+          ></p-button>
+          <p-button
+            label="Aplicar"
+            icon="pi pi-filter"
+            type="button"
+            (onClick)="applyFilters()"
+          ></p-button>
+        </div>
+      } @else {
+        <div class="empty-filters">Sin filtros configurados.</div>
+      }
+    </div>
+  </p-popover>
 </div>

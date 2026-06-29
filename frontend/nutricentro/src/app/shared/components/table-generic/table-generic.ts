@@ -11,9 +11,14 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import {TableActionConfig, TableColumnConfig} from './model/table-model';
-import {TableState} from '../../../core/model/paginacion-general';
+import {SelectModule} from 'primeng/select';
+import {TableActionConfig, TableColumnConfig, TableFilterConfig} from './model/table-model';
+import {TableState} from '../../../core/models/paginacion-general';
 import {Menu, MenuModule} from 'primeng/menu';
+import {DatePipe} from '../../pipes/date-pipe';
+import {Popover} from 'primeng/popover';
+import {InputNumber} from 'primeng/inputnumber';
+import {DatePickerModule} from 'primeng/datepicker';
 
 @Component({
   selector: 'app-table-generic',
@@ -30,15 +35,20 @@ import {Menu, MenuModule} from 'primeng/menu';
     TagModule,
     MenuModule,
     TooltipModule,
+    SelectModule,
+    Popover,
+    InputNumber,
+    DatePickerModule,
   ],
   templateUrl: './table-generic.html',
   styleUrl: './table-generic.css',
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService, MessageService, DatePipe],
 })
 export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   implements OnInit, OnChanges
 {
   @ViewChild('dataTable') table?: Table;
+  @ViewChild('filterPopover') filterPopover?: Popover;
 
   @Input() data: T[] = [];
   @Input() columns: TableColumnConfig<T>[] = [];
@@ -61,6 +71,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   @Input() subtitle = '';
   @Input() lazy = false;
   @Input() totalRecords = 0;
+  @Input() filterConfigs: TableFilterConfig[] = [];
 
   @Output() onActionClick = new EventEmitter<{ action: TableActionConfig<T>; row: T }>();
   @Output() onDelete = new EventEmitter<T>();
@@ -77,8 +88,9 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   rows = 10;
   sortField: string | undefined;
   sortOrder: number | undefined;
+  columnFilters: Record<string, any> = {};
 
-  constructor(private confirmationService: ConfirmationService) {}
+  constructor(private confirmationService: ConfirmationService, private datePipe: DatePipe) {}
 
   ngOnInit(): void {
     this.rows = this.pageSize;
@@ -96,53 +108,74 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   }
 
   updateTableData(): void {
-    this.filteredData = [...this.data];
-
-    if (!this.lazy) {
-      this.totalRecords = this.filteredData.length;
+    if (this.lazy) {
+      this.filteredData = [...this.data];
+      return;
     }
+
+    this.filteredData = this.applyLocalFilters(this.data);
+    this.totalRecords = this.filteredData.length;
   }
 
   onGlobalFilter(event: Event): void {
+    this.globalFilter = (event.target as HTMLInputElement).value;
+    this.first = 0;
+
     if (this.lazy) {
-
-      const search =
-        (event.target as HTMLInputElement).value;
-
-      this.tableStateChange.emit({
-        first: 0,
-        rows: this.rows,
-        sortField: this.sortField,
-        sortOrder: this.sortOrder,
-        search
-      });
-
+      this.emitTableState({ first: 0, search: this.globalFilter });
       return;
     }
 
-    const searchValue = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.updateTableData();
+  }
 
-    if (!searchValue) {
-      this.filteredData = [...this.data];
-      this.totalRecords = this.filteredData.length;
-      this.first = 0;
-      return;
-    }
+  private applyLocalFilters(data: T[]): T[] {
+    const searchValue = this.globalFilter.toLowerCase().trim();
 
     const fields = this.globalFilterFields.length
       ? this.globalFilterFields
       : this.columns.map((column) => column.field);
 
-    this.filteredData = this.data.filter((row) =>
-      fields.some((field) =>
-        String(this.getNestedProperty(row, field) ?? '')
-          .toLowerCase()
-          .includes(searchValue)
-      )
+    return data.filter((row) =>
+      this.matchesSearch(row, fields, searchValue) &&
+      this.matchesFilters(row)
     );
+  }
 
-    this.totalRecords = this.filteredData.length;
-    this.first = 0;
+  private matchesSearch(row: T, fields: string[], searchValue: string): boolean {
+    if (!searchValue) {
+      return true;
+    }
+
+    return fields.some((field) =>
+      String(this.getNestedProperty(row, field) ?? '')
+        .toLowerCase()
+        .includes(searchValue)
+    );
+  }
+
+  private matchesFilters(row: T): boolean {
+    return Object.entries(this.columnFilters).every(([field, filterValue]) => {
+      if (filterValue === null || filterValue === undefined || filterValue === '') {
+        return true;
+      }
+
+      const value = this.getNestedProperty(row, field);
+
+      if (Array.isArray(value)) {
+        return value.some((item) => this.valueMatchesFilter(item, filterValue));
+      }
+
+      return this.valueMatchesFilter(value, filterValue);
+    });
+  }
+
+  private valueMatchesFilter(value: any, filterValue: any): boolean {
+    if (value && typeof value === 'object') {
+      return Object.values(value).some((nestedValue) => this.valueMatchesFilter(nestedValue, filterValue));
+    }
+
+    return String(value ?? '').toLowerCase().includes(String(filterValue).toLowerCase());
   }
 
   onTableStateChange(event: any): void {
@@ -156,12 +189,37 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
 
     this.sortOrder = event.sortOrder;
 
-    this.tableStateChange.emit({
+    this.emitTableState({
       first: this.first,
       rows: this.rows,
       sortField: this.sortField,
       sortOrder: this.sortOrder
     });
+  }
+
+  private emitTableState(partial: Partial<TableState> = {}): void {
+    const filters = Object.keys(partial.filters ?? {}).length
+      ? partial.filters!
+      : this.cleanFilters();
+
+    this.tableStateChange.emit({
+      first: partial.first ?? this.first,
+      rows: partial.rows ?? this.rows,
+      sortField: partial.sortField ?? this.sortField,
+      sortOrder: partial.sortOrder ?? this.sortOrder,
+      search: partial.search ?? this.globalFilter,
+      filters
+    });
+  }
+
+  private cleanFilters(): Record<string, any> {
+    return Object.entries(this.columnFilters).reduce<Record<string, any>>((acc, [field, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        acc[field] = value;
+      }
+
+      return acc;
+    }, {});
   }
 
   onSelectionChange(selected: T[]): void {
@@ -186,7 +244,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     }
 
     if (action.field === 'history') {
-      this.onView.emit(row);
+      this.onHistory.emit(row);
       return;
     }
 
@@ -205,20 +263,25 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     });
   }
 
-  formatValue(value: any, type: string, formatFn?: (value: any, row?: T) => string, row?: T): string {
-    if (value === null || value === undefined || value === '') return '-';
-
-    if (formatFn) {
-      return formatFn(value, row);
+  formatValue(value: any, column: TableColumnConfig<T>, row?: T): string {
+    if (value === null || value === undefined || value === '') {
+      return '-';
     }
 
-    switch (type) {
+    if (column.formatFn) {
+      return column.formatFn(value, row);
+    }
+
+    switch (column.type) {
       case 'date':
-        return new Date(value).toLocaleDateString('es-AR');
+        return this.datePipe.transform(value, column.dateFormat ?? 'short');
+
       case 'number':
         return Number(value).toLocaleString('es-AR');
+
       case 'boolean':
         return value ? 'Sí' : 'No';
+
       default:
         return String(value);
     }
@@ -245,34 +308,68 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   clear(): void {
     this.table?.clear();
     this.globalFilter = '';
-    this.filteredData = [...this.data];
+    this.columnFilters = {};
+    this.updateTableData();
 
-    if (!this.lazy) {
-      this.totalRecords = this.filteredData.length;
-    }
-
-    this.tableStateChange.emit({
+    this.emitTableState({
       first: 0,
       rows: this.rows,
-      search: ''
+      search: '',
+      filters: {}
     });
+  }
+
+  openFilterPanel(event: Event): void {
+    this.filterPopover?.toggle(event);
+  }
+
+  onFilterValueChange(field: string, value: any): void {
+    if (value === null || value === undefined || value === '') {
+      delete this.columnFilters[field];
+    } else {
+      this.columnFilters[field] = value;
+    }
+  }
+
+  applyFilters(): void {
+    this.first = 0;
+
+    if (this.lazy) {
+      this.emitTableState({ first: 0, filters: this.cleanFilters() });
+    } else {
+      this.updateTableData();
+    }
+
+    this.filterPopover?.hide();
+  }
+
+  clearFilters(): void {
+    this.columnFilters = {};
+    this.applyFilters();
+  }
+
+  filtersActive(): boolean {
+    return this.filtersCount() > 0;
+  }
+
+  filtersCount(): number {
+    return Object.keys(this.cleanFilters()).length;
   }
 
   reset(): void {
     this.first = 0;
     this.globalFilter = '';
+    this.columnFilters = {};
     this.sortField = undefined;
     this.sortOrder = undefined;
-    this.filteredData = [...this.data];
-
-    if (!this.lazy) {
-      this.totalRecords = this.filteredData.length;
-    }
+    this.updateTableData();
 
     if (this.lazy) {
-      this.tableStateChange.emit({
+      this.emitTableState({
         first: 0,
-        rows: this.rows
+        rows: this.rows,
+        search: '',
+        filters: {}
       });
     }
   }

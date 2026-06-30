@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.patients.PatientRequestDTO;
 import nutricentro.dtos.patients.PatientResponseDTO;
 import nutricentro.dtos.patients.PatientUpdateDTO;
+import nutricentro.entities.AppointmentEntity;
 import nutricentro.entities.PatientEntity;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
@@ -79,11 +80,12 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Pageable pageable) {
+    public Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Long professionalId, Pageable pageable) {
         Specification<PatientEntity> spec =
                 Specification.where(bySearch(search))
                         .and(byGender(gender))
-                        .and(byStatus(status));
+                        .and(byStatus(status))
+                        .and(byProfessional(professionalId));
 
         return patientRepository
                 .findAll(spec, pageable)
@@ -148,6 +150,23 @@ public class PatientServiceImpl implements PatientService {
             }
 
             return cb.equal(root.get("status"), status);
+        };
+    }
+
+    private Specification<PatientEntity> byProfessional(Long professionalId) {
+        return (root, query, cb) -> {
+            if (professionalId == null) {
+                return cb.conjunction();
+            }
+
+            var appointmentSubquery = query.subquery(Long.class);
+            var appointment = appointmentSubquery.from(AppointmentEntity.class);
+
+            appointmentSubquery
+                    .select(appointment.get("patient").get("id"))
+                    .where(cb.equal(appointment.get("professional").get("id"), professionalId));
+
+            return root.get("id").in(appointmentSubquery);
         };
     }
 

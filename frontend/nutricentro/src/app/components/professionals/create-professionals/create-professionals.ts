@@ -8,6 +8,9 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} from '../models/professional-model';
 import {ProfessionalService} from '../services/professional-service';
 import {SpecialtyService} from '../specialties/services/specialty-service';
+import {toIsoLocalDate} from '../../../shared/utils/date-utils';
+import {Gender_Options} from '../../../shared/constants/genders';
+import {PERSON_STATUS_OPTIONS} from '../../../shared/constants/person-status';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -59,6 +62,9 @@ export class CreateProfessionals implements OnInit {
         label: 'Nombre',
         type: 'text',
         required: true,
+        minLength: 3,
+        maxLength: 100,
+        pattern: /^[A-Za-zÁÉÍÓÚáéíóúÑñ' ]+$/,
         autocomplete: 'firstName'
       },
       {
@@ -66,20 +72,24 @@ export class CreateProfessionals implements OnInit {
         label: 'Apellido',
         type: 'text',
         required: true,
+        minLength: 3,
+        maxLength: 100,
+        pattern: /^[A-Za-zÁÉÍÓÚáéíóúÑñ' ]+$/,
         autocomplete: 'lastName'
       },
       {
         name: 'document',
         label: 'Documento',
-        type: 'number',
+        type: 'numeric',
+        pattern: /^[0-9]{7,8}$/,
         required: true,
-        minLength: 7,
-        maxLength: 8,
+        placeholder: '12345678',
         autocomplete: 'document'
       },
       {
         name: 'specialtyIds',
         label: 'Especialidad',
+        placeholder: 'Seleccione una especialidad',
         type: 'multiselect',
         options: this.specialties,
         required: true,
@@ -90,28 +100,33 @@ export class CreateProfessionals implements OnInit {
         label: 'Matrícula',
         type: 'text',
         required: true,
-        autocomplete: 'tuition'
+        minLength: 3,
+        maxLength: 30,
+        autocomplete: 'tuition',
+        placeholder: '1234',
+        prefix: 'MP'
       },
       {
         name: 'email',
         label: 'Email',
         type: 'email',
-        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+        placeholder: 'ejemplo@correo.com',
         required: false,
-        autocomplete: 'email'
+        autocomplete: 'email',
+        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i
       },
       {
         name: 'mobile',
         label: 'Número de teléfono',
-        type: 'number',
-        minLength: 6,
-        maxLength: 20,
+        type: 'numeric',
+        placeholder: '+5493525345678',
+        pattern: /^[0-9]{6,15}$/,
         required: false,
         autocomplete: 'mobile'
       },
       {
         name: 'birthDate',
-        label: 'Fecha de cumpleaños',
+        label: 'Fecha de nacimiento',
         type: 'date',
         required: true,
         autocomplete: 'birthDate'
@@ -120,7 +135,8 @@ export class CreateProfessionals implements OnInit {
         name: 'gender',
         label: 'Género',
         type: 'select',
-        options: this.gender,
+        options: Gender_Options,
+        placeholder: 'Seleccione un género',
         required: false,
         autocomplete: 'gender'
       }
@@ -129,26 +145,14 @@ export class CreateProfessionals implements OnInit {
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'status',
-        label: 'Profesional activo',
-        options: this.status,
-        type: 'checkbox'
+        label: 'Estado',
+        options: PERSON_STATUS_OPTIONS,
+        type: 'select'
       });
     }
   }
 
   specialties : { label: string; value: number }[] = [];
-
-  gender = [
-    { label: 'Femenino', value: 'FEMALE' },
-    { label: 'Masculino', value: 'MALE' },
-    { label: 'No binario', value: 'NON_BINARY' },
-    { label: 'Prefiero no decirlo', value: 'PREFER_NOT_TO_SAY' }
-  ];
-
-  status = [
-    { label: 'Activo', value: 'ACTIVE' },
-    { label: 'Inactivo', value: 'INACTIVE' }
-  ]
 
   get pageTitle(): string {
     if (this.mode === 'create') {
@@ -207,9 +211,7 @@ export class CreateProfessionals implements OnInit {
   saveProfessional(formData: Record<string, any>): void {
     this.saving = true;
 
-    const birthDate = new Date(formData['birthDate'])
-      .toISOString()
-      .split('T')[0];
+    const birthDate = toIsoLocalDate(formData['birthDate']);
 
     if (this.mode !== 'create') {
       const request: ProfessionalUpdateDTO = {
@@ -284,6 +286,8 @@ export class CreateProfessionals implements OnInit {
       mobile: this.selectedProfessional?.mobile,
       gender: this.selectedProfessional?.gender,
       registration: this.selectedProfessional?.registration,
+      tuition: this.selectedProfessional?.tuition,
+      document: this.selectedProfessional?.document,
       specialtyIds: this.selectedProfessional?.specialties.map(s => s.id)
     };
 

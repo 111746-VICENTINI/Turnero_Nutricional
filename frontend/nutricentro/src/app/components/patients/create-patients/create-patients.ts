@@ -58,7 +58,8 @@ export class CreatePatients implements OnInit {
         required: true,
         minLength: 3,
         maxLength: 100,
-        autocomplete: 'firstName'
+        autocomplete: 'firstName',
+        pattern: /^[A-Za-zÁÉÍÓÚáéíóúÑñ' ]+$/
       },
       {
         name: 'lastName',
@@ -67,32 +68,17 @@ export class CreatePatients implements OnInit {
         required: true,
         minLength: 3,
         maxLength: 100,
-        autocomplete: 'lastName'
+        autocomplete: 'lastName',
+        pattern: /^[A-Za-zÁÉÍÓÚáéíóúÑñ' ]+$/
       },
       {
         name: 'document',
         label: 'Documento',
-        type: 'number',
+        type: 'numeric',
         required: true,
-        minLength: 7,
-        maxLength: 8,
+        pattern: /^[0-9]{7,8}$/,
+        placeholder: '12345678',
         autocomplete: 'document'
-      },
-      {
-        name: 'email',
-        label: 'Email',
-        type: 'email',
-        required: false,
-        autocomplete: 'email'
-      },
-      {
-        name: 'mobile',
-        label: 'Número de teléfono',
-        type: 'number',
-        minLength: 6,
-        maxLength: 20,
-        required: false,
-        autocomplete: 'mobile'
       },
       {
         name: 'birthDate',
@@ -102,9 +88,28 @@ export class CreatePatients implements OnInit {
         autocomplete: 'birthDate'
       },
       {
+        name: 'email',
+        label: 'Email',
+        type: 'email',
+        placeholder: 'ejemplo@correo.com',
+        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i,
+        required: false,
+        autocomplete: 'email'
+      },
+      {
+        name: 'mobile',
+        label: 'Número de teléfono',
+        type: 'numeric',
+        placeholder: '+5493525345678',
+        pattern: /^[0-9]{6,15}$/,
+        required: false,
+        autocomplete: 'mobile'
+      },
+      {
         name: 'gender',
         label: 'Género',
         type: 'select',
+        placeholder: 'Seleccione un género',
         options: Gender_Options,
         required: false,
         autocomplete: 'gender'
@@ -114,7 +119,7 @@ export class CreatePatients implements OnInit {
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'status',
-        label: 'Paciente activo',
+        label: 'Estado',
         type: 'select',
         options: PERSON_STATUS_OPTIONS
       });

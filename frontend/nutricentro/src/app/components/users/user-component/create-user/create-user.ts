@@ -15,6 +15,8 @@ import { RoleService } from '../../../../core/services/role-service';
 import { UserService } from '../services/user-service';
 import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
 import {FormGeneric} from '../../../../shared/components/form-generic/form-generic';
+import {ROLE_LABELS} from '../../../../shared/constants/roles';
+import {USER_STATUS_OPTIONS} from '../../../../shared/constants/user-status';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -62,14 +64,20 @@ export class CreateUser implements OnInit {
         label: 'Usuario',
         type: 'text',
         required: true,
-        autocomplete: 'username'
+        autocomplete: 'username',
+        minLength: 3,
+        maxLength: 100,
+        pattern: /^[A-Za-zÁÉÍÓÚáéíóúÑñ' ]+$/,
+        placeholder: 'Nombre de usuario'
       },
       {
         name: 'email',
         label: 'Email',
         type: 'email',
         required: true,
-        autocomplete: 'email'
+        autocomplete: 'email',
+        placeholder: 'ejemplo@gmail.com',
+        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i
       }
     ];
 
@@ -78,6 +86,8 @@ export class CreateUser implements OnInit {
         name: 'password',
         label: 'Contraseña',
         type: 'password',
+        minLength: 4,
+        maxLength: 100,
         required: true,
         autocomplete: 'new-password'
       });
@@ -86,8 +96,9 @@ export class CreateUser implements OnInit {
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'isActive',
-        label: 'Usuario activo',
-        type: 'checkbox'
+        label: 'Estado del usuario',
+        type: 'select',
+        options: USER_STATUS_OPTIONS
       });
     }
 
@@ -95,9 +106,10 @@ export class CreateUser implements OnInit {
       name: 'roles',
       label: 'Roles',
       type: 'multiselect',
+      placeholder: 'Seleccione un rol',
       required: true,
       options: this.roles.map(role => ({
-        label: role.name,
+        label: ROLE_LABELS[role.name] ?? role.name,
         value: role.name
       }))
     });

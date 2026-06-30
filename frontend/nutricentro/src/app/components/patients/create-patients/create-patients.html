@@ -5,19 +5,20 @@
     <h1>{{ pageTitle}}</h1>
 
     @if (mode === 'view') {
-      <p-button
-        label="Historial Clínico"
-        icon="pi pi-book"
-        styleClass="text-xl"
-        (onClick)="goToHistory()">
-      </p-button>
+      <div class="header-actions">
+        <p-button
+          label="Historial Clínico"
+          icon="pi pi-book"
+          severity="info"
+          (onClick)="goToHistory()">
+        </p-button>
 
-      <p-button
-        icon="pi pi-pencil"
-        label="Editar"
-        styleClass="text-xl"
-        (onClick)="editModePatient()">
-      </p-button>
+        <p-button
+          icon="pi pi-pencil"
+          label="Editar"
+          (onClick)="editModePatient()">
+        </p-button>
+      </div>
     }
   </header>
 

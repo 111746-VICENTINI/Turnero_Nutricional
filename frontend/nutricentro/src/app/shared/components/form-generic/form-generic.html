@@ -24,184 +24,221 @@
 
         <div class="control-container">
           @if (readonly) {
-            <div class="readonly-value">{{ getDisplayValue(field) }}</div>
-          } @else {
-          @switch (field.type) {
-            @case ('text') {
-              <input
-                pInputText
-                type="text"
-                [id]="field.name"
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [readOnly]="field.readonly || false"
-                [autocomplete]="field.autocomplete || 'off'"
-                class="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              />
-            }
+            @if (field.prefix || field.suffix) {
+              <p-inputgroup>
+                @if (field.prefix) {
+                  <p-inputgroup-addon>{{ field.prefix }}</p-inputgroup-addon>
+                }
 
-            @case ('email') {
-              <input
-                pInputText
-                type="email"
-                [id]="field.name"
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [readOnly]="field.readonly || false"
-                [autocomplete]="field.autocomplete || 'email'"
-                class="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              />
-            }
+                <div class="readonly-value w-full"> {{ getDisplayValue(field) }}</div>
 
-            @case ('number') {
-              <p-inputNumber
-                [id]="field.name"
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                class="w-full"
-                styleClass="w-full"
-                [min]="field.min"
-                [max]="field.max"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-inputNumber>
-            }
-
-            @case ('password') {
-              <input
-                pInputText
-                type="password"
-                [id]="field.name"
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [readOnly]="field.readonly || false"
-                [autocomplete]="field.autocomplete || 'new-password'"
-                class="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              />
-            }
-
-            @case ('select') {
-              <p-select
-                [id]="field.name"
-                [formControlName]="field.name"
-                [options]="field.options || []"
-                optionLabel="label"
-                optionValue="value"
-                [placeholder]="field.placeholder || 'Seleccionar opción'"
-                class="w-full"
-                styleClass="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-select>
-            }
-
-            @case ('multiselect') {
-              <p-multiSelect
-                [id]="field.name"
-                [formControlName]="field.name"
-                [options]="field.options || []"
-                optionLabel="label"
-                optionValue="value"
-                [placeholder]="field.placeholder || 'Seleccionar opciones'"
-                display="chip"
-                class="w-full"
-                styleClass="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-multiSelect>
-            }
-
-            @case ('checkbox') {
-              <div class="checkbox-wrapper">
-                <p-checkbox [id]="field.name" [formControlName]="field.name" [binary]="true"></p-checkbox>
-                <label [for]="field.name" class="checkbox-label">
-                  {{ field.label }}
-                  @if (field.required) {
-                    <span class="text-red-500">*</span>
-                  }
-                </label>
+                @if (field.suffix) {
+                  <p-inputgroup-addon>{{ field.suffix }}</p-inputgroup-addon>
+                }
+              </p-inputgroup>
+            } @else {
+              <div class="readonly-value">
+                {{ getDisplayValue(field) }}
               </div>
             }
+          } @else {
+            <ng-template #control>
 
-            @case ('radio') {
-              <div class="radio-group">
-                @for (option of field.options || []; track option.value) {
-                  <div class="radio-wrapper">
-                    <p-radioButton
-                      [id]="field.name + '_' + option.value"
-                      [formControlName]="field.name"
-                      [value]="option.value"
-                      [disabled]="option.disabled || false"
-                    ></p-radioButton>
-                    <label [for]="field.name + '_' + option.value" class="radio-label">
-                      {{ option.label }}
+              @switch (field.type) {
+                @case ('text') {
+                  <input
+                    pInputText
+                    type="text"
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    [readOnly]="field.readonly || false"
+                    [autocomplete]="field.autocomplete || 'off'"
+                    class="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  />
+                }
+                @case ('email') {
+                  <input
+                    pInputText
+                    type="email"
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    [readOnly]="field.readonly || false"
+                    [autocomplete]="field.autocomplete || 'email'"
+                    class="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  />
+                }
+                @case ('number') {
+                  <p-inputNumber
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    class="w-full"
+                    styleClass="w-full"
+                    [min]="field.min"
+                    [max]="field.max"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-inputNumber>
+                }
+                @case ('numeric') {
+                  <input
+                    pInputText
+                    inputmode="numeric"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    class="w-full"
+                  />
+                }
+                @case ('password') {
+                  <input
+                    pInputText
+                    type="password"
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    [readOnly]="field.readonly || false"
+                    [autocomplete]="field.autocomplete || 'new-password'"
+                    class="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  />
+                }
+                @case ('select') {
+                  <p-select
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [options]="field.options || []"
+                    optionLabel="label"
+                    optionValue="value"
+                    [placeholder]="field.placeholder || 'Seleccionar opción'"
+                    class="w-full"
+                    styleClass="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-select>
+                }
+                @case ('multiselect') {
+                  <p-multiSelect
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [options]="field.options || []"
+                    optionLabel="label"
+                    optionValue="value"
+                    [placeholder]="field.placeholder || 'Seleccionar opciones'"
+                    display="chip"
+                    class="w-full"
+                    styleClass="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-multiSelect>
+                }
+                @case ('checkbox') {
+                  <div class="checkbox-wrapper">
+                    <p-checkbox [id]="field.name" [formControlName]="field.name" [binary]="true"></p-checkbox>
+                    <label [for]="field.name" class="checkbox-label">
+                      {{ field.label }}
+                      @if (field.required) {
+                        <span class="text-red-500">*</span>
+                      }
                     </label>
                   </div>
                 }
-              </div>
-            }
+                @case ('radio') {
+                  <div class="radio-group">
+                    @for (option of field.options || []; track option.value) {
+                      <div class="radio-wrapper">
+                        <p-radioButton
+                          [id]="field.name + '_' + option.value"
+                          [formControlName]="field.name"
+                          [value]="option.value"
+                          [disabled]="option.disabled || false"
+                        ></p-radioButton>
+                        <label [for]="field.name + '_' + option.value" class="radio-label">
+                          {{ option.label }}
+                        </label>
+                      </div>
+                    }
+                  </div>
+                }
+                @case ('textarea') {
+                  <textarea
+                    pTextarea
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [placeholder]="field.placeholder || ''"
+                    [rows]="field.rows || 3"
+                    [readOnly]="field.readonly || false"
+                    class="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></textarea>
+                }
+                @case ('date') {
+                  <p-datepicker
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/yyyy"
+                    pInputMask="99/99/9999"
+                    [keepInvalid]="true"
+                    [readonlyInput]="false"
+                    [maxDate]="getMaxDate(field)"
+                    [showIcon]="true"
+                    class="w-full"
+                    styleClass="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-datepicker>
+                }
+                @case ('datetime') {
+                  <p-datepicker
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/yyyy"
+                    pInputMask="99/99/9999"
+                    [keepInvalid]="true"
+                    [readonlyInput]="false"
+                    [showIcon]="true"
+                    [showTime]="true"
+                    hourFormat="24"
+                    class="w-full"
+                    styleClass="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-datepicker>
+                }
+                @case ('time') {
+                  <p-datepicker
+                    [id]="field.name"
+                    [formControlName]="field.name"
+                    [timeOnly]="true"
+                    hourFormat="24"
+                    [showIcon]="true"
+                    class="w-full"
+                    styleClass="w-full"
+                    [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
+                  ></p-datepicker>
+                }
+              }
+            </ng-template>
 
-            @case ('textarea') {
-              <textarea
-                pTextarea
-                [id]="field.name"
-                [formControlName]="field.name"
-                [placeholder]="field.placeholder || ''"
-                [rows]="field.rows || 3"
-                [readOnly]="field.readonly || false"
-                class="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></textarea>
-            }
+            @if (field.prefix || field.suffix) {
+              <p-inputgroup>
+                @if (field.prefix) {
+                  <p-inputgroup-addon>
+                    {{ field.prefix }}
+                  </p-inputgroup-addon>
+                }
 
-            @case ('date') {
-              <p-datepicker
-                [id]="field.name"
-                [formControlName]="field.name"
-                dateFormat="dd/mm/yy"
-                placeholder="dd/mm/yyyy"
-                pInputMask="99/99/9999"
-                [keepInvalid]="true"
-                [readonlyInput]="false"
-                [maxDate]="getMaxDate(field)"
-                [showIcon]="true"
-                class="w-full"
-                styleClass="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-datepicker>
-            }
+                <ng-container *ngTemplateOutlet="control"></ng-container>
 
-            @case ('datetime') {
-              <p-datepicker
-                [id]="field.name"
-                [formControlName]="field.name"
-                dateFormat="dd/mm/yy"
-                placeholder="dd/mm/yyyy"
-                pInputMask="99/99/9999"
-                [keepInvalid]="true"
-                [readonlyInput]="false"
-                [showIcon]="true"
-                [showTime]="true"
-                hourFormat="24"
-                class="w-full"
-                styleClass="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-datepicker>
+                @if (field.suffix) {
+                  <p-inputgroup-addon>
+                    {{ field.suffix }}
+                  </p-inputgroup-addon>
+                }
+              </p-inputgroup>
+            } @else {
+              <ng-container *ngTemplateOutlet="control"></ng-container>
             }
-
-            @case ('time') {
-              <p-datepicker
-                [id]="field.name"
-                [formControlName]="field.name"
-                [timeOnly]="true"
-                hourFormat="24"
-                [showIcon]="true"
-                class="w-full"
-                styleClass="w-full"
-                [ngClass]="{ 'ng-invalid ng-dirty': isInvalid(field.name) }"
-              ></p-datepicker>
-            }
-          }
           }
         </div>
 

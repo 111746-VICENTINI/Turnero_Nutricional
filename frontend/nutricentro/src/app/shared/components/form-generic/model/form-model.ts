@@ -2,6 +2,7 @@ export type GenericFieldType =
   | 'text'
   | 'email'
   | 'number'
+  | 'numeric'
   | 'password'
   | 'select'
   | 'multiselect'
@@ -36,8 +37,24 @@ export interface GenericFormField {
   maxDate?: Date;
   allowFuture?: boolean;
   pattern?: string | RegExp;
-  errorMessage?: string;
+  errorMessages?: {
+    required?: string;
+    email?: string;
+    minlength?: string;
+    maxlength?: string;
+    min?: string;
+    max?: string;
+    pattern?: string;
+    invalidDate?: string;
+    futureDate?: string;
+  };
   rows?: number;
   hint?: string;
   autocomplete?: string;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
+  showIcon?: boolean;
+  iconType?: 'prime' | 'svg';
+  prefix?: string;
+  suffix?: string;
 }

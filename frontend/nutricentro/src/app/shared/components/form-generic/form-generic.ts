@@ -14,6 +14,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { GenericFormField } from './model/form-model';
 import { formatLocalDate, parseLocalDate, parseLocalTime, toIsoLocalDate, toIsoLocalTime } from '../../utils/date-utils';
 import {InputMaskDirective} from 'primeng/inputmask';
+import {InputGroupAddonModule} from 'primeng/inputgroupaddon';
+import {InputGroupModule} from 'primeng/inputgroup';
 
 @Component({
   selector: 'app-form-generic',
@@ -31,6 +33,8 @@ import {InputMaskDirective} from 'primeng/inputmask';
     InputNumberModule,
     TooltipModule,
     InputMaskDirective,
+    InputGroupModule,
+    InputGroupAddonModule
   ],
   templateUrl: './form-generic.html',
   styleUrl: './form-generic.css',
@@ -140,8 +144,6 @@ export class FormGeneric implements OnChanges {
   getErrorMessage(field: GenericFormField): string {
     const control = this.form.get(field.name);
     if (!control?.errors) return '';
-
-    if (field.errorMessage) return field.errorMessage;
 
     const errors = control.errors;
 

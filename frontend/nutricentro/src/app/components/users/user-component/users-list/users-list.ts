@@ -43,7 +43,6 @@ export class UsersList implements OnInit {
       field: 'roles',
       header: 'Roles',
       type: 'custom',
-      sortable: false,
       formatFn: (roles: string[]) =>
       {
         if (!roles || roles.length === 0) return '-';
@@ -170,7 +169,7 @@ export class UsersList implements OnInit {
   }
 
   private mapSortField(field: string | undefined): string {
-    const allowedFields = ['username', 'email', 'isActive'];
+    const allowedFields = ['username', 'email', 'isActive', 'roles'];
     return field && allowedFields.includes(field) ? field : 'username';
   }
 }

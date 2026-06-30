@@ -1,4 +1,6 @@
 import {SpecialtyOnlyNameDTO} from '../specialties/models/specialty-model';
+import {GenderType} from '../../../shared/constants/genders';
+import {PersonStatus} from '../../../shared/constants/person-status';
 
 export interface ProfessionalRequestDTO {
   firstName: string,
@@ -8,10 +10,10 @@ export interface ProfessionalRequestDTO {
   specialtyIds: number[],
   tuition: string,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
   registration: string,
-  status: string //personStatus
+  status: PersonStatus
 }
 
 export interface ProfessionalResponseDTO {
@@ -20,12 +22,12 @@ export interface ProfessionalResponseDTO {
   lastName: string,
   birthDate: string,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
   registration: string,
   tuition: string,
   document: number,
-  status: string, //personStatus
+  status: PersonStatus,
   specialties: SpecialtyOnlyNameDTO[]
 }
 
@@ -34,10 +36,10 @@ export interface ProfessionalUpdateDTO {
   lastName: string,
   birthDate: string,
   mobile: string,
-  gender: string, //GenderType gender;
+  gender: GenderType,
   email: string,
   registration: string,
-  status: string //personStatus
+  status: PersonStatus,
   document: number,
   tuition: string,
   specialtyIds: number[];

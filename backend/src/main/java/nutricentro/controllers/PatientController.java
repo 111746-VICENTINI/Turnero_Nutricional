@@ -68,6 +68,9 @@ public class PatientController {
             @RequestParam(required = false)
             PersonStatus status,
 
+            @RequestParam(required = false)
+            Long professionalId,
+
             @RequestParam(defaultValue = "0")
             int page,
 
@@ -92,6 +95,7 @@ public class PatientController {
                         search,
                         gender,
                         status,
+                        professionalId,
                         pageRequest
                 )
         );

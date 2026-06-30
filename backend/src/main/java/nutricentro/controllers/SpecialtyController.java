@@ -31,7 +31,7 @@ public class SpecialtyController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<List<SpecialtyResponseDTO>> getAllSpecialties() {
         return ResponseEntity.ok(specialtyService.getAllSpecialties());
     }
@@ -57,7 +57,7 @@ public class SpecialtyController {
     }
 
     @GetMapping()
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<Page<SpecialtyResponseDTO>> searchSpecialties(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean active,

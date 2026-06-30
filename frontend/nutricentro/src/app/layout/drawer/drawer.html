@@ -3,8 +3,9 @@
   <aside
     class="sidebar"
     [class.expanded]="sidebarExpanded"
+    [class.hidden-sidebar]="!sidebarVisible"
     (mouseenter)="sidebarExpanded = true"
-    (mouseleave)="!sidebarPinned && (sidebarExpanded = false)">
+    (mouseleave)="sidebarExpanded = false">
 
         <div class="menu-panel">
           <ul class="list-none p-2 m-0">
@@ -231,7 +232,7 @@
   </aside>
 
   <!--  top bar -->
-  <div class="content-wrapper">
+  <div class="content-wrapper" [class.wrapper-full]="!sidebarVisible">
 
     <div class="topbar">
       <div class="topbar-left">

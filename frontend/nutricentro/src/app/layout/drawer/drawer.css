@@ -107,9 +107,13 @@
   transition: margin-left .25s ease;
 }
 
+.content-wrapper.wrapper-full {
+  margin-left: 0;
+}
+
 .sidebar {
   width: 72px;
-  transition: width .25s ease;
+  transition: width .25s ease, transform .25s ease;
   background: white;
   border-right: 1px solid #e5e7eb;
   overflow-x: hidden;
@@ -127,6 +131,10 @@
 
 .sidebar.expanded {
   width: 280px;
+}
+
+.sidebar.hidden-sidebar {
+  transform: translateX(-100%);
 }
 
 .menu-item {

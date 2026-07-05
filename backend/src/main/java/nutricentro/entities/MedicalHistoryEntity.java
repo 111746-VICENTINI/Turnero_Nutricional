@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "medical_history")
@@ -34,4 +36,25 @@ public class MedicalHistoryEntity extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "professional_id")
     private ProfessionalEntity professional;
+
+    @OneToOne(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ClinicalDataEntity clinicalData;
+
+    @OneToOne(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private NutritionalDataEntity nutritionalData;
+
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LaboratoryEntity> laboratories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AntropometryEntity> anthropometries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ConsultationEntity> consultations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FoodPlanEntity> foodPlans = new ArrayList<>();
+
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClinicalFileEntity> files = new ArrayList<>();
 }

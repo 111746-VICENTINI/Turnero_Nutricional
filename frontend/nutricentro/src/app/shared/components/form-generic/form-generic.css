@@ -1,20 +1,23 @@
 .generic-form-container {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 0;
   border-radius: 8px;
-  padding: 1.25rem;
+  max-width: 100%;
+  min-width: 0;
+  padding: 1.35rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: var(--columns, repeat(2, minmax(0, 1fr)));
-  gap: 1.25rem 1rem;
+  gap: 1.65rem 1.1rem;
 }
 
 .field-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .col-span-2 {
@@ -29,10 +32,20 @@
   grid-column: 1 / -1;
 }
 
+.col-span-5 {
+  grid-column: span 5;
+}
+
+.col-span-6 {
+  grid-column: 1 / -1;
+}
+
 .field-label {
-  color: #374151;
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: #52615d;
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .control-container,
@@ -43,33 +56,101 @@
 .readonly-value {
   align-items: center;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid #dbe4ea;
+  border-radius: 8px;
   color: #111827;
   display: flex;
-  min-height: 2.5rem;
-  padding: 0.6rem 0.75rem;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
   width: 100%;
 }
 
-.checkbox-wrapper,
 .radio-wrapper {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.radio-group {
+.switch-wrapper {
   display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.15rem;
+  padding: 0.68rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #f7faf8;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.checkbox-label,
+.switch-wrapper:hover {
+  border-color: #b7e4cf;
+  background: #ffffff;
+}
+
+.switch-wrapper.is-active {
+  border-color: #b7e4cf;
+  background: #eef9f3;
+}
+
+.switch-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.switch-label {
+  color: #263c36;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.switch-copy small {
+  color: #68746f;
+  font-size: 0.78rem;
+}
+
+.radio-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.65rem;
+}
+
 .radio-label {
   color: #374151;
   cursor: pointer;
   font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.select-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #e5ece8;
+  border-radius: 8px;
+  background: #f9fbfa;
+  color: #374151;
+  cursor: pointer;
+  font-weight: 650;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.select-card:hover,
+.select-card.selected {
+  border-color: #9fd8bd;
+  background: #effaf4;
 }
 
 .hint-text {
@@ -78,7 +159,7 @@
 }
 
 .error-container {
-  min-height: 1.15rem;
+  min-height: 0.65rem;
 }
 
 .error-text,
@@ -92,12 +173,12 @@
 }
 
 .form-actions {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #eef2f1;
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.1rem;
 }
 
 .form-sm {
@@ -133,6 +214,56 @@
   width: 100%;
 }
 
+:host ::ng-deep .p-inputtext,
+:host ::ng-deep .p-select,
+:host ::ng-deep .p-multiselect,
+:host ::ng-deep .p-datepicker .p-inputtext,
+:host ::ng-deep .p-inputnumber-input {
+  min-height: 3rem;
+  border-color: #dbe4ea;
+  border-radius: 8px;
+  font-size: 0.98rem;
+}
+
+:host ::ng-deep .p-inputtext:enabled:focus,
+:host ::ng-deep .p-select:not(.p-disabled).p-focus,
+:host ::ng-deep .p-multiselect:not(.p-disabled).p-focus,
+:host ::ng-deep .p-datepicker .p-inputtext:enabled:focus,
+:host ::ng-deep .p-inputnumber-input:enabled:focus {
+  border-color: #2f7d63;
+  box-shadow: 0 0 0 3px rgba(47, 125, 99, 0.12);
+}
+
+:host ::ng-deep .p-textarea {
+  min-height: 5.25rem;
+  border-color: #dbe4ea;
+  border-radius: 8px;
+  resize: none;
+}
+
+:host ::ng-deep .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #2f7d63;
+}
+
+.section-header {
+  margin-top: 1.15rem;
+  margin-bottom: -0.2rem;
+  width: 100%;
+}
+
+.section-title {
+  color: #10201d;
+  font-size: 1.02rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.section-hint {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem 0;
+}
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;
@@ -140,7 +271,9 @@
 
   .col-span-2,
   .col-span-3,
-  .col-span-4 {
+  .col-span-4,
+  .col-span-5,
+  .col-span-6 {
     grid-column: 1;
   }
 

@@ -10,6 +10,7 @@ export type GenericFieldType =
   | 'radio'
   | 'textarea'
   | 'date'
+  | 'header'
   | 'datetime'
   | 'time';
 
@@ -25,7 +26,7 @@ export interface GenericFormField {
   type: GenericFieldType;
   required?: boolean;
   placeholder?: string;
-  colSpan?: 1 | 2 | 3 | 4;
+  colSpan?: 1 | 2 | 3 | 4 | 5 | 6;
   options?: GenericSelectOption[];
   disabled?: boolean;
   readonly?: boolean;
@@ -57,4 +58,8 @@ export interface GenericFormField {
   iconType?: 'prime' | 'svg';
   prefix?: string;
   suffix?: string;
+  visibleWhen?: {
+    field: string;
+    value?: any;
+  };
 }

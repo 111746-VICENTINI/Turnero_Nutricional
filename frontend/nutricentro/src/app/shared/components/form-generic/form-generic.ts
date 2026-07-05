@@ -10,6 +10,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { GenericFormField } from './model/form-model';
 import { formatLocalDate, parseLocalDate, parseLocalTime, toIsoLocalDate, toIsoLocalTime } from '../../utils/date-utils';
@@ -29,6 +30,7 @@ import {InputGroupModule} from 'primeng/inputgroup';
     CheckboxModule,
     RadioButtonModule,
     TextareaModule,
+    ToggleSwitchModule,
     DatePickerModule,
     InputNumberModule,
     TooltipModule,
@@ -43,7 +45,7 @@ export class FormGeneric implements OnChanges {
   @Input({ required: true }) fields: GenericFormField[] = [];
   @Input() initialValues: Record<string, any> = {};
   @Input() isSubmitting = false;
-  @Input() columnsPerRow: 1 | 2 | 3 | 4 = 2;
+  @Input() columnsPerRow: 1 | 2 | 3 | 4 | 5 | 6 = 2;
   @Input() formWidth: 'sm' | 'md' | 'lg' | 'xl' | 'full' = 'lg';
   @Input() fontSize: 'sm' | 'md' | 'lg' = 'md';
   @Input() submitLabel = 'Guardar';
@@ -82,6 +84,7 @@ export class FormGeneric implements OnChanges {
     const group: Record<string, FormControl> = {};
 
     this.fields.forEach((field) => {
+      if (field.type === 'header') return;
       const validators: ValidatorFn[] = [];
 
       if (field.required) {
@@ -141,6 +144,17 @@ export class FormGeneric implements OnChanges {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  isVisible(field: GenericFormField): boolean {
+    if (!field.visibleWhen) {
+      return true;
+    }
+
+    const parentValue = this.form.get(field.visibleWhen.field)?.value;
+    return field.visibleWhen.value === undefined
+      ? !!parentValue
+      : parentValue === field.visibleWhen.value;
+  }
+
   getErrorMessage(field: GenericFormField): string {
     const control = this.form.get(field.name);
     if (!control?.errors) return '';
@@ -173,6 +187,8 @@ export class FormGeneric implements OnChanges {
 
   onCancel(): void {
     const values = this.fields.reduce<Record<string, any>>((acc, field) => {
+      if (field.type === 'header') return acc;
+
       acc[field.name] = this.normalizeInitialValue(field, this.initialValues[field.name]);
       return acc;
     }, {});
@@ -197,6 +213,8 @@ export class FormGeneric implements OnChanges {
     const normalized = { ...values };
 
     this.fields.forEach((field) => {
+      if (field.type === 'header') return;
+
       if (field.type === 'date') {
         normalized[field.name] = toIsoLocalDate(values[field.name]);
       }

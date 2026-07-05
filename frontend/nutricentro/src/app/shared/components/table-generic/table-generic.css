@@ -2,6 +2,8 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -12,17 +14,20 @@
   justify-content: space-between;
   padding: 1rem;
   display: grid;
+  min-width: 0;
 }
 
 .table-toolbar h2 {
   color: #111827;
   font-size: 1.125rem;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .table-toolbar p {
   color: #6b7280;
   margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
 }
 
 .search-container {
@@ -30,6 +35,7 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .search-input {
@@ -151,6 +157,14 @@
 :host ::ng-deep .p-datatable-tbody > tr > td,
 :host ::ng-deep .p-datatable-thead > tr > th {
   padding: 0.85rem 1rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:host ::ng-deep .p-datatable-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 :host ::ng-deep .action-button {
@@ -161,7 +175,7 @@
 @media (max-width: 768px) {
   .table-toolbar {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .search-container,

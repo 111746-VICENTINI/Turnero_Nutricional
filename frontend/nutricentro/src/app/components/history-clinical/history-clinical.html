@@ -1,1 +1,173 @@
-<p>historial de pacientes</p>
+<p-toast></p-toast>
+
+@if (loading) {
+  <section class="history-shell">
+    <div class="loading-panel">
+      <span class="loading-dot"></span>
+      <p>Cargando historia clinica...</p>
+    </div>
+  </section>
+
+<!--  paciente inactivo -->
+} @else if (patient && isPatientInactive) {
+  <section class="history-shell">
+    <div class="inactive-state">
+      <div class="inactive-icon">
+        <i class="pi pi-lock"></i>
+      </div>
+      <span>Paciente inactivo</span>
+      <h1>{{ patientName }}</h1>
+      <p>Este paciente se encuentra deshabilitado. <br>
+        Debe activarlo para poder acceder a su historial clínico.
+      </p>
+      <div class="inactive-actions">
+        <p-button
+          icon="pi pi-arrow-left"
+          label="Volver"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="goBack()">
+        </p-button>
+        <p-button
+          icon="pi pi-check-circle"
+          label="Activar paciente"
+          severity="success"
+          (onClick)="activatePatient()">
+        </p-button>
+      </div>
+    </div>
+  </section>
+
+<!--  historial clinico del paciente -->
+} @else if (patient && history) {
+  <section class="history-shell">
+
+    <header class="clinical-header">
+      <div class="patient-row">
+        <div class="avatar" aria-hidden="true">
+          {{ patient.firstName.charAt(0) }}{{ patient.lastName.charAt(0) }}
+        </div>
+
+        <div class="patient-identity">
+          <h1>{{ patientName }}</h1>
+          <div class="identity-meta">
+            <span>{{ patient.age || '-' }} años</span>
+            <span>{{ genderLabels[patient.gender] || '-' }}</span>
+            <span>DNI {{ patient.document }}</span>
+            <span>{{ statusLabels[patient.status] || patient.status }}</span>
+            <span>Nac. {{ patient.birthDate ? (patient.birthDate | date: 'dd/MM/yyyy') : '-' }}</span>
+          </div>
+        </div>
+
+        <div class="contact-panel">
+          <span>{{ patient.mobile || 'Sin telefono' }}</span>
+          <span>{{ patient.email || 'Sin email' }}</span>
+          <p-button
+            icon="pi pi-whatsapp"
+            label="WhatsApp"
+            severity="success"
+            size="large"
+            (onClick)="openWhatsApp()">
+          </p-button>
+        </div>
+      </div>
+
+      <div class="focus-row">
+        <article>
+          <span>Objetivo nutricional</span>
+          <strong>{{ primaryGoal }}</strong>
+        </article>
+
+        <article>
+          <span>Proxima consulta</span>
+          <strong>{{ nextConsultationText }}</strong>
+          <small>Profesional asignado</small>
+        </article>
+
+        <article>
+          <span>Ultima consulta</span>
+          <strong>
+            {{ latestConsultation?.date ? (latestConsultation?.date | date: 'dd/MM/yyyy') : '-' }}
+          </strong>
+          <small>{{ lastConsultationSummary }}</small>
+        </article>
+      </div>
+
+      <!-- alertas -->
+      <section class="alerts-panel" aria-label="Alertas clinicas">
+        <div>
+          <span class="panel-label">Alertas clinicas</span>
+          <div class="alert-list">
+            @if (clinicalAlerts.length) {
+              @for (alert of clinicalAlerts; track alert.prefix + alert.label) {
+                <span class="alert-badge" [ngClass]="'tone-' + alert.tone">
+                  <i [class]="alert.icon"></i>
+                  @if (alert.prefix) {
+                    <strong>{{ alert.prefix }}:</strong>
+                  }
+                  {{ alert.label }}
+                </span>
+              }
+            } @else {
+              <span class="alert-badge tone-muted">
+                <i class="pi pi-check-circle"></i>
+                Sin antecedentes a destacar
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="medication-box">
+          <span>Medicacion habitual</span>
+          <strong>{{ medications }}</strong>
+        </div>
+      </section>
+
+      @if (showSummaryActions) {
+        <nav class="quick-actions" aria-label="Acciones rapidas">
+          <p-button icon="pi pi-plus" label="Nueva consulta" (onClick)="selectTab('consultations')"></p-button>
+          <p-button icon="pi pi-list-check" label="Nuevo plan" severity="secondary" [outlined]="true" (onClick)="selectTab('plans')"></p-button>
+          <p-button icon="pi pi-paperclip" label="Adjuntar archivo" severity="secondary" [outlined]="true" (onClick)="selectTab('files')"></p-button>
+        </nav>
+      }
+    </header>
+
+  <!-- cards -->
+    <section class="metric-board" aria-label="Metricas rapidas">
+      @for (metric of quickMetrics; track metric.label) {
+        <article class="metric-card" [ngClass]="'metric-' + metric.tone">
+          <span>{{ metric.label }}</span>
+          <strong>{{ metric.value }}</strong>
+          <small>{{ metric.trend }}</small>
+        </article>
+      }
+    </section>
+
+    <app-history-tabs
+      [nutritionData]="nutritionData"
+      [history]="history"
+      [activeTab]="activeTab"
+      (activeTabChanged)="activeTab = $event"
+      (historyChanged)="refreshHistory()">
+    </app-history-tabs>
+  </section>
+} @else {
+  <section class="history-shell">
+    <div class="empty-state">
+      <h2>No se encontro su historia clinica</h2>
+      <p>Volve a seleccionar el paciente desde el listado.</p>
+    </div>
+  </section>
+}
+
+@if (!isPatientInactive) {
+  <div class="page-footer">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="Volver"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goBack()">
+    </p-button>
+  </div>
+}

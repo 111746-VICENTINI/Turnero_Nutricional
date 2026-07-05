@@ -1,26 +1,35 @@
 .clinical-tabs {
-  overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
   border: 1px solid #dbe4ea;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #ffffff;
+  box-shadow: 0 10px 30px rgba(16, 32, 29, 0.04);
 }
 
 :host ::ng-deep .p-tabs-tablist {
   gap: 0.25rem;
-  padding: 0.6rem 0.7rem 0;
-  background: #ffffff;
+  padding: 0.55rem 0.65rem 0;
   border-bottom: 1px solid #e6edf0;
+  background: #ffffff;
   overflow-x: auto;
 }
 
 :host ::ng-deep .p-tabs-tab {
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  border-radius: 8px 8px 0 0;
   white-space: nowrap;
 }
 
-:host ::ng-deep .p-tabpanels {
-  padding: 0;
+:host ::ng-deep .p-tabs-tab i {
+  font-size: 0.9rem;
 }
 
+:host ::ng-deep .p-tabpanels,
 :host ::ng-deep .p-tabpanel {
+  max-width: 100%;
+  min-width: 0;
   padding: 0;
 }

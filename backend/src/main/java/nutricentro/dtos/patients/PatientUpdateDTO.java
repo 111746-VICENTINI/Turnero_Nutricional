@@ -29,6 +29,7 @@ public class PatientUpdateDTO {
     @Email(message = "El formato email no es válido")
     private String email;
     private String mobile;
+    private String address;
 
     @NotNull(message = "El dni es obligatorio")
     private Integer document;

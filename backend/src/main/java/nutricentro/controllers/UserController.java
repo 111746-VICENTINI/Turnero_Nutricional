@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/v1/user")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-@CrossOrigin("*")
+@CrossOrigin(origins = "${app.cors.allowed-origins:*}")
 public class UserController {
 
     private final UserService userService;

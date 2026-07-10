@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleRequestDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleResponseDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleUpdateDTO;
+import nutricentro.enums.AppointmentModality;
 import nutricentro.enums.PersonStatus;
 import nutricentro.services.ProfessionalScheduleService;
 import org.springframework.data.domain.Page;
@@ -24,12 +25,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/professional-schedule")
 @RequiredArgsConstructor
-@CrossOrigin("*")
+@CrossOrigin(origins = "${app.cors.allowed-origins:*}")
 public class ProfessionalScheduleController {
     private final ProfessionalScheduleService professionalScheduleService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<ProfessionalScheduleResponseDTO> create(@RequestBody @Valid ProfessionalScheduleRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(professionalScheduleService.create(dto));
     }
@@ -47,14 +48,14 @@ public class ProfessionalScheduleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<ProfessionalScheduleResponseDTO> update(@PathVariable Long id,
                                                                   @RequestBody ProfessionalScheduleUpdateDTO dto) {
         return ResponseEntity.ok(professionalScheduleService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         professionalScheduleService.delete(id);
         return ResponseEntity.noContent().build();
@@ -80,7 +81,16 @@ public class ProfessionalScheduleController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     public ResponseEntity<List<LocalTime>> getAvailableSlots(@RequestParam Long professionalId,
                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                                                             LocalDate date) {
-        return ResponseEntity.ok(professionalScheduleService.getAvailableSlots(professionalId, date));
+                                                             LocalDate date,
+                                                             @RequestParam(required = false) AppointmentModality modality,
+                                                             @RequestParam(required = false) String locationKey,
+                                                             @RequestParam(required = false) Integer durationMinutes) {
+        return ResponseEntity.ok(professionalScheduleService.getAvailableSlots(
+                professionalId,
+                date,
+                modality,
+                locationKey,
+                durationMinutes
+        ));
     }
 }

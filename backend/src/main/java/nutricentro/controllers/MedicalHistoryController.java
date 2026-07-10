@@ -43,7 +43,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/medical-history")
 @RequiredArgsConstructor
-@CrossOrigin("*")
+@CrossOrigin(origins = "${app.cors.allowed-origins:*}")
 @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
 public class MedicalHistoryController {
     private final MedicalHistoryService medicalHistoryService;

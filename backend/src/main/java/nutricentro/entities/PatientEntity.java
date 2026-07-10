@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "patients")
@@ -44,4 +47,9 @@ public class PatientEntity extends BaseEntity {
 
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private MedicalHistoryEntity medicalHistory;
+
+    @OneToMany(mappedBy = "patient")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<ConsultationEntity> consultations = new ArrayList<>();
 }

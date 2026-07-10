@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.valueOf(ex.getStatus()).name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("0️⃣0️⃣0️⃣ ApiException capturada: {}", ex.getMessage(), ex);
+        LOGGER.warn("ApiException capturada: {}", ex.getMessage(), ex);
         return new ResponseEntity<>(error, HttpStatus.valueOf(ex.getStatus()));
     }
 
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
                 .error("VALIDATION_ERROR")
                 .message(message)
                 .build();
-        LOGGER.warn("4️⃣0️⃣0️⃣ MethodArgumentNotValidException (Error de validación): {}", message);
+        LOGGER.warn("MethodArgumentNotValidException (Error de validación): {}", message);
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.BAD_REQUEST.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣0️⃣ IllegalArgumentException: {}", ex.getMessage());
+        LOGGER.warn("IllegalArgumentException: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
                 .error("INTERNAL_SERVER_ERROR")
                 .message(ex.getMessage())
                 .build();
-        LOGGER.error("5️⃣0️⃣0️⃣ Exception no controlada: {}", ex.getMessage(), ex);
+        LOGGER.error("Exception no controlada: {}", ex.getMessage(), ex);
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.NOT_FOUND.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣4️⃣ Entidad no encontrada: {}", ex.getMessage());
+        LOGGER.warn("Entidad no encontrada: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.CONFLICT.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣9️⃣ DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage(), ex);
+        LOGGER.warn("DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage(), ex);
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
@@ -109,7 +109,7 @@ public class GlobalExceptionHandler {
                 .error(HttpStatus.FORBIDDEN.name())
                 .message(ex.getMessage())
                 .build();
-        LOGGER.warn("4️⃣0️⃣3️⃣ Excepción de Acceso Denegado: {}", ex.getMessage());
+        LOGGER.warn("Excepción de acceso denegado: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.name())
-                .message("Parametro inválido: " + ex.getName())
+                .message("Parámetro inválido: " + ex.getName())
                 .build();
 
         return ResponseEntity.badRequest().body(error);

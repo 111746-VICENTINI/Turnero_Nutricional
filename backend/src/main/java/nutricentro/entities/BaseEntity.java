@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.envers.Audited;
 import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -42,10 +43,11 @@ public class BaseEntity {
     @Column(name = "created_user", updatable = false)
     private Long createdUser;
 
-    @LastModifiedDate
+    @LastModifiedBy
     @Column(name = "last_updated_user")
     private Long lastUpdatedUser;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 

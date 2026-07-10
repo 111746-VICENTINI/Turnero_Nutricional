@@ -18,5 +18,5 @@ public interface PatientService {
     PatientResponseDTO createPatient(PatientRequestDTO patient);
     void delete (Long id);
     PatientResponseDTO update (Long id, PatientUpdateDTO patient);
-    Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Pageable pageable);
+    Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Long professionalId, Pageable pageable);
 }

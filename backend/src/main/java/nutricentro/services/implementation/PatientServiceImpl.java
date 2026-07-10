@@ -73,6 +73,7 @@ public class PatientServiceImpl implements PatientService {
         patientEntity.setDocument(patient.getDocument());
         patientEntity.setGender(patient.getGender());
         patientEntity.setMobile(patient.getMobile());
+        patientEntity.setAddress(patient.getAddress());
         patientEntity.setStatus(patient.getStatus());
         patientEntity.setBirthDate(patient.getBirthDate());
         PatientEntity saved = patientRepository.save(patientEntity);
@@ -81,11 +82,12 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Long professionalId, Pageable pageable) {
-        Specification<PatientEntity> spec =
-                Specification.where(bySearch(search))
-                        .and(byGender(gender))
-                        .and(byStatus(status))
-                        .and(byProfessional(professionalId));
+        Specification<PatientEntity> spec = Specification.allOf(
+                bySearch(search),
+                byGender(gender),
+                byStatus(status),
+                byProfessional(professionalId)
+        );
 
         return patientRepository
                 .findAll(spec, pageable)
@@ -101,6 +103,7 @@ public class PatientServiceImpl implements PatientService {
                 .lastName(saved.getLastName())
                 .email(saved.getEmail())
                 .mobile(saved.getMobile())
+                .address(saved.getAddress())
                 .age(calculateAge(saved.getBirthDate()))
                 .birthDate(saved.getBirthDate())
                 .status(saved.getStatus() != null ? saved.getStatus() : null)
@@ -126,6 +129,7 @@ public class PatientServiceImpl implements PatientService {
                     cb.like(cb.lower(root.get("firstName")), pattern),
                     cb.like(cb.lower(root.get("lastName")), pattern),
                     cb.like(cb.lower(root.get("email")), pattern),
+                    cb.like(cb.lower(root.get("mobile")), pattern),
                     cb.like(root.get("document").as(String.class), pattern)
             );
         };

@@ -79,7 +79,7 @@ export class ListSpecialties {
       next: () =>
       {
         this.loadSpecialties();
-        this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Profesional eliminado' });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Especialidad eliminada' });
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el profesional' })
     })

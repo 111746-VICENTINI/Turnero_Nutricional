@@ -1,11 +1,10 @@
 import { Routes } from '@angular/router';
 import {LoginForm} from './components/login/login-form/login-form';
-import {authGuard} from './core/guard/auth-guard';
+import {authGuard, workspaceRedirectGuard} from './core/guard/auth-guard';
 import {Dashboard} from './layout/dashboard/dashboard';
 import {Drawer} from './layout/drawer/drawer';
 import {roleGuard} from './core/guard/role-guard';
 import {HistoryClinical} from './components/history-clinical/history-clinical';
-import {Calendar} from './components/appointments/calendar/calendar';
 import {UnauthorizedComponent} from './shared/unauthorized/unauthorized.component';
 import {UsersList} from './components/users/user-component/users-list/users-list';
 import {CreateUser} from './components/users/user-component/create-user/create-user';
@@ -17,6 +16,7 @@ import {CreateSpecialty} from './components/professionals/specialties/create-spe
 import {ListSpecialties} from './components/professionals/specialties/list-specialties/list-specialties';
 import {ListAppointments} from './components/appointments/list-appointments/list-appointments';
 import {CreateAppointments} from './components/appointments/create-appointments/create-appointments';
+import {ProfessionalAvailability} from './components/professionals/availability/professional-availability';
 
 export const routes: Routes = [
   {
@@ -30,8 +30,8 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
+        canActivate: [workspaceRedirectGuard],
+        children: []
       },
       // USUARIOS
       {
@@ -115,6 +115,12 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
+      {
+        path: 'availability',
+        component: ProfessionalAvailability,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'PROFESSIONAL'] }
+      },
       // ESPECIALIDADES
       {
         path: 'specialty',
@@ -148,10 +154,16 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       {
+        path: 'mi-dia',
+        component: ListAppointments,
+        canActivate: [roleGuard],
+        data: { roles: ['PROFESSIONAL'] }
+      },
+      {
         path: 'agenda/create',
         component: CreateAppointments,
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'SECRETARY'] }
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       {
         path: 'agenda/:id',

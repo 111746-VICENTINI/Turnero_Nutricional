@@ -1,262 +1,69 @@
 <div class="app-shell">
-
   <aside
     class="sidebar"
     [class.expanded]="sidebarExpanded"
     [class.hidden-sidebar]="!sidebarVisible"
     (mouseenter)="sidebarExpanded = true"
-    (mouseleave)="sidebarExpanded = false">
+    (mouseleave)="sidebarExpanded = false"
+    aria-label="Navegación principal"
+  >
+    <nav class="menu-panel">
+      <ul class="menu-list">
+        @for (item of visibleNavigationItems; track item.route) {
+          <li>
+            <a
+              pRipple
+              [routerLink]="item.route"
+              routerLinkActive="menu-active"
+              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' || item.route === '/agenda' || item.route === '/mi-dia' || item.route === '/patient' || item.route === '/professional' || item.route === '/users' || item.route === '/specialty' }"
+              class="menu-item"
+              [attr.aria-label]="item.label"
+            >
+              <i [class]="item.icon"></i>
+              @if (sidebarExpanded) {
+                <span>{{ item.label }}</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
 
-        <div class="menu-panel">
-          <ul class="list-none p-2 m-0">
-
-          <!-- MENU -->
-            @if (isAdmin()) {
-              <li>
-                <a
-                  pRipple
-                  routerLink="/dashboard"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-home"></i>
-                  @if(sidebarExpanded){
-                    <span>Inicio</span>
-                  }
-                </a>
-              </li>
-            }
-
-            <!-- USUARIOS -->
-            @if (isAdmin()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('users')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-users"></i>
-                  @if(sidebarExpanded){
-                    <span>Gestión de usuarios</span>
-                  }
-                  @if(sidebarExpanded){
-                    <i [class]="openedMenu === 'users' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                  }
-                </a>
-              </li>
-            }
-
-            @if(sidebarExpanded && openedMenu === 'users'){
-              <ul class="submenu">
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/users"
-                    class="submenu-item">
-                    <i class="pi pi-list"></i>
-                    <span>Listado de usuarios</span>
-                  </a>
-                </li>
-              </ul>
-            }
-
-            <!-- PROFESIONALES -->
-            @if (isAdmin()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('professional')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-id-card"></i>
-                  @if(sidebarExpanded){
-                    <span>Gestión de profesionales</span>
-                  }
-
-                  <i [class]="openedMenu === 'professional' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                </a>
-              </li>
-            }
-            @if(sidebarExpanded && openedMenu === 'professional'){
-              <ul class="submenu">
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/professional"
-                    class="submenu-item">
-                    <i class="pi pi-list"></i>
-                    <span>Listado de profesionales</span>
-                  </a>
-                </li>
-              </ul>
-            }
-
-            <!-- PACIENTES -->
-            @if (isAdmin() || isSecretary() || isProfessional()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('patient')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-user"></i>
-                  @if (sidebarExpanded) {
-                    <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Pacientes' : 'Gestión de pacientes' }}</span>
-                  }
-
-                <i [class]="openedMenu === 'patient' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                </a>
-              </li>
-            }
-
-            @if(sidebarExpanded && openedMenu === 'patient'){
-              <ul class="submenu">
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/patient"
-                    class="submenu-item">
-                    <i class="pi pi-list"></i>
-                    <span>Listado de pacientes</span>
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/patient/create"
-                    class="submenu-item">
-                    <i class="pi pi-user-plus"></i>
-                    <span>Nuevo paciente</span>
-                  </a>
-                </li>
-              </ul>
-            }
-
-            <!-- TURNOS -->
-            @if (isAdmin() || isSecretary() || isProfessional()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('agenda')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-calendar"></i>
-                  @if (sidebarExpanded) {
-                    <span>{{ isProfessional() && !isAdmin() && !isSecretary() ? 'Turnos' : 'Agenda de turnos' }}</span>
-
-                  }
-
-                  <i [class]="openedMenu === 'agenda' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                </a>
-              </li>
-            }
-            @if(sidebarExpanded && openedMenu === 'agenda'){
-              <ul class="submenu">
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/agenda"
-                    class="submenu-item">
-                    <i class="pi pi-list"></i>
-                    <span>Historial</span>
-                  </a>
-                </li>
-              </ul>
-            }
-
-            <!-- HISTORIAL CLINICO -->
-<!--            @if (isAdmin() || isProfessional()) {-->
-<!--              <li>-->
-<!--                <a-->
-<!--                  pRipple-->
-<!--                  (click)="toggleMenu('medical-history')"-->
-<!--                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">-->
-<!--                  <i class="pi pi-file-edit"></i>-->
-<!--                  @if(sidebarExpanded){-->
-<!--                    <span>Historial clínico</span>-->
-<!--                  }-->
-
-<!--                  <i [class]="openedMenu === 'medical-history' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>-->
-<!--                </a>-->
-<!--              </li>-->
-<!--            }-->
-<!--            @if(sidebarExpanded && openedMenu === 'medical-history'){-->
-<!--              <ul class="submenu">-->
-<!--                <li>-->
-<!--                  <a-->
-<!--                    pRipple-->
-<!--                    routerLink="/medical-history"-->
-<!--                    class="submenu-item">-->
-<!--                    <i class="pi pi-list"></i>-->
-<!--                    <span>Historial</span>-->
-<!--                  </a>-->
-<!--                </li>-->
-<!--              </ul>-->
-<!--            }-->
-
-                <!-- CONFIGURACIONES - ESPECIALIDADES -->
-            @if (isAdmin()) {
-              <li>
-                <a
-                  pRipple
-                  (click)="toggleMenu('specialty')"
-                  class="menu-item flex items-center gap-3 p-4 cursor-pointer no-underline">
-                  <i class="pi pi-cog"></i>
-                  @if(sidebarExpanded){
-                    <span>Configuraciones</span>
-                  }
-
-                  <i [class]="openedMenu === 'specialty' ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                </a>
-              </li>
-            }
-            @if(sidebarExpanded && openedMenu === 'specialty'){
-              <ul class="submenu">
-                <li>
-                  <a
-                    pRipple
-                    routerLink="/specialty"
-                    class="submenu-item">
-                    <i class="pi pi-list"></i>
-                    <span>Especialidades</span>
-                  </a>
-                </li>
-              </ul>
-            }
-          </ul>
-        </div>
-
-        <div class="logout-panel">
-          <a pRipple (click)="logout()" class="menu-item logout-item">
-            <i class="pi pi-sign-out"></i>
-            @if(sidebarExpanded){
-              <span>Cerrar sesión</span>
-            }
-          </a>
-        </div>
+    <div class="logout-panel">
+      <button pRipple type="button" (click)="logout()" class="menu-item logout-item" aria-label="Cerrar sesión">
+        <i class="pi pi-sign-out"></i>
+        @if (sidebarExpanded) {
+          <span>Cerrar sesión</span>
+        }
+      </button>
+    </div>
   </aside>
 
-  <!--  top bar -->
   <div class="content-wrapper" [class.wrapper-full]="!sidebarVisible">
-
-    <div class="topbar">
+    <header class="topbar">
       <div class="topbar-left">
         <p-button
           icon="pi pi-bars"
           [text]="true"
           (onClick)="toggleSidebar()"
-          styleClass="topbar-menu-button">
+          styleClass="topbar-menu-button"
+          ariaLabel="Mostrar/ocultar menú">
         </p-button>
 
-        <span class="topbar-brand">Nutri Centro</span>
+        <div class="topbar-heading">
+          <span class="topbar-brand">Nutri Centro</span>
+          <span class="topbar-section">{{ currentSection }}</span>
+        </div>
       </div>
 
       <div class="topbar-right">
-        <span class="username"> {{ getFullName() }} </span>
+        <span class="username">{{ getFullName() }}</span>
         <i class="pi pi-user"></i>
-
-        <i class="pi pi-bell"></i>
       </div>
-    </div>
+    </header>
 
-    <div class="main-content">
+    <main class="main-content">
       <router-outlet></router-outlet>
-    </div>
-
+    </main>
   </div>
 </div>

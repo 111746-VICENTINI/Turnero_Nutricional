@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, finalize, forkJoin, of, switchMap } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
@@ -18,6 +18,11 @@ import { PatientService } from '../patients/services/patient-service';
 import { HistoryClinicalService } from './services/history-clinical-service';
 import { Gender_Labels } from '../../shared/constants/genders';
 import { PERSON_STATUS_LABELS, PersonStatus } from '../../shared/constants/person-status';
+import { AppointmentDetailDrawer } from '../appointments/appointment-detail-drawer/appointment-detail-drawer';
+import { AppointmentResponseDTO, AppointmentTimelineEventResponseDTO } from '../appointments/models/appointment-model';
+import { AppointmentService } from '../appointments/services/appointment-service';
+import { AppointmentStatus } from '../../shared/constants/appointment-status';
+import {formatLocalTime} from '../../shared/utils/date-utils';
 
 interface ContextMetric {
   label: string;
@@ -26,10 +31,19 @@ interface ContextMetric {
   tone: string;
 }
 
+interface PatientCommunicationItem {
+  appointmentId: number;
+  occurredAt: string;
+  title: string;
+  detail: string;
+  icon: string;
+  tone: string;
+}
+
 @Component({
   selector: 'app-history-clinical',
   standalone: true,
-  imports: [CommonModule, ToastModule, HistoryTabs, Button],
+  imports: [CommonModule, ToastModule, HistoryTabs, Button, AppointmentDetailDrawer],
   providers: [MessageService],
   templateUrl: './history-clinical.html',
   styleUrl: './history-clinical.css',
@@ -38,6 +52,7 @@ export class HistoryClinical implements OnInit {
   private route = inject(ActivatedRoute);
   private patientService = inject(PatientService);
   private historyService = inject(HistoryClinicalService);
+  private appointmentService = inject(AppointmentService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
@@ -46,11 +61,18 @@ export class HistoryClinical implements OnInit {
   nutritionData?: NutritionalDataDTO;
   patient?: PatientResponseDTO;
   history?: MedicalHistoryResponseDTO;
+  appointments: AppointmentResponseDTO[] = [];
+  communicationEvents: PatientCommunicationItem[] = [];
   loading = true;
+  communicationsLoading = false;
+  communicationsLoaded = false;
   activeTab = 'summary';
+  selectedAppointmentId?: number;
+  appointmentDrawerVisible = false;
 
   ngOnInit(): void {
     const patientId = Number(this.route.snapshot.paramMap.get('id'));
+    this.activeTab = this.route.snapshot.queryParamMap.get('tab') || 'summary';
 
     if (!patientId) {
       this.loading = false;
@@ -99,6 +121,9 @@ export class HistoryClinical implements OnInit {
         this.history = history ?? undefined;
         this.nutritionData = history?.nutritionalData ?? undefined;
         this.loading = false;
+        if (this.patient && !this.isPatientInactive) {
+          this.loadAppointments(this.patient.id);
+        }
       });
   }
 
@@ -112,6 +137,8 @@ export class HistoryClinical implements OnInit {
       next: (history) => {
         this.history = history;
         this.nutritionData = history.nutritionalData ?? undefined;
+        this.communicationEvents = [];
+        this.communicationsLoaded = false;
       },
       error: () => {
         this.messageService.add({
@@ -155,12 +182,53 @@ export class HistoryClinical implements OnInit {
     return this.patient?.status === PersonStatus.INACTIVE;
   }
 
+  get nextAppointment(): AppointmentResponseDTO | undefined {
+    return this.appointments
+      .filter((appointment) => !this.isTerminalAppointment(appointment.status))
+      .filter((appointment) => this.appointmentTime(appointment) >= Date.now())
+      .sort((first, second) => this.appointmentTime(first) - this.appointmentTime(second))?.[0];
+  }
+
+  get latestAppointment(): AppointmentResponseDTO | undefined {
+    return [...this.appointments]
+      .sort((first, second) => this.appointmentTime(second) - this.appointmentTime(first))?.[0];
+  }
+
+  get absentCount(): number {
+    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.ABSENT).length;
+  }
+
+  get canceledCount(): number {
+    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.CANCELED).length;
+  }
+
+  get rescheduledCount(): number {
+    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.RESCHEDULED).length;
+  }
+
+  get completedCount(): number {
+    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.COMPLETED).length;
+  }
+
+  get lastCommunicationText(): string {
+    if (this.communicationsLoading) {
+      return 'Cargando comunicaciones';
+    }
+    if (!this.communicationsLoaded) {
+      return 'Ver historial de comunicaciones';
+    }
+    const event = this.communicationEvents[0];
+    return event ? `${event.title} · ${this.formatDate(event.occurredAt)}` : 'Sin comunicaciones registradas';
+  }
+
   get primaryGoal(): string {
     return this.latestConsultation?.goal || this.activePlan?.title || 'Definir objetivo';
   }
 
   get nextConsultationText(): string {
-    return this.latestConsultation?.nextConsultation || 'Sin turno programado';
+    return this.nextAppointment
+      ? `${this.formatDate(this.nextAppointment.date)} ${this.formatTime(this.nextAppointment.time)}`
+      : this.latestConsultation?.nextConsultation || 'Sin turno programado';
   }
 
   get lastConsultationSummary(): string {
@@ -264,8 +332,14 @@ export class HistoryClinical implements OnInit {
       {
         label: 'Proximo turno',
         value: this.nextConsultationText,
-        trend: this.latestConsultation?.date ? 'Consulta registrada' : 'Sin consulta',
+        trend: this.nextAppointment?.professionalFullName || 'Sin turno activo',
         tone: 'gray',
+      },
+      {
+        label: 'Ausencias',
+        value: String(this.absentCount),
+        trend: `${this.canceledCount} cancelaciones`,
+        tone: this.absentCount ? 'orange' : 'green',
       }
     ];
   }
@@ -346,8 +420,39 @@ export class HistoryClinical implements OnInit {
   }
 
   selectTab(tab: string): void {
-    this.activeTab = tab;
+    this.onTabChanged(tab);
     document.querySelector('.clinical-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  onTabChanged(tab: string): void {
+    this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    if (tab === 'communications') {
+      this.loadCommunicationEvents();
+    }
+  }
+
+  openAppointmentDetail(appointmentId: number): void {
+    this.selectedAppointmentId = appointmentId;
+    this.appointmentDrawerVisible = true;
+  }
+
+  createAppointment(): void {
+    const returnTo = this.patient?.id
+      ? `/medical-history/${this.patient.id}?tab=appointments`
+      : this.router.url;
+
+    this.router.navigate(['/agenda/create'], {
+      queryParams: {
+        patientId: this.patient?.id,
+        returnTo
+      }
+    });
   }
 
   openAntropoGym(): void {
@@ -400,6 +505,96 @@ export class HistoryClinical implements OnInit {
       .map((label) => ({ label, tone, icon, prefix }));
   }
 
+  private loadAppointments(patientId: number): void {
+    this.appointmentService.searchAppointments({
+      patientId,
+      page: 0,
+      size: 100,
+      sortBy: 'date',
+      direction: 'desc'
+    }).subscribe({
+      next: (page) => this.appointments = page.content,
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Turnos',
+          detail: 'No se pudieron cargar los turnos del paciente.',
+        });
+      }
+    });
+  }
+
+  private loadCommunicationEvents(): void {
+    if (this.communicationsLoaded || this.communicationsLoading) {
+      return;
+    }
+
+    if (!this.appointments.length) {
+      this.communicationEvents = [];
+      this.communicationsLoaded = true;
+      return;
+    }
+
+    this.communicationsLoading = true;
+    forkJoin(
+      this.appointments.slice(0, 30).map((appointment) =>
+        this.appointmentService.getAppointmentTimeline(appointment.id).pipe(catchError(() => of([])))
+      )
+    ).pipe(
+      finalize(() => {
+        this.communicationsLoading = false;
+        this.communicationsLoaded = true;
+      })
+    ).subscribe((eventsByAppointment) => {
+      this.communicationEvents = eventsByAppointment
+        .flatMap((events) => events)
+        .filter((event) => this.isCommunicationEvent(event))
+        .map((event) => this.toCommunicationItem(event))
+        .sort((first, second) => new Date(second.occurredAt).getTime() - new Date(first.occurredAt).getTime());
+    });
+  }
+
+  private isCommunicationEvent(event: AppointmentTimelineEventResponseDTO): boolean {
+    return event.eventType.includes('WHATSAPP') ||
+      [
+        'APPOINTMENT_CONFIRMED',
+        'APPOINTMENT_CANCELED',
+        'APPOINTMENT_RESCHEDULED',
+        'APPOINTMENT_ABSENT'
+      ].includes(event.eventType);
+  }
+
+  private toCommunicationItem(event: AppointmentTimelineEventResponseDTO): PatientCommunicationItem {
+    const titleByType: Record<string, string> = {
+      APPOINTMENT_CONFIRMED: 'Confirmacion registrada',
+      APPOINTMENT_CANCELED: 'Cancelacion registrada',
+      APPOINTMENT_RESCHEDULED: 'Turno reprogramado',
+      APPOINTMENT_ABSENT: 'Ausencia registrada',
+      WHATSAPP_MESSAGE_SENT: 'WhatsApp enviado',
+      WHATSAPP_MESSAGE_FAILED: 'Error de WhatsApp',
+      WHATSAPP_REMINDER_SENT: 'Recordatorio enviado',
+      WHATSAPP_REMINDER_FAILED: 'Error de recordatorio',
+      WHATSAPP_RESPONSE_RECEIVED: 'Respuesta recibida',
+      WHATSAPP_RESPONSE_AMBIGUOUS: 'Respuesta ambigua',
+      WHATSAPP_RESPONSE_INVALID: 'Respuesta no reconocida'
+    };
+
+    const tone = event.eventType.includes('FAILED') || event.eventType.includes('CANCELED') || event.eventType.includes('ABSENT')
+      ? 'danger'
+      : event.eventType.includes('CONFIRMED') || event.eventType.includes('RECEIVED')
+        ? 'success'
+        : 'info';
+
+    return {
+      appointmentId: event.appointmentId,
+      occurredAt: event.occurredAt,
+      title: titleByType[event.eventType] ?? event.eventType,
+      detail: event.observations || event.reason || event.responsibleUsername || 'Sin observaciones',
+      icon: event.eventType.includes('WHATSAPP') ? 'pi pi-whatsapp' : 'pi pi-calendar',
+      tone
+    };
+  }
+
   private formatValue(value: number | null | undefined, unit: string): string {
     return value === null || value === undefined ? '-' : `${value}${unit ? ` ${unit}` : ''}`;
   }
@@ -415,6 +610,23 @@ export class HistoryClinical implements OnInit {
     }
 
     return new Intl.DateTimeFormat('es-AR').format(date);
+  }
+
+  private formatTime(value: unknown): string {
+    return formatLocalTime(value);
+  }
+
+  private appointmentTime(appointment: AppointmentResponseDTO): number {
+    return new Date(`${appointment.date}T${this.formatTime(appointment.time)}:00`).getTime();
+  }
+
+  private isTerminalAppointment(status: AppointmentStatus): boolean {
+    return [
+      AppointmentStatus.CANCELED,
+      AppointmentStatus.COMPLETED,
+      AppointmentStatus.REJECTED,
+      AppointmentStatus.ABSENT
+    ].includes(status);
   }
 
   private formatDelta(

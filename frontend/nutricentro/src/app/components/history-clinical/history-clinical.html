@@ -79,9 +79,9 @@
         </article>
 
         <article>
-          <span>Proxima consulta</span>
+          <span>Próximo turno</span>
           <strong>{{ nextConsultationText }}</strong>
-          <small>Profesional asignado</small>
+          <small>{{ nextAppointment?.professionalFullName || 'Sin profesional asignado' }}</small>
         </article>
 
         <article>
@@ -90,6 +90,11 @@
             {{ latestConsultation?.date ? (latestConsultation?.date | date: 'dd/MM/yyyy') : '-' }}
           </strong>
           <small>{{ lastConsultationSummary }}</small>
+        </article>
+
+        <article>
+          <span>Último contacto</span>
+          <strong>{{ lastCommunicationText }}</strong>
         </article>
       </div>
 
@@ -126,6 +131,7 @@
       @if (showSummaryActions) {
         <nav class="quick-actions" aria-label="Acciones rapidas">
           <p-button icon="pi pi-plus" label="Nueva consulta" (onClick)="selectTab('consultations')"></p-button>
+          <p-button icon="pi pi-calendar-plus" label="Nuevo turno" severity="secondary" [outlined]="true" (onClick)="createAppointment()"></p-button>
           <p-button icon="pi pi-list-check" label="Nuevo plan" severity="secondary" [outlined]="true" (onClick)="selectTab('plans')"></p-button>
           <p-button icon="pi pi-paperclip" label="Adjuntar archivo" severity="secondary" [outlined]="true" (onClick)="selectTab('files')"></p-button>
         </nav>
@@ -146,10 +152,20 @@
     <app-history-tabs
       [nutritionData]="nutritionData"
       [history]="history"
+      [appointments]="appointments"
+      [communicationEvents]="communicationEvents"
+      [communicationsLoading]="communicationsLoading"
       [activeTab]="activeTab"
-      (activeTabChanged)="activeTab = $event"
+      (activeTabChanged)="onTabChanged($event)"
+      (appointmentSelected)="openAppointmentDetail($event)"
       (historyChanged)="refreshHistory()">
     </app-history-tabs>
+
+    <app-appointment-detail-drawer
+      [(visible)]="appointmentDrawerVisible"
+      [appointmentId]="selectedAppointmentId"
+      (appointmentUpdated)="loadPatientAndHistory(patient.id)">
+    </app-appointment-detail-drawer>
   </section>
 } @else {
   <section class="history-shell">

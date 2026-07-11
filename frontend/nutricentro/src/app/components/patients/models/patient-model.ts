@@ -18,7 +18,7 @@ export interface PatientResponseDTO {
   firstName: string,
   lastName: string,
   birthDate: string,
-  age: string,
+  age: number,
   document: number,
   mobile: string,
   gender: GenderType,

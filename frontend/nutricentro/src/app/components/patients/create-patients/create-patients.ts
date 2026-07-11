@@ -101,7 +101,7 @@ export class CreatePatients implements OnInit {
         label: 'Número de teléfono',
         type: 'numeric',
         placeholder: '+5493525345678',
-        pattern: /^[0-9]{6,15}$/,
+        pattern: /^\+?[0-9\s\-]{6,20}$/,
         required: false,
         autocomplete: 'mobile'
       },
@@ -163,8 +163,6 @@ export class CreatePatients implements OnInit {
 
   savePatient(formData: Record<string, any>): void {
     this.saving = true;
-    console.log('gender recibido:', formData['gender']);
-    console.log(typeof formData['gender']);
     const birthDate = toIsoLocalDate(formData['birthDate']);
 
     if (this.mode !== 'create') {

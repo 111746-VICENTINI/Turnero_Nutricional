@@ -135,11 +135,15 @@ export class ListPatients {
   }
 
   viewPatient(patient: PatientResponseDTO): void {
-    this.router.navigate(['/patient', patient.id]);
+    this.router.navigate(['/medical-history', patient.id], {
+      queryParams: { tab: 'summary' }
+    });
   }
 
   viewHistory(patient: PatientResponseDTO): void {
-    this.router.navigate(['/medical-history', patient.id]);
+    this.router.navigate(['/medical-history', patient.id], {
+      queryParams: { tab: 'consultations' }
+    });
   }
 
   deletePatient(patient: PatientResponseDTO): void {
@@ -147,7 +151,7 @@ export class ListPatients {
       next: () =>
       {
         this.loadPatients();
-        this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Paciente eliminado' });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Paciente eliminado' });
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el paciente' })
     })

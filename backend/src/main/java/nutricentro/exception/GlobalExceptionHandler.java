@@ -71,9 +71,21 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("INTERNAL_SERVER_ERROR")
-                .message(ex.getMessage())
+                .message("Ocurrió un error interno. Revisá los datos ingresados o intentá nuevamente.")
                 .build();
         LOGGER.error("Exception no controlada: {}", ex.getMessage(), ex);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(StackOverflowError.class)
+    public ResponseEntity<ErrorApi> handleStackOverflow(StackOverflowError ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("INTERNAL_SERVER_ERROR")
+                .message("Ocurrió un error interno al procesar relaciones del sistema.")
+                .build();
+        LOGGER.error("StackOverflowError no controlado", ex);
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -95,7 +107,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                 .status(HttpStatus.CONFLICT.value())
                 .error(HttpStatus.CONFLICT.name())
-                .message(ex.getMessage())
+                .message("No se pudo completar la operación porque existen datos relacionados.")
                 .build();
         LOGGER.warn("DataIntegrityViolationException: {}", ex.getMostSpecificCause().getMessage(), ex);
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
@@ -110,6 +122,18 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .build();
         LOGGER.warn("Excepción de acceso denegado: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorApi> handleSpringAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.FORBIDDEN.value())
+                .error(HttpStatus.FORBIDDEN.name())
+                .message("No tenés permisos para realizar esta acción.")
+                .build();
+        LOGGER.warn("Acceso denegado por seguridad: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 

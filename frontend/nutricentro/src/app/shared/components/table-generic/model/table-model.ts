@@ -26,6 +26,7 @@ export interface TableColumnConfig<T = any> {
   alignCenter?: boolean;
   dateFormat?: 'short' | 'long' | 'dayOnly';
   tagSeverityFn?: (value: any, row?: T) => TableTagSeverity;
+  tagIconFn?: (value: any, row?: T) => string;
   filterable?: boolean;
   filterType?: TableFilterType;
   filterPlaceholder?: string;

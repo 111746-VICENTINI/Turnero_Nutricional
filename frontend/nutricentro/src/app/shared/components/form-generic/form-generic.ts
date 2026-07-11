@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -17,6 +17,7 @@ import { formatLocalDate, parseLocalDate, parseLocalTime, toIsoLocalDate, toIsoL
 import {InputMaskDirective} from 'primeng/inputmask';
 import {InputGroupAddonModule} from 'primeng/inputgroupaddon';
 import {InputGroupModule} from 'primeng/inputgroup';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-form-generic',
@@ -41,7 +42,7 @@ import {InputGroupModule} from 'primeng/inputgroup';
   templateUrl: './form-generic.html',
   styleUrl: './form-generic.css',
 })
-export class FormGeneric implements OnChanges {
+export class FormGeneric implements OnChanges, OnDestroy {
   @Input({ required: true }) fields: GenericFormField[] = [];
   @Input() initialValues: Record<string, any> = {};
   @Input() isSubmitting = false;
@@ -58,11 +59,13 @@ export class FormGeneric implements OnChanges {
 
   @Output() formSubmit = new EventEmitter<Record<string, any>>();
   @Output() formCancel = new EventEmitter<void>();
+  @Output() formValueChange = new EventEmitter<Record<string, any>>();
   @Output() back = new EventEmitter<void>();
   disabled?: boolean;
   today = new Date();
 
   form = new FormGroup({});
+  private valueChangesSubscription?: Subscription;
 
   constructor(private fb: FormBuilder) {}
 
@@ -78,6 +81,10 @@ export class FormGeneric implements OnChanges {
         this.form.enable({ emitEvent: false });
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    this.valueChangesSubscription?.unsubscribe();
   }
 
   private buildForm(): void {
@@ -133,6 +140,10 @@ export class FormGeneric implements OnChanges {
     });
 
     this.form = this.fb.group(group);
+    this.valueChangesSubscription?.unsubscribe();
+    this.valueChangesSubscription = this.form.valueChanges.subscribe((value) => {
+      this.formValueChange.emit(this.normalizeSubmitValue(value));
+    });
 
     if (this.readonly) {
       this.form.disable({ emitEvent: false });

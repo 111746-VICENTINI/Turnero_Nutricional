@@ -4,9 +4,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.appointments.AppointmentRequestDTO;
 import nutricentro.dtos.appointments.AppointmentResponseDTO;
+import nutricentro.dtos.appointments.AppointmentTimelineEventResponseDTO;
 import nutricentro.dtos.appointments.AppointmentUpdateDTO;
 import nutricentro.enums.AppointmentStatus;
 import nutricentro.services.AppointmentService;
+import nutricentro.services.AppointmentTimelineService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,18 +24,22 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/appointment")
 @RequiredArgsConstructor
-@CrossOrigin("*")
+@CrossOrigin(origins = "${app.cors.allowed-origins:*}")
+/** Expone endpoints para gestionar turnos y consultar su timeline. */
 public class AppointmentController {
     private final AppointmentService appointmentService;
+    private final AppointmentTimelineService appointmentTimelineService;
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    /** Crea un turno desde la API. */
     public ResponseEntity<AppointmentResponseDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.createAppointment(dto));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    /** Busca turnos aplicando filtros, orden y paginación. */
     public ResponseEntity<Page<AppointmentResponseDTO>> searchAppointments(
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -70,18 +76,28 @@ public class AppointmentController {
 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    /** Lista turnos por estado. */
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByStatus(@PathVariable AppointmentStatus status) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByStatus(status));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    /** Obtiene el detalle de un turno. */
     public ResponseEntity<AppointmentResponseDTO> getAppointmentById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
     }
 
+    @GetMapping("/{id}/timeline")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    /** Obtiene el timeline funcional de un turno. */
+    public ResponseEntity<List<AppointmentTimelineEventResponseDTO>> getAppointmentTimeline(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentTimelineService.getTimeline(id));
+    }
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
+    /** Actualiza un turno existente. */
     public ResponseEntity<AppointmentResponseDTO> updateAppointment(@PathVariable Long id,
                                                      @Valid @RequestBody AppointmentUpdateDTO dto) {
         return ResponseEntity.ok(appointmentService.updateAppointment(id, dto));
@@ -89,6 +105,7 @@ public class AppointmentController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    /** Cancela un turno existente. */
     public ResponseEntity<Void> deleteAppointment(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);
         return ResponseEntity.noContent().build();

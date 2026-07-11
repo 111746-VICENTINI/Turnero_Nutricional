@@ -74,8 +74,10 @@ public class SpecialtyServiceImpl implements SpecialtyService {
 
     @Override
     public Page<SpecialtyResponseDTO> searchSpecialties(String name, Boolean active, Pageable pageable) {
-        Specification<SpecialtyEntity> spec = Specification.where(byName(name))
-                .and(byActive(active));
+        Specification<SpecialtyEntity> spec = Specification.allOf(
+                byName(name),
+                byActive(active)
+        );
 
         return specialtyRepository.findAll(spec, pageable).map(this::toResponse);
     }

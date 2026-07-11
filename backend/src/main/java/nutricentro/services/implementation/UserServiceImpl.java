@@ -95,9 +95,11 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Page<UserResponseDTO> searchUsers(String search, String role, Boolean isActive, Pageable pageable) {
-		Specification<UserEntity> spec = Specification.where(bySearch(search))
-						.and(byRole(role))
-						.and(byActive(isActive));
+		Specification<UserEntity> spec = Specification.allOf(
+				bySearch(search),
+				byRole(role),
+				byActive(isActive)
+		);
 
 		return userRepository.findAll(spec, pageable).map(this::toResponse);
 	}

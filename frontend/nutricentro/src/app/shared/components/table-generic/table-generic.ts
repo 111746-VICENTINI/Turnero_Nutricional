@@ -65,6 +65,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   @Input() selection: T[] = [];
   @Input() showCheckbox = false;
   @Input() showGlobalFilter = true;
+  @Input() globalFilterPlaceholder = 'Buscar...';
   @Input() emptyMessage = 'No hay datos disponibles.';
   @Input() dataKey = 'id';
   @Input() title = '';

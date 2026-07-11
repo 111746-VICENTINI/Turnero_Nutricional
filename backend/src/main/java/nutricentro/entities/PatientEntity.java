@@ -2,10 +2,10 @@ package nutricentro.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
@@ -15,10 +15,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "patients")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class PatientEntity extends BaseEntity {
 
     @Column(nullable = false)
@@ -49,7 +50,5 @@ public class PatientEntity extends BaseEntity {
     private MedicalHistoryEntity medicalHistory;
 
     @OneToMany(mappedBy = "patient")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private List<ConsultationEntity> consultations = new ArrayList<>();
 }

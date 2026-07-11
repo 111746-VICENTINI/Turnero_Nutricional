@@ -3,7 +3,9 @@ package nutricentro.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -12,7 +14,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "roles")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
@@ -26,6 +29,7 @@ public class RoleEntity extends BaseEntity {
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @NotNull
+    @Builder.Default
     private Set<UserEntity> users = new HashSet<>();
 
     @Column(name = "hierarchy")
@@ -41,6 +45,11 @@ public class RoleEntity extends BaseEntity {
         }
         RoleEntity roleEntity = (RoleEntity) o;
         return getId() != null && getId().equals(roleEntity.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
 }

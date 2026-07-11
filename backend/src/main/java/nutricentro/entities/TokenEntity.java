@@ -34,6 +34,7 @@ public class TokenEntity extends BaseEntity {
     @Column(name = "expires_datetime", nullable = false)
     private LocalDateTime expiresAt;
 
+    @Builder.Default
     @Column(name = "is_used", nullable = false)
     private Boolean isUsed = false;
 

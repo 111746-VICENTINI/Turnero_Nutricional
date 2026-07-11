@@ -2,21 +2,24 @@ package nutricentro.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
 @Table(name = "professionals")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class ProfessionalEntity extends BaseEntity {
 
     @Column(nullable = false)
@@ -42,6 +45,12 @@ public class ProfessionalEntity extends BaseEntity {
     private GenderType gender;
 
     private String email;
+
+    private BigDecimal firstConsultationFee;
+    private BigDecimal followUpConsultationFee;
+    private BigDecimal onlineConsultationFee;
+    private String feeCurrency;
+    private Boolean allowAppointmentFeeOverride = true;
 
     @Enumerated(EnumType.STRING)
     private PersonStatus status;

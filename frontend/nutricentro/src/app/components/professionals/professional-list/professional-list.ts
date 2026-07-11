@@ -155,7 +155,7 @@ export class ProfessionalList {
       next: () =>
       {
         this.loadProfessionals();
-        this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Profesional eliminado' });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Profesional eliminado' });
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el profesional' })
     })

@@ -13,7 +13,12 @@ export interface ProfessionalRequestDTO {
   gender: GenderType,
   email: string,
   registration: string,
-  status: PersonStatus
+  status: PersonStatus,
+  firstConsultationFee?: number,
+  followUpConsultationFee?: number,
+  onlineConsultationFee?: number,
+  feeCurrency?: string,
+  allowAppointmentFeeOverride?: boolean
 }
 
 export interface ProfessionalResponseDTO {
@@ -28,7 +33,12 @@ export interface ProfessionalResponseDTO {
   tuition: string,
   document: number,
   status: PersonStatus,
-  specialties: SpecialtyOnlyNameDTO[]
+  specialties: SpecialtyOnlyNameDTO[],
+  firstConsultationFee?: number,
+  followUpConsultationFee?: number,
+  onlineConsultationFee?: number,
+  feeCurrency?: string,
+  allowAppointmentFeeOverride?: boolean
 }
 
 export interface ProfessionalUpdateDTO {
@@ -43,4 +53,9 @@ export interface ProfessionalUpdateDTO {
   document: number,
   tuition: string,
   specialtyIds: number[];
+  firstConsultationFee?: number,
+  followUpConsultationFee?: number,
+  onlineConsultationFee?: number,
+  feeCurrency?: string,
+  allowAppointmentFeeOverride?: boolean
 }

@@ -12,3 +12,10 @@ export const authGuard: CanActivateFn = () => {
   router.navigate(['/login']);
   return false;
 };
+
+export const workspaceRedirectGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return router.createUrlTree([authService.getHomePath()]);
+};

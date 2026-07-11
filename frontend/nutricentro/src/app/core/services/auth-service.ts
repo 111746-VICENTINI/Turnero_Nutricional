@@ -41,7 +41,7 @@ export class AuthService {
 
         this.rolesSignal.set(response.user?.roles ?? []);
 
-        this.redirectToDashboard();
+        this.redirectToWorkspace();
       })
     );
   }
@@ -57,23 +57,25 @@ export class AuthService {
     return JSON.parse(user);
   }
 
-  redirectToDashboard(): void {
+  redirectToWorkspace(): void {
+    this.router.navigate([this.getHomePath()]);
+  }
+
+  getHomePath(): string {
     const roles = this.getUserRoles();
 
     if (roles.includes('ADMIN')) {
-      this.router.navigate(['/dashboard']);
-      return;
+      return '/dashboard';
     }
     if (roles.includes('SECRETARY')) {
-      this.router.navigate(['/agenda']);
-      return;
+      return '/agenda';
     }
     if (roles.includes('PROFESSIONAL')) {
-      this.router.navigate(['/agenda']);
-      return;
+      return '/mi-dia';
     }
 
     this.logout();
+    return '/login';
   }
 
   /**

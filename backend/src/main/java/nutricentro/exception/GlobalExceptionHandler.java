@@ -35,6 +35,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.valueOf(ex.getStatus()));
     }
 
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<ErrorApi> handleEmailException(EmailException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("EMAIL_ERROR")
+                .message(ex.getMessage())
+                .build();
+        LOGGER.warn("EmailException: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     //cuando falla una validacion de dto
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorApi> handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -156,14 +168,37 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorApi> handleJsonError(
             HttpMessageNotReadableException ex) {
+        String detail = ex.getMostSpecificCause() != null && ex.getMostSpecificCause().getMessage() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
 
         ErrorApi error = ErrorApi.builder()
                 .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.name())
-                .message("JSON inválido")
+                .message(readableJsonMessage(detail))
                 .build();
 
         return ResponseEntity.badRequest().body(error);
+    }
+
+    private String readableJsonMessage(String detail) {
+        String normalized = detail == null ? "" : detail;
+        if (normalized.contains("LocalTime")) {
+            return "Hora invalida. Use el formato HH:mm.";
+        }
+        if (normalized.contains("LocalDate")) {
+            return "Fecha invalida. Use el formato yyyy-MM-dd.";
+        }
+        if (normalized.contains("AppointmentModality")) {
+            return "Modalidad invalida.";
+        }
+        if (normalized.contains("DayOfWeek")) {
+            return "Dia invalido.";
+        }
+        if (normalized.contains("PersonStatus")) {
+            return "Estado invalido.";
+        }
+        return "El formato enviado no es valido. Revise los datos ingresados.";
     }
 }

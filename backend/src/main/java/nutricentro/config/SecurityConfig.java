@@ -55,6 +55,8 @@ public class SecurityConfig {
 
 
                             .requestMatchers("/api/v1/auth/**").permitAll()
+                            .requestMatchers("/api/v1/whatsapp/webhook").permitAll()
+                            .requestMatchers("/api/v1/whatsapp/status", "/api/v1/whatsapp/test-connection").hasAnyRole("ADMIN", "PROFESSIONAL")
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/v1/roles/**").hasRole("ADMIN")
                             .requestMatchers("/api/v1/user/**").hasRole("ADMIN")
@@ -69,6 +71,8 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/appointment/**").hasAnyRole("ADMIN", "SECRETARY", "PROFESSIONAL")
 
                             .requestMatchers("/api/v1/medical-history/**").hasAnyRole("ADMIN", "PROFESSIONAL")
+                            .requestMatchers("/api/v1/follow-up/**").hasAnyRole("ADMIN", "PROFESSIONAL")
+                            .requestMatchers("/api/v1/notifications/**").hasAnyRole("ADMIN", "PROFESSIONAL")
                             .anyRequest().authenticated()
                     )
                     .oauth2ResourceServer(oauth2 -> oauth2

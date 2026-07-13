@@ -3,6 +3,7 @@ package nutricentro.services;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleRequestDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleResponseDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleUpdateDTO;
+import nutricentro.enums.AppointmentModality;
 import nutricentro.enums.PersonStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,11 @@ public interface ProfessionalScheduleService {
     ProfessionalScheduleResponseDTO getById(Long id);
     List<ProfessionalScheduleResponseDTO> getByProfessional(Long professionalId);
     List<LocalTime> getAvailableSlots(Long professionalId, LocalDate date);
+    List<LocalTime> getAvailableSlots(Long professionalId,
+                                      LocalDate date,
+                                      AppointmentModality modality,
+                                      String locationKey,
+                                      Integer durationMinutes);
     void delete(Long id);
     Page<ProfessionalScheduleResponseDTO> search(Long professionalId, DayOfWeek dayOfWeek, PersonStatus status,
                                                  String search, Pageable pageable);

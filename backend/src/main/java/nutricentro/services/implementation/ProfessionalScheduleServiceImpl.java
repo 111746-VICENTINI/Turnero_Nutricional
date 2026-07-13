@@ -3,17 +3,23 @@ package nutricentro.services.implementation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleRequestDTO;
+import nutricentro.dtos.professionalSchedule.ProfessionalScheduleBreakRequestDTO;
+import nutricentro.dtos.professionalSchedule.ProfessionalScheduleBreakResponseDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleResponseDTO;
 import nutricentro.dtos.professionalSchedule.ProfessionalScheduleUpdateDTO;
 import nutricentro.entities.AppointmentEntity;
 import nutricentro.entities.ProfessionalEntity;
+import nutricentro.entities.ProfessionalScheduleBreakEntity;
 import nutricentro.entities.ProfessionalScheduleEntity;
-import nutricentro.enums.AppointmentStatus;
+import nutricentro.enums.AppointmentModality;
 import nutricentro.enums.PersonStatus;
 import nutricentro.exception.ApiException;
 import nutricentro.repositories.AppointmentRepository;
 import nutricentro.repositories.ProfessionalRepository;
+import nutricentro.repositories.ProfessionalScheduleBreakRepository;
 import nutricentro.repositories.ProfessionalScheduleRepository;
+import nutricentro.services.AppointmentAvailabilityService;
+import nutricentro.services.AppointmentStateMachine;
 import nutricentro.services.ProfessionalScheduleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +33,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,16 +40,18 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleService {
 
-    private static final List<AppointmentStatus> NON_BLOCKING_STATUSES = List.of(AppointmentStatus.CANCELED, AppointmentStatus.REJECTED);
-
     private final ProfessionalScheduleRepository scheduleRepository;
+    private final ProfessionalScheduleBreakRepository scheduleBreakRepository;
     private final ProfessionalRepository professionalRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentStateMachine appointmentStateMachine;
+    private final AppointmentAvailabilityService appointmentAvailabilityService;
 
     @Override
     @Transactional
     public ProfessionalScheduleResponseDTO create(ProfessionalScheduleRequestDTO dto) {
-        validate(dto.getStartTime(), dto.getEndTime(), dto.getSlotDurationMinutes());
+        validate(dto.getStartTime(), dto.getEndTime(), dto.getSlotDurationMinutes(),
+                dto.getBufferMinutes(), dto.getMaxDailyAppointments());
 
         ProfessionalEntity professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
@@ -69,9 +76,15 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         schedule.setStartTime(dto.getStartTime());
         schedule.setEndTime(dto.getEndTime());
         schedule.setSlotDurationMinutes(dto.getSlotDurationMinutes());
+        schedule.setBufferMinutes(dto.getBufferMinutes() != null ? dto.getBufferMinutes() : 0);
+        schedule.setMaxDailyAppointments(dto.getMaxDailyAppointments());
+        schedule.setModality(dto.getModality() != null ? dto.getModality() : AppointmentModality.HYBRID);
+        schedule.setLocationKey(normalizeLocationKey(dto.getLocationKey()));
         schedule.setStatus(status);
 
-        return toResponse(scheduleRepository.save(schedule));
+        ProfessionalScheduleEntity savedSchedule = scheduleRepository.save(schedule);
+        syncBreaks(savedSchedule, dto.getBreaks());
+        return toResponse(savedSchedule);
     }
 
     @Override
@@ -84,10 +97,22 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         Integer duration = dto.getSlotDurationMinutes() != null
                 ? dto.getSlotDurationMinutes()
                 : schedule.getSlotDurationMinutes();
+        Integer bufferMinutes = dto.getBufferMinutes() != null
+                ? dto.getBufferMinutes()
+                : schedule.getBufferMinutes();
+        Integer maxDailyAppointments = dto.getMaxDailyAppointments() != null
+                ? dto.getMaxDailyAppointments()
+                : schedule.getMaxDailyAppointments();
+        AppointmentModality modality = dto.getModality() != null
+                ? dto.getModality()
+                : schedule.getModality();
+        String locationKey = dto.getLocationKey() != null
+                ? normalizeLocationKey(dto.getLocationKey())
+                : schedule.getLocationKey();
         DayOfWeek day = dto.getDayOfWeek() != null ? dto.getDayOfWeek() : schedule.getDayOfWeek();
         PersonStatus status = dto.getStatus() != null ? dto.getStatus() : schedule.getStatus();
 
-        validate(startTime, endTime, duration);
+        validate(startTime, endTime, duration, bufferMinutes, maxDailyAppointments);
         if (status == PersonStatus.ACTIVE && hasOverlap(schedule.getId(), schedule.getProfessional().getId(), day, startTime, endTime)) {
             throw new ApiException("El horario se superpone con otra franja activa", HttpStatus.CONFLICT.value());
         }
@@ -97,10 +122,18 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         schedule.setStartTime(startTime);
         schedule.setEndTime(endTime);
         schedule.setSlotDurationMinutes(duration);
+        schedule.setBufferMinutes(bufferMinutes != null ? bufferMinutes : 0);
+        schedule.setMaxDailyAppointments(maxDailyAppointments);
+        schedule.setModality(modality != null ? modality : AppointmentModality.HYBRID);
+        schedule.setLocationKey(locationKey);
         schedule.setDayOfWeek(day);
         schedule.setStatus(status);
 
-        return toResponse(scheduleRepository.save(schedule));
+        ProfessionalScheduleEntity savedSchedule = scheduleRepository.save(schedule);
+        if (dto.getBreaks() != null) {
+            syncBreaks(savedSchedule, dto.getBreaks());
+        }
+        return toResponse(savedSchedule);
     }
 
     @Override
@@ -128,41 +161,20 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
 
         schedule.setStatus(PersonStatus.INACTIVE);
         scheduleRepository.save(schedule);
+        List<ProfessionalScheduleBreakEntity> activeBreaks = scheduleBreakRepository.findByScheduleIdAndStatus(schedule.getId(), PersonStatus.ACTIVE);
+        activeBreaks.forEach(scheduleBreak -> scheduleBreak.setStatus(PersonStatus.INACTIVE));
+        scheduleBreakRepository.saveAll(activeBreaks);
     }
 
     @Override
     public List<LocalTime> getAvailableSlots(Long professionalId, LocalDate date) {
-        if (date.isBefore(LocalDate.now())) {
-            return List.of();
-        }
+        return getAvailableSlots(professionalId, date, null, null, null);
+    }
 
-        List<ProfessionalScheduleEntity> schedules = scheduleRepository.findByProfessionalIdAndDayOfWeekAndStatus
-                                                (professionalId, date.getDayOfWeek(), PersonStatus.ACTIVE);
-        if (schedules.isEmpty()) {
-            return List.of();
-        }
-
-        List<AppointmentEntity> appointments = appointmentRepository.findByProfessionalIdAndDateAndStatusNotIn(professionalId, date, NON_BLOCKING_STATUSES);
-        List<LocalTime> availableSlots = new ArrayList<>();
-
-        for (ProfessionalScheduleEntity schedule : schedules) {
-            LocalTime current = schedule.getStartTime();
-            int duration = schedule.getSlotDurationMinutes();
-
-            while (!current.plusMinutes(duration).isAfter(schedule.getEndTime())) {
-                LocalDateTime slotDateTime = LocalDateTime.of(date, current);
-                if (slotDateTime.isAfter(LocalDateTime.now())
-                        && isFree(current, duration, appointments, schedules)) {
-                    availableSlots.add(current);
-                }
-                current = current.plusMinutes(duration);
-            }
-        }
-
-        return availableSlots.stream()
-                .distinct()
-                .sorted()
-                .toList();
+    @Override
+    public List<LocalTime> getAvailableSlots(Long professionalId, LocalDate date, AppointmentModality modality,
+                                             String locationKey, Integer durationMinutes) {
+        return appointmentAvailabilityService.getAvailableSlots(professionalId, date, modality, locationKey, durationMinutes);
     }
 
     @Override
@@ -175,19 +187,6 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                                                         byDay(dayOfWeek), byStatus(status), bySearch(search));
 
         return scheduleRepository.findAll(spec, pageable).map(this::toResponse);
-    }
-
-    private boolean isFree(LocalTime slot, int duration, List<AppointmentEntity> appointments, List<ProfessionalScheduleEntity> schedules) {
-        LocalTime slotEnd = slot.plusMinutes(duration);
-        return appointments.stream().noneMatch(appointment -> {
-            int appointmentDuration = schedules.stream()
-                    .filter(schedule -> isSlotInSchedule(schedule, appointment.getTime()))
-                    .map(ProfessionalScheduleEntity::getSlotDurationMinutes)
-                    .findFirst()
-                    .orElse(duration);
-            LocalTime appointmentEnd = appointment.getTime().plusMinutes(appointmentDuration);
-            return slot.isBefore(appointmentEnd) && appointment.getTime().isBefore(slotEnd);
-        });
     }
 
     private void validateFutureAppointmentsRemainCovered(ProfessionalScheduleEntity changedSchedule,
@@ -204,9 +203,12 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                 .toList();
 
         List<AppointmentEntity> futureAppointments = appointmentRepository
-                .findByProfessionalIdAndDateGreaterThanEqualAndStatusNotIn(professionalId, LocalDate.now(), NON_BLOCKING_STATUSES)
+                .findByProfessionalIdAndDateGreaterThanEqualAndStatusNotIn(professionalId, LocalDate.now(),
+                        appointmentStateMachine.getNonBlockingStatuses())
                 .stream().filter(appointment -> LocalDateTime.of(appointment.getDate(), appointment.getTime())
                         .isAfter(LocalDateTime.now()))
+                .filter(appointment -> appointment.getDate().getDayOfWeek() == changedSchedule.getDayOfWeek())
+                .filter(appointment -> isSlotInSchedule(changedSchedule, appointment.getTime()))
                 .toList();
 
         for (AppointmentEntity appointment : futureAppointments) {
@@ -224,7 +226,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                 throw new ApiException(
                         "El cambio deja fuera de agenda el turno " + appointment.getId()
                                 + " del " + appointment.getDate() + " a las " + appointment.getTime()
-                                + ". Reprogramelo o cancelelo antes de modificar el horario.",
+                                + ". Reprográmelo o cancélelo antes de modificar el horario.",
                         HttpStatus.CONFLICT.value()
                 );
             }
@@ -236,7 +238,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                     .findByPatientIdAndDateAndStatusNotIn(
                             appointment.getPatient().getId(),
                             appointment.getDate(),
-                            NON_BLOCKING_STATUSES
+                            appointmentStateMachine.getNonBlockingStatuses()
                     ).stream()
                     .filter(other -> !Objects.equals(other.getId(), appointment.getId()))
                     .anyMatch(other -> overlapsPatientAppointment(
@@ -280,7 +282,11 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         return scheduleRepository.existsOverlappingScheduleExcludingId(scheduleId, professionalId, day, start, end);
     }
 
-    private void validate(LocalTime startTime, LocalTime endTime, Integer duration) {
+    private void validate(LocalTime startTime,
+                          LocalTime endTime,
+                          Integer duration,
+                          Integer bufferMinutes,
+                          Integer maxDailyAppointments) {
         if (startTime == null || endTime == null || duration == null) {
             throw new ApiException("El horario y la duración son obligatorios", HttpStatus.BAD_REQUEST.value());
         }
@@ -302,6 +308,18 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                     HttpStatus.BAD_REQUEST.value()
             );
         }
+        if (bufferMinutes != null && bufferMinutes < 0) {
+            throw new ApiException(
+                    "El tiempo entre turnos no puede ser negativo",
+                    HttpStatus.BAD_REQUEST.value()
+            );
+        }
+        if (maxDailyAppointments != null && maxDailyAppointments < 1) {
+            throw new ApiException(
+                    "El máximo diario de pacientes debe ser mayor a cero",
+                    HttpStatus.BAD_REQUEST.value()
+            );
+        }
     }
 
     private boolean isSlotInSchedule(ProfessionalScheduleEntity schedule, LocalTime time) {
@@ -313,6 +331,54 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
             return false;
         }
         return Duration.between(start, time).toMinutes() % duration == 0;
+    }
+
+    private void syncBreaks(ProfessionalScheduleEntity schedule, List<ProfessionalScheduleBreakRequestDTO> breaks) {
+        List<ProfessionalScheduleBreakRequestDTO> requestedBreaks = breaks != null ? breaks : List.of();
+        validateBreaks(schedule, requestedBreaks);
+
+        List<ProfessionalScheduleBreakEntity> existingBreaks = scheduleBreakRepository
+                .findByScheduleIdAndStatus(schedule.getId(), PersonStatus.ACTIVE);
+        existingBreaks.forEach(scheduleBreak -> scheduleBreak.setStatus(PersonStatus.INACTIVE));
+        scheduleBreakRepository.saveAll(existingBreaks);
+
+        List<ProfessionalScheduleBreakEntity> newBreaks = requestedBreaks.stream()
+                .map(dto -> {
+                    ProfessionalScheduleBreakEntity scheduleBreak = new ProfessionalScheduleBreakEntity();
+                    scheduleBreak.setSchedule(schedule);
+                    scheduleBreak.setStartTime(dto.getStartTime());
+                    scheduleBreak.setEndTime(dto.getEndTime());
+                    scheduleBreak.setStatus(PersonStatus.ACTIVE);
+                    return scheduleBreak;
+                })
+                .toList();
+        scheduleBreakRepository.saveAll(newBreaks);
+    }
+
+    private void validateBreaks(ProfessionalScheduleEntity schedule, List<ProfessionalScheduleBreakRequestDTO> breaks) {
+        for (ProfessionalScheduleBreakRequestDTO scheduleBreak : breaks) {
+            if (scheduleBreak.getStartTime() == null || scheduleBreak.getEndTime() == null) {
+                throw new ApiException("El inicio y fin de la pausa son obligatorios", HttpStatus.BAD_REQUEST.value());
+            }
+            if (!scheduleBreak.getStartTime().isBefore(scheduleBreak.getEndTime())) {
+                throw new ApiException("La pausa debe tener inicio anterior al fin", HttpStatus.BAD_REQUEST.value());
+            }
+            if (scheduleBreak.getStartTime().isBefore(schedule.getStartTime())
+                    || scheduleBreak.getEndTime().isAfter(schedule.getEndTime())) {
+                throw new ApiException("La pausa debe estar dentro de la franja horaria", HttpStatus.BAD_REQUEST.value());
+            }
+        }
+
+        for (int i = 0; i < breaks.size(); i++) {
+            for (int j = i + 1; j < breaks.size(); j++) {
+                ProfessionalScheduleBreakRequestDTO first = breaks.get(i);
+                ProfessionalScheduleBreakRequestDTO second = breaks.get(j);
+                if (first.getStartTime().isBefore(second.getEndTime())
+                        && second.getStartTime().isBefore(first.getEndTime())) {
+                    throw new ApiException("Las pausas no pueden superponerse", HttpStatus.BAD_REQUEST.value());
+                }
+            }
+        }
     }
 
     private ProfessionalScheduleEntity findSchedule(Long id) {
@@ -332,6 +398,11 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                 .dayOfWeek(schedule.getDayOfWeek())
                 .status(schedule.getStatus())
                 .slotDurationMinutes(schedule.getSlotDurationMinutes())
+                .bufferMinutes(schedule.getBufferMinutes() != null ? schedule.getBufferMinutes() : 0)
+                .maxDailyAppointments(schedule.getMaxDailyAppointments())
+                .modality(schedule.getModality() != null ? schedule.getModality() : AppointmentModality.HYBRID)
+                .locationKey(schedule.getLocationKey())
+                .breaks(toBreakResponses(schedule))
                 .startTime(schedule.getStartTime())
                 .endTime(schedule.getEndTime())
                 .professionalName(
@@ -340,6 +411,25 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                                 + schedule.getProfessional().getLastName()
                 )
                 .build();
+    }
+
+    private String normalizeLocationKey(String locationKey) {
+        return locationKey == null || locationKey.isBlank() ? null : locationKey.trim();
+    }
+
+    private List<ProfessionalScheduleBreakResponseDTO> toBreakResponses(ProfessionalScheduleEntity schedule) {
+        if (schedule.getId() == null) {
+            return List.of();
+        }
+        return scheduleBreakRepository.findByScheduleIdAndStatus(schedule.getId(), PersonStatus.ACTIVE)
+                .stream()
+                .map(scheduleBreak -> ProfessionalScheduleBreakResponseDTO.builder()
+                        .id(scheduleBreak.getId())
+                        .startTime(scheduleBreak.getStartTime())
+                        .endTime(scheduleBreak.getEndTime())
+                        .build()
+                )
+                .toList();
     }
 
     private Specification<ProfessionalScheduleEntity> byProfessional(Long professionalId) {

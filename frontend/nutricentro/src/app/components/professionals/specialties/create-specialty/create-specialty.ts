@@ -1,7 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {Button} from "primeng/button";
 import {FormGeneric} from "../../../../shared/components/form-generic/form-generic";
-import {Toast} from "primeng/toast";
 import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
 import {MessageService} from 'primeng/api';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -41,6 +40,7 @@ export class CreateSpecialty implements OnInit {
       this.mode = routePath.endsWith('/edit') ? 'edit' : 'view';
       this.specialtyId = Number(id);
       this.isFormEditable = this.mode === 'edit';
+      this.loadSpecialty(this.specialtyId);
     }
 
     this.buildFields();
@@ -67,7 +67,7 @@ export class CreateSpecialty implements OnInit {
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'isActive',
-        label: 'Profesional activo',
+        label: 'Especialidad activa',
         type: 'checkbox'
       });
     }
@@ -83,6 +83,23 @@ export class CreateSpecialty implements OnInit {
 
   get submitLabel(): string {
     return this.mode === 'create' ? 'Crear' : 'Actualizar';
+  }
+
+  private loadSpecialty(id:number): void {
+    this.specialtyService.getByIdSpecialty(id).subscribe({
+      next: specialty => {
+        this.selectedSpecialty = specialty;
+
+        this.initialValues = {
+          name: specialty.name,
+          description: specialty.description,
+          isActive: specialty.isActive
+        };
+      },
+      error: () => {
+        this.showError('No se pudo cargar la especialidad');
+      }
+    });
   }
 
   saveSpecialty(formData: Record<string, any>): void {
@@ -162,6 +179,7 @@ export class CreateSpecialty implements OnInit {
   editModeUser(): void {
     this.mode = 'edit';
     this.isFormEditable = true;
+    this.buildFields();
   }
 
 }

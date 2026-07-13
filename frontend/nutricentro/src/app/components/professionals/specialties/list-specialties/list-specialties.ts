@@ -70,23 +70,23 @@ export class ListSpecialties {
     this.router.navigate(['/specialty/create']);
   }
 
-  viewSpecialty(professional: SpecialtyResponseDTO): void {
-    this.router.navigate(['/specialty', professional.id]);
+  viewSpecialty(specialty: SpecialtyResponseDTO): void {
+    this.router.navigate(['/specialty', specialty.id]);
   }
 
-  deleteSpecialty(professional: SpecialtyResponseDTO): void {
-    this.specialtyService.deleteSpecialty(Number(professional.id)).subscribe({
+  deleteSpecialty(specialty: SpecialtyResponseDTO): void {
+    this.specialtyService.deleteSpecialty(Number(specialty.id)).subscribe({
       next: () =>
       {
         this.loadSpecialties();
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Especialidad eliminada' });
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el profesional' })
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar la especialidad' })
     })
   }
 
-  editSpecialty(professional: SpecialtyResponseDTO){
-    this.router.navigate(['/specialty', professional.id ,'edit']);
+  editSpecialty(specialty: SpecialtyResponseDTO){
+    this.router.navigate(['/specialty', specialty.id ,'edit']);
   }
 
   onTableChange(event: TableState): void {

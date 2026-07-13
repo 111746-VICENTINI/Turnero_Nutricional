@@ -55,7 +55,6 @@ public class SpecialtyServiceImpl implements SpecialtyService {
             throw new IllegalStateException("No se puede eliminar la especialidad porque está asociada a profesionales");
         }
 
-//        specialtyRepository.delete(specialty);
         specialty.setIsActive(false);
         specialtyRepository.save(specialty);
     }

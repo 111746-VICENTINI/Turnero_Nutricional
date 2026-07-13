@@ -10,6 +10,7 @@ import nutricentro.enums.AppointmentStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -33,4 +34,7 @@ public class AppointmentRequestDTO {
     private Long professionalId;
 
     private Long secretaryId;
+    private BigDecimal appliedFee;
+    private String feeType;
+    private String feeCurrency;
 }

@@ -9,9 +9,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 @Repository
 public interface ProfessionalRepository extends JpaRepository<ProfessionalEntity, Long>, JpaSpecificationExecutor<ProfessionalEntity> {
     boolean existsBySpecialties_Id(Long id);
+
+    Optional<ProfessionalEntity> findByUserId(Long userId);
+    Optional<ProfessionalEntity> findByEmailIgnoreCase(String email);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select professional from ProfessionalEntity professional where professional.id = :id")

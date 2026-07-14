@@ -13,6 +13,7 @@ import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -48,4 +49,9 @@ public class ProfessionalRequestDTO {
     private GenderType gender;
     private String registration;
     private PersonStatus status;
+    private BigDecimal firstConsultationFee;
+    private BigDecimal followUpConsultationFee;
+    private BigDecimal onlineConsultationFee;
+    private String feeCurrency;
+    private Boolean allowAppointmentFeeOverride;
 }

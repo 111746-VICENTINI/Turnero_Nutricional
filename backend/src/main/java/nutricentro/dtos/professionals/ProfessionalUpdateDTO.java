@@ -2,9 +2,6 @@ package nutricentro.dtos.professionals;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +10,7 @@ import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -20,26 +18,14 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ProfessionalUpdateDTO {
-
-    @NotBlank(message = "El nombre es obligatorio")
-    @NotNull(message = "El nombre es obligatorio")
     private String firstName;
-
-    @NotBlank(message = "El apellido es obligatorio")
-    @NotNull(message = "El apellido es obligatorio")
     private String lastName;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    @NotNull(message = "El dni es obligatorio")
     private Integer document;
-
-    @NotEmpty(message = "La especialidad es obligatoria")
     private List<Long> specialtyIds;
-
-    @NotBlank(message = "La matricula es obligatoria")
-    @NotNull(message = "La matricula es obligatoria")
     private String tuition;
 
     @Email(message = "El formato email no es válido")
@@ -49,4 +35,9 @@ public class ProfessionalUpdateDTO {
     private GenderType gender;
     private String registration;
     private PersonStatus status;
+    private BigDecimal firstConsultationFee;
+    private BigDecimal followUpConsultationFee;
+    private BigDecimal onlineConsultationFee;
+    private String feeCurrency;
+    private Boolean allowAppointmentFeeOverride;
 }

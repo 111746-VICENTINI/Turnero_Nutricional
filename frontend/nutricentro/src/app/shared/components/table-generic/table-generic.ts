@@ -90,6 +90,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
   sortField: string | undefined;
   sortOrder: number | undefined;
   columnFilters: Record<string, any> = {};
+  private lastEmittedLazyState?: string;
 
   constructor(private confirmationService: ConfirmationService, private datePipe: DatePipe) {}
 
@@ -203,13 +204,41 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
       ? partial.filters!
       : this.cleanFilters();
 
-    this.tableStateChange.emit({
+    const state: TableState = {
       first: partial.first ?? this.first,
       rows: partial.rows ?? this.rows,
       sortField: partial.sortField ?? this.sortField,
       sortOrder: partial.sortOrder ?? this.sortOrder,
       search: partial.search ?? this.globalFilter,
       filters
+    };
+
+    if (this.lazy) {
+      const signature = this.tableStateSignature(state);
+      if (signature === this.lastEmittedLazyState) {
+        return;
+      }
+      this.lastEmittedLazyState = signature;
+    }
+
+    this.tableStateChange.emit(state);
+  }
+
+  private tableStateSignature(state: TableState): string {
+    const sortedFilters = Object.keys(state.filters ?? {})
+      .sort()
+      .reduce<Record<string, any>>((acc, key) => {
+        acc[key] = state.filters?.[key];
+        return acc;
+      }, {});
+
+    return JSON.stringify({
+      first: state.first,
+      rows: state.rows,
+      sortField: state.sortField ?? null,
+      sortOrder: state.sortOrder ?? null,
+      search: state.search ?? '',
+      filters: sortedFilters
     });
   }
 

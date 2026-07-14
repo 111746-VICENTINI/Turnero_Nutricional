@@ -1,0 +1,258 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Plan alimentario</h2>
+    </div>
+
+    <div class="plan-actions">
+      <p-button icon="pi pi-file-pdf" label="Generar PDF" severity="secondary" [outlined]="true"></p-button>
+      <p-button icon="pi pi-copy" label="Duplicar plan" severity="secondary" [outlined]="true"></p-button>
+      <p-button icon="pi pi-envelope" label="Enviar Email" severity="secondary" [outlined]="true" (onClick)="openEmailDialog()"></p-button>
+    </div>
+  </div>
+
+  <div class="plan-workspace">
+    <app-form-generic
+      [fields]="planFields"
+      [initialValues]="form"
+      [isSubmitting]="saving"
+      [columnsPerRow]="2"
+      formWidth="full"
+      submitLabel="Crear plan"
+      cancelLabel="Limpiar"
+      (formSubmit)="save($event)">
+    </app-form-generic>
+
+  <!-- buscador de alimentos -->
+    <aside class="food-builder">
+      <div class="builder-title">
+        <h3>Alimentos del plan</h3>
+        <span>{{ items.length }} items</span>
+      </div>
+
+      <div class="food-search">
+        <input
+          name="foodQuery"
+          type="search"
+          [(ngModel)]="foodQuery"
+          (keyup.enter)="searchFoods()"
+          placeholder="Buscar alimento" />
+        <p-button
+          icon="pi pi-search"
+          [label]="searching ? 'Buscando' : 'Buscar'"
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="searchFoods()">
+        </p-button>
+      </div>
+
+      @if (foodResults.length) {
+        <div class="food-results">
+          @for (food of foodResults; track food.externalId || food.id || food.name) {
+            <button type="button" (click)="selectFood(food)">
+              <strong>{{ food.name }}</strong>
+              <span>{{ food.brand || food.source || 'Base de alimentos' }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <div class="add-food-row">
+        <span>{{ selectedFood?.name || 'Selecciona un alimento' }}</span>
+        <input name="selectedGrams" type="number" [(ngModel)]="selectedGrams" min="1" />
+        <p-button
+          icon="pi pi-plus"
+          label="Agregar"
+          type="button"
+          [disabled]="!selectedFood"
+          (onClick)="addFoodItem()">
+        </p-button>
+      </div>
+
+      <div class="macro-strip">
+        <div>
+          <span>Kcal</span>
+          <strong>{{ totals.calories | number: '1.0-0' }}</strong>
+        </div>
+        <div>
+          <span>Proteinas</span>
+          <strong>{{ totals.protein | number: '1.0-1' }} g</strong>
+        </div>
+        <div>
+          <span>Carbohidratos</span>
+          <strong>{{ totals.carbohydrates | number: '1.0-1' }} g</strong>
+        </div>
+        <div>
+          <span>Grasas</span>
+          <strong>{{ totals.fat | number: '1.0-1' }} g</strong>
+        </div>
+      </div>
+
+      <div class="selected-foods">
+        @for (item of items; track $index) {
+          <article>
+            <div class="food-item-main">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.grams || 0 }} g</span>
+            </div>
+
+            <div class="food-item-macros">
+              <span>{{ item.calories || 0 | number: '1.0-0' }} kcal</span>
+              <span>P {{ item.protein || 0 | number: '1.0-1' }} g</span>
+              <span>C {{ item.carbohydrates || 0 | number: '1.0-1' }} g</span>
+              <span>G {{ item.fat || 0 | number: '1.0-1' }} g</span>
+            </div>
+
+            <p-button
+              icon="pi pi-trash"
+              type="button"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="removeItem(item)">
+            </p-button>
+          </article>
+        } @empty {
+          <div class="empty-foods">No hay alimentos agregados al calculo.</div>
+        }
+      </div>
+    </aside>
+  </div>
+
+  <app-table-generic
+    [data]="history.foodPlans || []"
+    [columns]="planColumns"
+    [actions]="planActions"
+    [globalFilterFields]="['title', 'description', 'menu', 'notes', 'observations', 'menuMaterialName', 'menuMaterialUrl', 'pdfUrl']"
+    [scrollable]="true"
+    [emptyMessage]="'Todavia no hay planes alimentarios.'"
+    title="Planes cargados"
+    formWidth="full"
+    (onEdit)="openEdit($event)"
+    (onDelete)="delete($event)"
+    (onActionClick)="onPlanAction($event)">
+  </app-table-generic>
+
+  <p-dialog
+    [(visible)]="editDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(64rem, 94vw)' }"
+    header="Editar plan alimentario">
+    <app-form-generic
+      [fields]="planFields"
+      [initialValues]="editForm"
+      [isSubmitting]="savingEdit"
+      [columnsPerRow]="3"
+      formWidth="full"
+      submitLabel="Guardar cambios"
+      cancelLabel="Cancelar"
+      (formSubmit)="saveEdit($event)"
+      (formCancel)="closeEdit()">
+    </app-form-generic>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="emailDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(42rem, 94vw)' }"
+    header="Enviar plan por email">
+    <div class="email-dialog">
+      <label>
+        <span>Destinatario</span>
+        <input
+          name="emailTo"
+          type="email"
+          [(ngModel)]="emailDraft.to"
+          autocomplete="email"
+          placeholder="paciente@email.com" />
+      </label>
+
+      <label>
+        <span>Asunto</span>
+        <input
+          name="emailSubject"
+          type="text"
+          [(ngModel)]="emailDraft.subject"
+          placeholder="Plan alimentario NutriCentro" />
+      </label>
+
+      <label>
+        <span>Mensaje</span>
+        <textarea
+          name="emailMessage"
+          pTextarea
+          [(ngModel)]="emailDraft.message"
+          rows="6"
+          placeholder="Escribe el mensaje para el paciente"></textarea>
+      </label>
+
+      <div class="attachment-panel">
+        <span>Adjuntos</span>
+        <label class="check-row" [class.disabled]="!hasFoodPlan">
+          <p-checkbox
+            name="includeFoodPlan"
+            [(ngModel)]="emailDraft.includeFoodPlan"
+            [binary]="true"
+            [disabled]="!hasFoodPlan">
+          </p-checkbox>
+          <span>Plan alimentario</span>
+        </label>
+
+        <label class="check-row" [class.disabled]="!hasAnthropometry">
+          <p-checkbox
+            name="includeAnthropometry"
+            [(ngModel)]="emailDraft.includeAnthropometry"
+            [binary]="true"
+            [disabled]="!hasAnthropometry">
+          </p-checkbox>
+          <span>Antropometria</span>
+        </label>
+
+        <label class="check-row" [class.disabled]="!hasLaboratories">
+          <p-checkbox
+            name="includeLaboratories"
+            [(ngModel)]="emailDraft.includeLaboratories"
+            [binary]="true"
+            [disabled]="!hasLaboratories">
+          </p-checkbox>
+          <span>Laboratorios</span>
+        </label>
+
+        <label class="check-row" [class.disabled]="!hasClinicalFiles">
+          <p-checkbox
+            name="includeClinicalFiles"
+            [(ngModel)]="emailDraft.includeClinicalFiles"
+            [binary]="true"
+            [disabled]="!hasClinicalFiles">
+          </p-checkbox>
+          <span>Archivos clinicos</span>
+        </label>
+      </div>
+
+      @if (emailAttachmentSize > maxEmailAttachmentBytes) {
+        <small class="email-error">Los archivos clinicos seleccionados superan el tamano permitido.</small>
+      }
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="email-actions">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeEmailDialog()">
+        </p-button>
+        <p-button
+          label="Enviar"
+          icon="pi pi-send"
+          [loading]="emailSending"
+          [disabled]="!canSendEmail"
+          (onClick)="sendEmail()">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</section>

@@ -1,0 +1,172 @@
+.tab-surface {
+  display: grid;
+  gap: 1rem;
+  max-width: 100%;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-title h2 {
+  margin: 0;
+  color: #10201d;
+  font-size: 1.2rem;
+}
+
+.section-title p {
+  margin: 0.25rem 0 0;
+  color: #66736f;
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  padding-left: 1.1rem;
+}
+
+.timeline::before {
+  position: absolute;
+  top: 0.8rem;
+  bottom: 0.8rem;
+  left: 0.32rem;
+  width: 2px;
+  border-radius: 999px;
+  background: #dbe4ea;
+  content: '';
+}
+
+.consultation-card {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #dbe4ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 1.1rem;
+  left: -1.1rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #2f7d63;
+  box-shadow: 0 0 0 3px #dff3e9;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-head span,
+.consultation-body span {
+  color: #66736f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.card-head h3 {
+  margin: 0.15rem 0 0;
+  color: #10201d;
+  font-size: 1.05rem;
+}
+
+.card-actions,
+.consultation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.consultation-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #52615d;
+  font-weight: 700;
+}
+
+.consultation-body {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.consultation-body section {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #e6edf0;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.consultation-body p {
+  margin: 0.35rem 0 0;
+  color: #10201d;
+  overflow-wrap: anywhere;
+}
+
+.linked-appointment {
+  align-items: center;
+  background: #edf4ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #1d4ed8;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+}
+
+.empty-timeline {
+  display: grid;
+  place-items: center;
+  gap: 0.4rem;
+  min-height: 12rem;
+  border: 1px dashed #cbd8d2;
+  border-radius: 8px;
+  background: #fbfdfc;
+  color: #66736f;
+  text-align: center;
+}
+
+.empty-timeline i {
+  color: #2f7d63;
+  font-size: 1.8rem;
+}
+
+.empty-timeline strong {
+  color: #10201d;
+}
+
+@media (max-width: 900px) {
+  .card-head,
+  .consultation-body {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-title {
+    display: grid;
+  }
+}

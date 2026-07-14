@@ -1,0 +1,98 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Registro de controles</h2>
+    </div>
+
+    <p-button
+      icon="pi pi-plus"
+      label="Nueva consulta"
+      type="button"
+      (onClick)="openCreate()">
+    </p-button>
+  </div>
+
+  <div class="timeline">
+    @if (history.consultations.length) {
+      @for (consultation of history.consultations; track consultation.id) {
+        <article class="consultation-card">
+          <div class="timeline-dot"></div>
+          <div class="card-head">
+            <div>
+              <span>{{ consultation.date ? (consultation.date | date: 'dd/MM/yyyy') : 'Sin fecha' }}</span>
+              <h3>{{ consultation.goal || consultation.reason || 'Consulta nutricional' }}</h3>
+            </div>
+            <div class="card-actions">
+              <p-tag
+                [value]="consultationStatusLabel(consultation.status)"
+                [severity]="consultationSeverity(consultation.status)"
+                icon="pi pi-stethoscope">
+              </p-tag>
+              <p-button icon="pi pi-copy" label="Duplicar" severity="secondary" [outlined]="true" size="small" (onClick)="duplicate(consultation)"></p-button>
+              <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [outlined]="true" size="small" (onClick)="openEdit(consultation)"></p-button>
+              @if (canFinalize(consultation)) {
+                <p-button icon="pi pi-verified" label="Finalizar" severity="success" size="small" [loading]="saving" (onClick)="finalize(consultation)"></p-button>
+              }
+              <p-button icon="pi pi-trash" label="Eliminar" severity="danger" [outlined]="true" size="small" (onClick)="delete(consultation)"></p-button>
+            </div>
+          </div>
+
+          <div class="consultation-meta">
+            <span><i class="pi pi-user"></i> Profesional {{ consultation.professionalId || '-' }}</span>
+            <span><i class="pi pi-clock"></i> {{ consultation.startTime || '-' }} - {{ consultation.endTime || '-' }} · {{ durationText(consultation) }}</span>
+            <span><i class="pi pi-calendar-plus"></i> Próximo turno: {{ consultation.nextConsultation || '-' }}</span>
+            @if (consultation.appointmentId) {
+              <button type="button" class="linked-appointment" (click)="openAppointment(consultation.appointmentId)">
+                <i class="pi pi-link"></i>
+                Turno #{{ consultation.appointmentId }}
+              </button>
+            }
+          </div>
+
+          <div class="consultation-body">
+            <section>
+              <span>Motivo</span>
+              <p>{{ consultation.reason || '-' }}</p>
+            </section>
+            <section>
+              <span>Evolución</span>
+              <p>{{ consultation.evolution || consultation.observations || consultation.diagnosis || '-' }}</p>
+            </section>
+            <section>
+              <span>Indicaciones</span>
+              <p>{{ consultation.indications || consultation.treatment || '-' }}</p>
+            </section>
+            <section>
+              <span>Observaciones</span>
+              <p>{{ consultation.observations || '-' }}</p>
+            </section>
+          </div>
+        </article>
+      }
+    } @else {
+      <div class="empty-timeline">
+        <i class="pi pi-comments"></i>
+        <strong>No hay consultas registradas</strong>
+      </div>
+    }
+  </div>
+
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(60rem, 94vw)' }"
+    [header]="selected ? 'Editar consulta' : 'Registrar consulta'">
+    <app-form-generic
+      [fields]="fields"
+      [initialValues]="form"
+      [isSubmitting]="saving"
+      [columnsPerRow]="2"
+      formWidth="full"
+      [submitLabel]="selected ? 'Guardar cambios' : 'Registrar consulta'"
+      cancelLabel="Cancelar"
+      (formSubmit)="save($event)"
+      (formCancel)="closeDialog()">
+    </app-form-generic>
+  </p-dialog>
+</section>

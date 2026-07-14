@@ -1,0 +1,605 @@
+<p-confirmDialog></p-confirmDialog>
+
+@if (isProfessionalWorkspace) {
+  <section class="professional-day-page">
+    <header class="professional-header">
+      <div>
+        <span class="eyebrow">Mi Día</span>
+        <h1>Pacientes de hoy</h1>
+        <p>{{ selectedDateLabel }}</p>
+      </div>
+
+      <div class="agenda-actions">
+        <div class="date-switcher" aria-label="Seleccionar fecha de trabajo">
+          <p-button
+            icon="pi pi-chevron-left"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            type="button"
+            pTooltip="Dia anterior"
+            tooltipPosition="bottom"
+            (onClick)="goToPreviousPeriod()"
+          ></p-button>
+
+          <p-datepicker
+            [(ngModel)]="selectedCalendarDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            appendTo="body"
+            (ngModelChange)="onSelectedDateChange($event)"
+            ariaLabel="Fecha de trabajo"
+          ></p-datepicker>
+
+          <p-button
+            icon="pi pi-chevron-right"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            type="button"
+            pTooltip="Dia siguiente"
+            tooltipPosition="bottom"
+            (onClick)="goToNextPeriod()"
+          ></p-button>
+        </div>
+
+        @if (!isProfessionalOnly) {
+          <p-select
+            [(ngModel)]="selectedSpecialtyId"
+            [options]="specialtyOptions"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            (ngModelChange)="onSpecialtyChange()"
+            ariaLabel="Filtrar por especialidad"
+          ></p-select>
+
+          <app-search-autocomplete
+            [(value)]="selectedProfessionalModel"
+            [suggestions]="professionalSuggestions"
+            [forceSelection]="true"
+            [labelFn]="professionalLabel"
+            [detailFn]="professionalDetail"
+            placeholder="Buscar profesional"
+            ariaLabel="Filtrar por profesional"
+            (complete)="searchProfessionals($event)"
+            (selected)="onProfessionalChange()"
+            (cleared)="clearProfessionalFilter()">
+          </app-search-autocomplete>
+        }
+
+        <p-button
+          label="Hoy"
+          icon="pi pi-calendar"
+          severity="secondary"
+          [outlined]="true"
+          type="button"
+          (onClick)="goToToday()"
+        ></p-button>
+      </div>
+    </header>
+
+    <section class="agenda-context" aria-label="Contexto de agenda abierta">
+      <article>
+        <span>Agenda</span>
+        <strong>{{ agendaScopeLabel }}</strong>
+      </article>
+      <article>
+        <span>Profesional</span>
+        <strong>{{ selectedProfessionalLabel }}</strong>
+      </article>
+      <article>
+        <span>Especialidad</span>
+        <strong>{{ selectedSpecialtyLabel }}</strong>
+      </article>
+      <article>
+        <span>Fecha</span>
+        <strong>{{ selectedDateLabel }}</strong>
+      </article>
+      <article>
+        <span>Semana</span>
+        <strong>{{ selectedWeekLabel }}</strong>
+      </article>
+    </section>
+
+    <section class="professional-status-grid" aria-label="Resumen del dia profesional">
+      <article class="summary-card total-card">
+        <span class="summary-icon pi pi-users"></span>
+        <div>
+          <strong>{{ dailyAppointments.length }}</strong>
+          <span>pacientes</span>
+        </div>
+      </article>
+      <article class="summary-card status-confirmed">
+        <span class="summary-icon pi pi-check-circle"></span>
+        <div>
+          <strong>{{ statusCount(AppointmentStatus.CONFIRMED) }}</strong>
+          <span>confirmados</span>
+        </div>
+      </article>
+      <article class="summary-card status-confirmed">
+        <span class="summary-icon pi pi-user-plus"></span>
+        <div>
+          <strong>{{ presentPatients.length }}</strong>
+          <span>presentes / en curso</span>
+        </div>
+      </article>
+      <article class="summary-card status-completed">
+        <span class="summary-icon pi pi-verified"></span>
+        <div>
+          <strong>{{ finishedPatients.length }}</strong>
+          <span>finalizados</span>
+        </div>
+      </article>
+      <article class="summary-card status-rejected">
+        <span class="summary-icon pi pi-user-minus"></span>
+        <div>
+          <strong>{{ absentPatients.length }}</strong>
+          <span>ausentes</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="professional-board">
+      <div class="professional-column">
+        <div class="section-heading">
+          <div>
+            <h2>Próximos pacientes</h2>
+            <p>Confirmados, pendientes y reprogramados.</p>
+          </div>
+        </div>
+
+        <div class="professional-list">
+          @for (item of nextPatients; track item.id) {
+            <article class="professional-card" [ngClass]="statusClass(item.status)">
+              <button type="button" class="professional-card-main" (click)="viewAppointment(item)">
+                <time>{{ formatTime(item.time) }}</time>
+                <div>
+                  <strong>{{ item.patientFullName }}</strong>
+                  <span>{{ item.reason || 'Sin motivo cargado' }}</span>
+                  <small>{{ item.professionalFullName }}</small>
+                </div>
+                <p-tag
+                  [value]="statusLabel(item.status)"
+                  [severity]="APPOINTMENT_STATUS_SEVERITY[item.status]"
+                  [icon]="statusIcon(item.status)">
+                </p-tag>
+              </button>
+
+              <div class="quick-actions professional-actions">
+                @if (canMarkPresent(item)) {
+                  <p-button icon="pi pi-user-plus" label="Presente" size="small" severity="success" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
+                }
+                @if (canMarkAbsent(item)) {
+                  <p-button icon="pi pi-user-minus" label="Ausente" size="small" severity="secondary" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.ABSENT)"></p-button>
+                }
+                <p-button icon="pi pi-eye" label="Resumen" size="small" severity="secondary" [text]="true" (onClick)="viewAppointment(item)"></p-button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state compact-empty">
+              <span class="pi pi-calendar-check"></span>
+              <strong>No hay pacientes pendientes</strong>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="professional-column featured">
+        <div class="section-heading">
+          <div>
+            <h2>Presentes y consultas</h2>
+          </div>
+        </div>
+
+        <div class="professional-list">
+          @for (item of presentPatients; track item.id) {
+            <article class="professional-card active-consultation">
+              <button type="button" class="professional-card-main" (click)="viewAppointment(item)">
+                <time>{{ formatTime(item.time) }}</time>
+                <div>
+                  <strong>{{ item.patientFullName }}</strong>
+                  <span>{{ item.reason || 'Consulta nutricional' }}</span>
+                  <small>Paciente presente</small>
+                </div>
+                <p-tag value="Listo para consulta" severity="success" icon="pi pi-stethoscope"></p-tag>
+              </button>
+
+              <div class="quick-actions professional-actions">
+                <p-button icon="pi pi-play" label="Iniciar / continuar" size="small" severity="info" (onClick)="viewAppointment(item)"></p-button>
+                <p-button icon="pi pi-book" label="Expediente" size="small" severity="secondary" [outlined]="true" (onClick)="viewAppointment(item)"></p-button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state compact-empty">
+              <span class="pi pi-user-plus"></span>
+              <strong>Ningún paciente presente</strong>
+              <p>Cuando la secretaria o el profesional marque presente, aparecerá aca.</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="professional-column">
+        <div class="section-heading">
+          <div>
+            <h2>Cierre del dia</h2>
+            <p>Finalizados y ausentes.</p>
+          </div>
+        </div>
+
+        <div class="professional-list compact-list">
+          @for (item of finishedPatients; track item.id) {
+            <button type="button" class="closure-row" (click)="viewAppointment(item)">
+              <span>{{ formatTime(item.time) }}</span>
+              <strong>{{ item.patientFullName }}</strong>
+              <p-tag value="Finalizado" severity="info" icon="pi pi-verified"></p-tag>
+            </button>
+          }
+          @for (item of absentPatients; track item.id) {
+            <button type="button" class="closure-row" (click)="viewAppointment(item)">
+              <span>{{ formatTime(item.time) }}</span>
+              <strong>{{ item.patientFullName }}</strong>
+              <p-tag value="Ausente" severity="secondary" icon="pi pi-user-minus"></p-tag>
+            </button>
+          }
+          @if (!finishedPatients.length && !absentPatients.length) {
+            <div class="empty-state compact-empty">
+              <span class="pi pi-list-check"></span>
+              <strong>Sin cierres todavia</strong>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <app-appointment-detail-drawer
+      [(visible)]="detailDrawerVisible"
+      [appointmentId]="selectedAppointmentId"
+      (appointmentUpdated)="onAppointmentUpdated()"
+    ></app-appointment-detail-drawer>
+  </section>
+} @else {
+<section class="agenda-page">
+  <header class="agenda-header">
+    <div class="agenda-title">
+      <span class="eyebrow">Agenda</span>
+      <h1>Centro operativo</h1>
+      <p>{{ selectedRangeLabel }}</p>
+    </div>
+
+    <div class="agenda-actions">
+      <div class="view-switcher" aria-label="Vista de agenda">
+        <button type="button" [class.active]="viewMode === 'day'" (click)="onViewModeChange('day')">
+          <i class="pi pi-calendar"></i>
+          Dia
+        </button>
+        <button type="button" [class.active]="viewMode === 'week'" (click)="onViewModeChange('week')">
+          <i class="pi pi-table"></i>
+          Semana
+        </button>
+        <button type="button" [class.active]="viewMode === 'list'" (click)="onViewModeChange('list')">
+          <i class="pi pi-list"></i>
+          Lista
+        </button>
+      </div>
+
+      <div class="date-switcher" aria-label="Seleccionar fecha de agenda">
+        <p-button
+          icon="pi pi-chevron-left"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          type="button"
+          pTooltip="Periodo anterior"
+          tooltipPosition="bottom"
+          (onClick)="goToPreviousPeriod()"
+        ></p-button>
+
+        <p-datepicker
+          [(ngModel)]="selectedCalendarDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          appendTo="body"
+          (ngModelChange)="onSelectedDateChange($event)"
+          ariaLabel="Fecha de agenda"
+        ></p-datepicker>
+
+        <p-button
+          icon="pi pi-chevron-right"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          type="button"
+          pTooltip="Periodo siguiente"
+          tooltipPosition="bottom"
+          (onClick)="goToNextPeriod()"
+        ></p-button>
+      </div>
+
+      <p-button
+        label="Hoy"
+        icon="pi pi-calendar"
+        severity="secondary"
+        [outlined]="true"
+        type="button"
+        (onClick)="goToToday()"
+      ></p-button>
+
+      @if (canManageAppointments) {
+        <p-button
+          label="Nuevo turno"
+          icon="pi pi-plus"
+          type="button"
+          (onClick)="createAppointment()"
+        ></p-button>
+      }
+    </div>
+  </header>
+
+  <section class="agenda-filters" aria-label="Filtros de agenda">
+    <app-search-autocomplete
+      [(value)]="agendaSearchValue"
+      [suggestions]="agendaSearchSuggestions"
+      [forceSelection]="false"
+      [labelFn]="textLabel"
+      placeholder="Buscar paciente, DNI, telefono, profesional, matricula, especialidad o motivo"
+      ariaLabel="Buscar en agenda"
+      (complete)="completeAgendaSearch($event)"
+      (valueChange)="onAgendaSearchChange($event)"
+      (selected)="onAgendaSearchSelected($event)"
+      (cleared)="clearAgendaSearch()">
+    </app-search-autocomplete>
+
+    @if (!isProfessionalOnly) {
+      <p-select
+        [(ngModel)]="selectedSpecialtyId"
+        [options]="specialtyOptions"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        (ngModelChange)="onSpecialtyChange()"
+        ariaLabel="Filtrar por especialidad"
+      ></p-select>
+
+      <app-search-autocomplete
+        [(value)]="selectedProfessionalModel"
+        [suggestions]="professionalSuggestions"
+        [forceSelection]="true"
+        [labelFn]="professionalLabel"
+        [detailFn]="professionalDetail"
+        placeholder="Buscar profesional"
+        ariaLabel="Filtrar por profesional"
+        (complete)="searchProfessionals($event)"
+        (selected)="onProfessionalChange()"
+        (cleared)="clearProfessionalFilter()">
+      </app-search-autocomplete>
+    }
+
+    <p-select
+      [(ngModel)]="selectedStatus"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      appendTo="body"
+      (ngModelChange)="onFilterChange()"
+      ariaLabel="Filtrar por estado"
+    ></p-select>
+  </section>
+
+  <section class="agenda-context" aria-label="Contexto de agenda abierta">
+    <article>
+      <span>Agenda</span>
+      <strong>{{ agendaScopeLabel }}</strong>
+    </article>
+    <article>
+      <span>Profesional</span>
+      <strong>{{ selectedProfessionalLabel }}</strong>
+    </article>
+    <article>
+      <span>Especialidad</span>
+      <strong>{{ selectedSpecialtyLabel }}</strong>
+    </article>
+    <article>
+      <span>Fecha</span>
+      <strong>{{ selectedDateLabel }}</strong>
+    </article>
+    <article>
+      <span>Semana</span>
+      <strong>{{ selectedWeekLabel }}</strong>
+    </article>
+  </section>
+
+  <section class="status-grid" aria-label="Resumen de estados de turnos">
+    <article class="summary-card total-card">
+      <span class="summary-icon pi pi-calendar-clock"></span>
+      <div>
+        <strong>{{ totalRecords }}</strong>
+        <span>turnos visibles</span>
+      </div>
+    </article>
+
+    @for (status of visibleStatusCards; track status) {
+      <article class="summary-card" [ngClass]="statusClass(status)">
+        <span class="summary-icon" [ngClass]="statusIcon(status)"></span>
+        <div>
+          <strong>{{ statusCount(status) }}</strong>
+          <span>{{ statusLabel(status) }}</span>
+        </div>
+      </article>
+    }
+  </section>
+
+  @if (viewMode === 'day') {
+    <div class="agenda-layout">
+      <section class="day-panel">
+        <div class="section-heading">
+          <div>
+            <h2>{{ selectedDateLabel }}</h2>
+            <p>{{ dailyAppointments.length }} turnos en la jornada</p>
+          </div>
+          @if (loading) {
+            <span class="live-count">Cargando...</span>
+          } @else {
+            <span class="live-count">{{ dailyAppointments.length }} visibles</span>
+          }
+        </div>
+
+        <div class="time-board" [class.loading]="loading">
+          @if (dailyAppointments.length > 0) {
+            @for (item of dailyAppointments; track item.id) {
+              <article class="appointment-card" [ngClass]="statusClass(item.status)">
+                <button
+                  class="appointment-open"
+                  type="button"
+                  (click)="viewAppointment(item)"
+                  [attr.aria-label]="'Ver turno de ' + item.patientFullName"
+                >
+                  <time>{{ formatTime(item.time) }}</time>
+                  <div class="appointment-main">
+                    <strong>{{ item.patientFullName }}</strong>
+                    <span>{{ item.professionalFullName }}</span>
+                    <p>{{ item.reason || 'Sin motivo cargado' }}</p>
+                  </div>
+                  <p-tag
+                    [value]="statusLabel(item.status)"
+                    [severity]="APPOINTMENT_STATUS_SEVERITY[item.status]"
+                    [icon]="statusIcon(item.status)"
+                  ></p-tag>
+                </button>
+
+                <div class="quick-actions" aria-label="Acciones rapidas">
+                  @if (canConfirm(item)) {
+                    <p-button icon="pi pi-check" label="Confirmar" size="small" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.CONFIRMED)"></p-button>
+                  }
+                  @if (canMarkPresent(item)) {
+                    <p-button icon="pi pi-user-plus" label="Presente" size="small" severity="success" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
+                  }
+                  @if (canMarkAbsent(item)) {
+                    <p-button icon="pi pi-user-minus" label="Ausente" size="small" severity="secondary" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.ABSENT)"></p-button>
+                  }
+                  @if (canStartConsultation(item)) {
+                    <p-button icon="pi pi-play" label="Consulta" size="small" severity="info" [text]="true" (onClick)="viewAppointment(item)"></p-button>
+                  }
+                  @if (canCancel(item)) {
+                    <p-button icon="pi pi-ban" label="Cancelar" size="small" severity="danger" [text]="true" (onClick)="cancelAppointment(item)"></p-button>
+                  }
+                </div>
+              </article>
+            }
+          } @else {
+            <div class="empty-state">
+              <span class="pi pi-calendar-times"></span>
+              <strong>No hay turnos para esta fecha</strong>
+              <p>Desde aca podes crear el primer turno o cambiar de profesional para revisar disponibilidad.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <aside class="availability-panel">
+        <div class="section-heading compact">
+          <div>
+            <h2>Horarios libres</h2>
+            <p>{{ selectedDateLabel }}</p>
+          </div>
+        </div>
+
+        @if (!selectedProfessionalId) {
+          <div class="empty-inline">
+            <i class="pi pi-user"></i>
+            <span>Seleccioná un profesional para ver huecos disponibles.</span>
+          </div>
+        } @else if (slotsLoading) {
+          <div class="empty-inline">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Cargando horarios disponibles...</span>
+          </div>
+        } @else if (filteredFreeSlots.length) {
+          <div class="slot-grid">
+            @for (slot of filteredFreeSlots; track slot) {
+              <button type="button" (click)="createAppointment(selectedDate, slot)">{{ slot }}</button>
+            }
+          </div>
+        } @else {
+          <div class="empty-inline">
+            <i class="pi pi-calendar-minus"></i>
+            <span>No hay horarios libres para los filtros actuales.</span>
+          </div>
+        }
+      </aside>
+    </div>
+  }
+
+  @if (viewMode === 'week') {
+    <section class="week-panel">
+      @for (day of weekDays; track day) {
+        <article class="week-day" [class.today]="day === selectedDate" (click)="onWeekDayEmptyClick(day, $event)">
+          <header>
+            <div>
+              <strong>{{ weekdayLabel(day) }}</strong>
+              <span>{{ appointmentsForDate(day).length }} turnos</span>
+            </div>
+            @if (canManageAppointments) {
+              <button type="button" class="week-new-button" (click)="createAppointmentForDay(day)">
+                <i class="pi pi-plus"></i>
+                Nuevo
+              </button>
+            }
+          </header>
+
+          <div class="week-items">
+            @for (item of appointmentsForDate(day); track item.id) {
+              <button type="button" class="week-item" [ngClass]="statusClass(item.status)" (click)="viewAppointment(item)">
+                <span>{{ formatTime(item.time) }}</span>
+                <strong>{{ item.patientFullName }}</strong>
+                <small>{{ statusLabel(item.status) }}</small>
+              </button>
+            } @empty {
+              <button type="button" class="week-empty" (click)="createAppointmentForDay(day)">
+                Sin turnos
+                @if (canManageAppointments) {
+                  <small>Click para crear</small>
+                }
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+
+  @if (viewMode === 'list') {
+    <section class="table-panel">
+      <app-table-generic
+        title="Listado de turnos"
+        subtitle="Vista administrativa para busqueda y revision."
+        [data]="appointment"
+        [columns]="columns"
+        [actions]="actions"
+        [filterConfigs]="filterConfigs"
+        globalFilterPlaceholder="Buscar paciente, DNI, telefono, profesional, especialidad o motivo"
+        [lazy]="true"
+        [loading]="loading"
+        [totalRecords]="totalRecords"
+        [pageSize]="pageSize"
+        [globalFilterFields]="['patientFullName', 'professionalFullName', 'reason', 'status']"
+        emptyMessage="No hay turnos para los filtros seleccionados"
+        formWidth="full"
+        fontSize="sm"
+        (tableStateChange)="onTableChange($event)"
+        (onView)="viewAppointment($event)"
+        (onEdit)="editAppointment($event)"
+        (onHistory)="viewHistory($event)"
+        (onDelete)="cancelAppointment($event)">
+      </app-table-generic>
+    </section>
+  }
+
+  <app-appointment-detail-drawer
+    [(visible)]="detailDrawerVisible"
+    [appointmentId]="selectedAppointmentId"
+    (appointmentUpdated)="onAppointmentUpdated()"
+  ></app-appointment-detail-drawer>
+</section>
+}

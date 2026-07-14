@@ -1,12 +1,16 @@
 import {CommonModule} from '@angular/common';
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
-import {filter} from 'rxjs';
+import {filter, interval, Subject, takeUntil} from 'rxjs';
 import {AvatarModule} from 'primeng/avatar';
 import {ButtonModule} from 'primeng/button';
+import {Popover} from 'primeng/popover';
 import {RippleModule} from 'primeng/ripple';
 import {StyleClassModule} from 'primeng/styleclass';
 import {AuthService} from '../../core/services/auth-service';
+import {NotificationResponseDTO} from '../../core/models/notification-model';
+import {NotificationPriority} from '../../core/models/follow-up-model';
+import {NotificationService} from '../../core/services/notification-service';
 
 interface NavigationItem {
   label: string;
@@ -25,20 +29,26 @@ interface NavigationItem {
     RouterLink,
     RouterLinkActive,
     ButtonModule,
+    Popover,
     RippleModule,
     StyleClassModule
   ],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
 })
-export class Drawer implements OnInit {
+export class Drawer implements OnInit, OnDestroy {
   sidebarExpanded = false;
   sidebarVisible = true;
 
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   readonly router = inject(Router);
   readonly roles = this.authService.roles;
   readonly actualUser = this.authService.getCurrentUser();
+  notifications: NotificationResponseDTO[] = [];
+  notificationsLoading = false;
+  unreadNotificationsCount = 0;
+  private readonly destroy$ = new Subject<void>();
 
   readonly navigationItems: NavigationItem[] = [
     {label: 'Inicio', icon: 'pi pi-chart-line', route: '/dashboard', roles: ['ADMIN']},
@@ -52,15 +62,38 @@ export class Drawer implements OnInit {
   ];
 
   ngOnInit(): void {
+    if (this.canSeeNotifications) {
+      this.loadNotifications();
+      interval(60000)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.refreshNotificationsSummary());
+    }
+
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => {
         this.sidebarExpanded = false;
       });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   get visibleNavigationItems(): NavigationItem[] {
     return this.navigationItems.filter(item => item.roles.some(role => this.roles().includes(role)));
+  }
+
+  get canSeeNotifications(): boolean {
+    return this.roles().some(role => ['ADMIN', 'PROFESSIONAL'].includes(role));
+  }
+
+  get notificationBadgeLabel(): string {
+    return this.unreadNotificationsCount > 9 ? '9+' : String(this.unreadNotificationsCount);
   }
 
   get currentSection(): string {
@@ -85,7 +118,118 @@ export class Drawer implements OnInit {
     this.authService.logout();
   }
 
+  toggleNotifications(event: Event, popover: Popover): void {
+    popover.toggle(event);
+    this.loadNotifications();
+  }
+
+  loadNotifications(): void {
+    if (!this.canSeeNotifications || this.notificationsLoading) {
+      return;
+    }
+
+    this.notificationsLoading = true;
+    this.notificationService.getNotifications().subscribe({
+      next: (notifications) => {
+        this.notifications = notifications;
+        this.syncUnreadCountFromList();
+        this.notificationsLoading = false;
+      },
+      error: () => {
+        this.notifications = [];
+        this.unreadNotificationsCount = 0;
+        this.notificationsLoading = false;
+      }
+    });
+  }
+
+  refreshNotificationsSummary(): void {
+    if (!this.canSeeNotifications) {
+      return;
+    }
+
+    this.notificationService.getSummary().subscribe({
+      next: (summary) => this.unreadNotificationsCount = summary.unreadCount,
+    });
+  }
+
+  markAsRead(notification: NotificationResponseDTO): void {
+    if (notification.read) {
+      return;
+    }
+
+    this.notificationService.markAsRead(notification.key).subscribe({
+      next: () => {
+        notification.read = true;
+        this.syncUnreadCountFromList();
+      }
+    });
+  }
+
+  markAllAsRead(): void {
+    if (!this.unreadNotificationsCount) {
+      return;
+    }
+
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications = this.notifications.map(notification => ({
+          ...notification,
+          read: true
+        }));
+        this.unreadNotificationsCount = 0;
+      }
+    });
+  }
+
+  openPatient(notification: NotificationResponseDTO, popover: Popover): void {
+    this.markAsRead(notification);
+    popover.hide();
+    this.router.navigate([notification.actionRoute || `/medical-history/${notification.patientId}`]);
+  }
+
+  priorityClass(priority: NotificationPriority): string {
+    return `priority-${priority.toLowerCase()}`;
+  }
+
+  priorityLabel(priority: NotificationPriority): string {
+    const labels: Record<NotificationPriority, string> = {
+      LOW: 'Baja',
+      MEDIUM: 'Media',
+      HIGH: 'Alta',
+      CRITICAL: 'Critica'
+    };
+    return labels[priority];
+  }
+
+  inactivityText(notification: NotificationResponseDTO): string {
+    const months = notification.monthsSinceLastConsultation ?? 0;
+    if (months >= 12) {
+      return 'Mas de 1 anio';
+    }
+    if (months > 0) {
+      return `${months} meses`;
+    }
+    const days = notification.daysSinceLastConsultation ?? 0;
+    return `${days} dias`;
+  }
+
+  formatDate(value: string | null | undefined): string {
+    if (!value) {
+      return '-';
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat('es-AR').format(date);
+  }
+
   getFullName(): string {
     return `${this.actualUser?.username ?? 'usuario'}`;
+  }
+
+  private syncUnreadCountFromList(): void {
+    this.unreadNotificationsCount = this.notifications.filter(notification => !notification.read).length;
   }
 }

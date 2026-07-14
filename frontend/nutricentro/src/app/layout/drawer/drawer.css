@@ -59,6 +59,254 @@
   font-weight: 600;
 }
 
+.notification-trigger {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.35rem;
+  justify-content: center;
+  position: relative;
+  transition: background 0.18s ease, transform 0.18s ease;
+  width: 2.35rem;
+}
+
+.notification-trigger:hover,
+.notification-trigger.has-unread {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.notification-trigger i {
+  font-size: 1rem;
+}
+
+.notification-count {
+  align-items: center;
+  background: #ef4444;
+  border: 2px solid #10b981;
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 800;
+  height: 1.15rem;
+  justify-content: center;
+  min-width: 1.15rem;
+  padding: 0 0.25rem;
+  position: absolute;
+  right: -0.25rem;
+  top: -0.25rem;
+}
+
+:host ::ng-deep .notifications-popover {
+  max-width: min(28rem, calc(100vw - 2rem));
+  width: 28rem;
+}
+
+.notifications-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.notifications-panel header {
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+}
+
+.notifications-panel header div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.notifications-panel header span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.notifications-panel header strong {
+  color: #111827;
+  font-size: 1rem;
+}
+
+.mark-all-button,
+.link-button {
+  background: transparent;
+  border: 0;
+  color: #047857;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0;
+}
+
+.mark-all-button:disabled {
+  color: #94a3b8;
+  cursor: default;
+}
+
+.notification-list {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 25rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.notification-item {
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 0.75rem;
+}
+
+.notification-read {
+  opacity: 0.66;
+}
+
+.notification-icon {
+  align-items: center;
+  background: #ecfdf5;
+  border-radius: 999px;
+  color: #047857;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.notification-content {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.notification-title-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.notification-title-row div {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.notification-title-row div span {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.notification-title-row strong {
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.notification-content p {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.notification-meta span {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  color: #475569;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 700;
+  gap: 0.25rem;
+  padding: 0.22rem 0.45rem;
+}
+
+.notification-meta .meta-highlight {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.priority-pill {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.18rem 0.45rem;
+}
+
+.priority-medium {
+  border-left-color: #f59e0b;
+}
+
+.priority-medium .priority-pill,
+.priority-medium .notification-icon {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.priority-high {
+  border-left-color: #f97316;
+}
+
+.priority-high .priority-pill,
+.priority-high .notification-icon {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.priority-critical {
+  border-left-color: #ef4444;
+}
+
+.priority-critical .priority-pill,
+.priority-critical .notification-icon {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.link-button.muted {
+  color: #64748b;
+}
+
+.notification-empty {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 6rem;
+  text-align: center;
+}
+
 .content-wrapper {
   display: flex;
   flex: 1;

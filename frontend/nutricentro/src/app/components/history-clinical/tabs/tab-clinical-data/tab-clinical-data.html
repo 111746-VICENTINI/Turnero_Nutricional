@@ -1,0 +1,19 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Datos clinicos</h2>
+      <p>Alergias, patologías, medicación y antecedentes familiares.</p>
+    </div>
+  </div>
+
+  <app-form-generic
+    [fields]="fields"
+    [initialValues]="form"
+    [isSubmitting]="saving"
+    [columnsPerRow]="4"
+    formWidth="full"
+    submitLabel="Guardar datos clinicos"
+    cancelLabel="Restaurar"
+    (formSubmit)="save($event)">
+  </app-form-generic>
+</section>

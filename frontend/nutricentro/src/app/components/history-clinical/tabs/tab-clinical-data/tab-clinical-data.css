@@ -1,0 +1,29 @@
+.tab-surface {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.section-title {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.section-title h2 {
+  color: #10201d;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.section-title p {
+  color: #66736f;
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 760px) {
+  .section-title {
+    display: grid;
+  }
+}

@@ -1,0 +1,134 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Archivos</h2>
+      <p>Subir PDF, imágenes, documentos.</p>
+    </div>
+  </div>
+
+  <div class="file-workspace">
+    <section
+      class="upload-panel"
+      [class.dragging]="dragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)">
+      <i class="pi pi-cloud-upload"></i>
+      <strong>{{ selectedFile?.name || 'Arrastra un archivo o seleccionalo' }}</strong>
+      <span>PDF, JPG, PNG o DOCX. El archivo original queda guardado en NutriCentro.</span>
+
+      <input
+        #fileInput
+        type="file"
+        [accept]="acceptedTypes"
+        (change)="onFileInput($event)"
+        hidden />
+
+      <div class="upload-actions">
+        <p-button
+          icon="pi pi-folder-open"
+          label="Elegir archivo"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="fileInput.click()">
+        </p-button>
+      </div>
+    </section>
+
+    <aside class="metadata-panel">
+      <label>
+        Tipo
+        <select [(ngModel)]="selectedType">
+          @for (type of fileTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Fecha
+        <input type="date" [(ngModel)]="date" />
+      </label>
+
+      <label>
+        Profesional
+        <input type="text" [(ngModel)]="professional" placeholder="Profesional responsable" />
+      </label>
+
+      <label>
+        Comentario
+        <textarea [(ngModel)]="comment" rows="4" placeholder="Descripcion del archivo"></textarea>
+      </label>
+
+      <p-button
+        icon="pi pi-upload"
+        label="Subir archivo"
+        [disabled]="!canUpload"
+        [loading]="uploading"
+        (onClick)="upload()">
+      </p-button>
+    </aside>
+  </div>
+
+  <div class="file-grid">
+    @for (item of groupedCounts; track item.type) {
+      <article>
+        <span>{{ item.type }}</span>
+        <strong>{{ item.count }}</strong>
+        <small>archivos</small>
+      </article>
+    }
+  </div>
+
+  <section class="files-list">
+    <div class="list-title">
+      <h3>Archivos cargados</h3>
+      <span>{{ files.length }} total</span>
+    </div>
+
+    @if (files.length) {
+      @for (file of files; track file.id) {
+        <article class="file-row">
+          <div class="file-icon">
+            <i [class]="file.contentType.startsWith('image/') ? 'pi pi-image' : file.contentType === 'application/pdf' ? 'pi pi-file-pdf' : 'pi pi-file-word'"></i>
+          </div>
+          <div class="file-main">
+            <strong>{{ file.originalName }}</strong>
+            <span>{{ file.type }} · {{ file.date ? (file.date | date: 'dd/MM/yyyy') : '-' }} · {{ formatSize(file.size) }}</span>
+            @if (file.comment) {
+              <p>{{ file.comment }}</p>
+            }
+          </div>
+          <div class="file-professional">
+            <span>Profesional </span>
+            <strong>{{ file.professional || '-' }}</strong>
+          </div>
+          <div class="row-actions">
+            <p-button icon="pi pi-eye" label="Vista previa" severity="secondary" [outlined]="true" size="small" (onClick)="preview(file)"></p-button>
+            <p-button icon="pi pi-download" label="Descargar" severity="secondary" [outlined]="true" size="small" (onClick)="download(file)"></p-button>
+            <p-button icon="pi pi-trash" label="Eliminar" severity="danger" [outlined]="true" size="small" (onClick)="delete(file)"></p-button>
+          </div>
+        </article>
+      }
+    } @else {
+      <div class="empty-files">
+        <i class="pi pi-folder-open"></i>
+        <strong>Sin archivos cargados</strong>
+      </div>
+    }
+  </section>
+
+  @if (previewUrl) {
+    <section class="preview-panel">
+      <div class="preview-head">
+        <strong>{{ previewFileName }}</strong>
+        <p-button icon="pi pi-times" severity="secondary" [text]="true" [rounded]="true" (onClick)="closePreview()"></p-button>
+      </div>
+      @if (previewKind === 'image') {
+        <img [src]="previewUrl" [alt]="previewFileName" />
+      } @else {
+        <iframe [src]="previewUrl" title="Vista previa de archivo"></iframe>
+      }
+    </section>
+  }
+</section>

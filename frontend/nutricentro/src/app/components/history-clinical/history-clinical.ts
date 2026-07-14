@@ -23,6 +23,8 @@ import { AppointmentResponseDTO, AppointmentTimelineEventResponseDTO } from '../
 import { AppointmentService } from '../appointments/services/appointment-service';
 import { AppointmentStatus } from '../../shared/constants/appointment-status';
 import {formatLocalTime} from '../../shared/utils/date-utils';
+import { FollowUpService } from '../../core/services/follow-up-service';
+import { PatientFollowUpStatusDTO } from '../../core/models/follow-up-model';
 
 interface ContextMetric {
   label: string;
@@ -53,6 +55,7 @@ export class HistoryClinical implements OnInit {
   private patientService = inject(PatientService);
   private historyService = inject(HistoryClinicalService);
   private appointmentService = inject(AppointmentService);
+  private followUpService = inject(FollowUpService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
@@ -62,17 +65,24 @@ export class HistoryClinical implements OnInit {
   patient?: PatientResponseDTO;
   history?: MedicalHistoryResponseDTO;
   appointments: AppointmentResponseDTO[] = [];
+  followUpStatus?: PatientFollowUpStatusDTO;
   communicationEvents: PatientCommunicationItem[] = [];
   loading = true;
   communicationsLoading = false;
   communicationsLoaded = false;
   activeTab = 'summary';
+  appointmentContextId?: number;
   selectedAppointmentId?: number;
   appointmentDrawerVisible = false;
 
   ngOnInit(): void {
     const patientId = Number(this.route.snapshot.paramMap.get('id'));
     this.activeTab = this.route.snapshot.queryParamMap.get('tab') || 'summary';
+    const appointmentId = Number(this.route.snapshot.queryParamMap.get('appointmentId'));
+    this.appointmentContextId = Number.isFinite(appointmentId) && appointmentId > 0 ? appointmentId : undefined;
+    if (this.appointmentContextId) {
+      this.activeTab = 'consultations';
+    }
 
     if (!patientId) {
       this.loading = false;
@@ -122,7 +132,11 @@ export class HistoryClinical implements OnInit {
         this.nutritionData = history?.nutritionalData ?? undefined;
         this.loading = false;
         if (this.patient && !this.isPatientInactive) {
+          this.loadFollowUpStatus(this.patient.id);
           this.loadAppointments(this.patient.id);
+          if (history) {
+            this.ensureAppointmentConsultation(history);
+          }
         }
       });
   }
@@ -139,6 +153,7 @@ export class HistoryClinical implements OnInit {
         this.nutritionData = history.nutritionalData ?? undefined;
         this.communicationEvents = [];
         this.communicationsLoaded = false;
+        this.loadFollowUpStatus(patientId);
       },
       error: () => {
         this.messageService.add({
@@ -168,6 +183,40 @@ export class HistoryClinical implements OnInit {
 
   get latestConsultation(): ConsultationResponseDTO | undefined {
     return this.history?.consultations?.[0];
+  }
+
+  get followUpTone(): string {
+    const status = this.followUpStatus?.status;
+    if (status === 'OVER_ONE_YEAR') {
+      return 'danger';
+    }
+    if (status === 'OVER_SIX_MONTHS') {
+      return 'orange';
+    }
+    if (status === 'OVER_THREE_MONTHS') {
+      return 'warning';
+    }
+    if (status === 'WITHOUT_VALID_CONSULTATION') {
+      return 'muted';
+    }
+    return 'success';
+  }
+
+  get followUpIcon(): string {
+    const status = this.followUpStatus?.status;
+    if (status === 'OVER_ONE_YEAR') {
+      return 'pi pi-exclamation-triangle';
+    }
+    if (status === 'OVER_SIX_MONTHS') {
+      return 'pi pi-exclamation-circle';
+    }
+    if (status === 'OVER_THREE_MONTHS') {
+      return 'pi pi-clock';
+    }
+    if (status === 'WITHOUT_VALID_CONSULTATION') {
+      return 'pi pi-calendar-minus';
+    }
+    return 'pi pi-check-circle';
   }
 
   get latestLaboratory(): LaboratoryResponseDTO | undefined {
@@ -521,6 +570,54 @@ export class HistoryClinical implements OnInit {
           detail: 'No se pudieron cargar los turnos del paciente.',
         });
       }
+    });
+  }
+
+  private ensureAppointmentConsultation(history: MedicalHistoryResponseDTO): void {
+    const appointmentId = this.appointmentContextId;
+    if (!appointmentId) {
+      return;
+    }
+
+    const existing = history.consultations?.some((consultation) => consultation.appointmentId === appointmentId);
+    if (existing) {
+      return;
+    }
+
+    this.loading = true;
+    this.historyService.addConsultation(history.id, {
+      appointmentId,
+      status: 'BORRADOR',
+    }).pipe(
+      switchMap(() => this.historyService.getByPatientId(history.patientId)),
+      finalize(() => this.loading = false)
+    ).subscribe({
+      next: (updatedHistory) => {
+        this.history = updatedHistory;
+        this.nutritionData = updatedHistory.nutritionalData ?? undefined;
+        this.loadAppointments(updatedHistory.patientId);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Consulta iniciada',
+          detail: 'La consulta quedo vinculada al turno.',
+        });
+      },
+      error: (error) => {
+        this.loading = false;
+        const response = error as {error?: {message?: string}};
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo iniciar la consulta',
+          detail: response?.error?.message || 'Revisa el estado del turno e intenta nuevamente.',
+        });
+      }
+    });
+  }
+
+  private loadFollowUpStatus(patientId: number): void {
+    this.followUpService.getPatientStatus(patientId).subscribe({
+      next: (status) => this.followUpStatus = status,
+      error: () => this.followUpStatus = undefined
     });
   }
 

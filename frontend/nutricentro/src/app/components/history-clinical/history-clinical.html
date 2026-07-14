@@ -72,6 +72,30 @@
         </div>
       </div>
 
+      @if (followUpStatus) {
+        <section class="follow-up-card" [ngClass]="'follow-up-' + followUpTone">
+          <div class="follow-up-icon">
+            <i [class]="followUpIcon"></i>
+          </div>
+
+          <div class="follow-up-body">
+            <span>Seguimiento automatico</span>
+            <strong>{{ followUpStatus.label }}</strong>
+            <p>{{ followUpStatus.recommendation }}</p>
+          </div>
+
+          <div class="follow-up-data">
+            <span>Ultima consulta</span>
+            <strong>
+              {{ followUpStatus.lastConsultationDate ? (followUpStatus.lastConsultationDate | date: 'dd/MM/yyyy') : '-' }}
+            </strong>
+            <small>
+              {{ followUpStatus.daysSinceLastConsultation ?? 0 }} dias desde el ultimo control
+            </small>
+          </div>
+        </section>
+      }
+
       <div class="focus-row">
         <article>
           <span>Objetivo nutricional</span>
@@ -156,6 +180,7 @@
       [communicationEvents]="communicationEvents"
       [communicationsLoading]="communicationsLoading"
       [activeTab]="activeTab"
+      [appointmentContextId]="appointmentContextId"
       (activeTabChanged)="onTabChanged($event)"
       (appointmentSelected)="openAppointmentDetail($event)"
       (historyChanged)="refreshHistory()">

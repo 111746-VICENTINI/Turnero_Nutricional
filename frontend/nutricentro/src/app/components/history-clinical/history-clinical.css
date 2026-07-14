@@ -116,6 +116,112 @@
   gap: 0.55rem;
 }
 
+.follow-up-card {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--green);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) minmax(13rem, auto);
+  padding: 0.7rem 0.8rem;
+}
+
+.follow-up-icon {
+  display: grid;
+  width: 2.55rem;
+  height: 2.55rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 1.15rem;
+}
+
+.follow-up-body,
+.follow-up-data {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.follow-up-body span,
+.follow-up-data span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.follow-up-body strong,
+.follow-up-data strong {
+  color: var(--text);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.follow-up-body p,
+.follow-up-data small {
+  color: var(--muted);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.follow-up-data {
+  border-left: 1px solid var(--line);
+  padding-left: 0.75rem;
+}
+
+.follow-up-success {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+}
+
+.follow-up-success .follow-up-icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.follow-up-warning {
+  background: #fffbeb;
+  border-left-color: #eab308;
+}
+
+.follow-up-warning .follow-up-icon {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.follow-up-orange {
+  background: #fff7ed;
+  border-left-color: #f97316;
+}
+
+.follow-up-orange .follow-up-icon {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.follow-up-danger {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.follow-up-danger .follow-up-icon {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.follow-up-muted {
+  background: #f8fafc;
+  border-left-color: #94a3b8;
+}
+
+.follow-up-muted .follow-up-icon {
+  background: #e2e8f0;
+  color: #475569;
+}
+
 .focus-row article,
 .alerts-panel,
 .metric-card {
@@ -357,8 +463,16 @@
   }
 
   .focus-row,
+  .follow-up-card,
   .alerts-panel {
     grid-template-columns: 1fr;
+  }
+
+  .follow-up-data {
+    padding-left: 0;
+    padding-top: 0.65rem;
+    border-left: 0;
+    border-top: 1px solid var(--line);
   }
 
   .medication-box {

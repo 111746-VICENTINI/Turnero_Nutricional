@@ -10,13 +10,6 @@ export class RoleService {
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/roles`;
 
-  // createRole(request: RoleRequestDTO) {
-  //   return this.http.post<RoleResponseDTO>(
-  //     `${this.apiUrl}/create`,
-  //     request
-  //   );
-  // }
-
   getRoles() {
     return this.http.get<RoleResponseDTO[]>(
       `${this.apiUrl}/all`

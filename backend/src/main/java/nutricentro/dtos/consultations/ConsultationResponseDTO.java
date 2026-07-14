@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nutricentro.enums.ConsultationStatus;
 
+import java.time.LocalTime;
 import java.util.Date;
 
 @Data
@@ -14,11 +16,18 @@ import java.util.Date;
 public class ConsultationResponseDTO {
     private Long id;
     private Date date;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private ConsultationStatus status;
+    private Long patientId;
+    private Long appointmentId;
     private Long professionalId;
     private String reason;
     private String diagnosis;
     private String treatment;
+    private String evolution;
     private String observations;
+    private String indications;
     private String goal;
     private String nextConsultation;
 }

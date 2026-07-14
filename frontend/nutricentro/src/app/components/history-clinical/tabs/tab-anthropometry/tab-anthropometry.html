@@ -1,0 +1,126 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Antropometria</h2>
+    </div>
+
+    <div class="actions">
+      <p-button
+        icon="pi pi-external-link"
+        label="Abrir AntroSport"
+        type="button"
+        severity="success"
+        (onClick)="openAntropoGym()">
+      </p-button>
+      <p-button
+        icon="pi pi-plus"
+        label="Carga manual"
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="openCreate()">
+      </p-button>
+    </div>
+  </div>
+
+  <div class="metric-strip">
+    @for (kpi of anthropometryKpis; track kpi.label) {
+      <div>
+        <span>{{ kpi.label }}</span>
+        <strong>{{ kpi.value }}</strong>
+        <small>{{ kpi.delta }}</small>
+      </div>
+    }
+  </div>
+
+  <div class="evolution-panel">
+    <h3>Ultimas mediciones</h3>
+    <div class="evolution-list">
+      @for (row of recentEvolutionRows; track row.date) {
+        <div class="evolution-row">
+          <div>
+            <span>Fecha</span>
+            <strong>{{ row.date ? (row.date | date: 'dd/MM/yyyy') : '-' }}</strong>
+          </div>
+          <div>
+            <span>Peso</span>
+            <strong>{{ row.weight }}</strong>
+            <small>{{ row.weightDelta }}</small>
+          </div>
+          <div>
+            <span>Grasa</span>
+            <strong>{{ row.fat }}</strong>
+          </div>
+          <div>
+            <span>Musculo</span>
+            <strong>{{ row.muscle }}</strong>
+          </div>
+          <div>
+            <span>Origen</span>
+            <strong>{{ row.source }}</strong>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-evolution">No hay mediciones para comparar.</div>
+      }
+    </div>
+  </div>
+
+  <app-table-generic
+    [data]="history.anthropometries || []"
+    [columns]="columns"
+    [actions]="actions"
+    [globalFilterFields]="['date', 'source', 'professionalName', 'weight', 'height', 'waist', 'hips', 'arm', 'bmi',
+    'waistHipRatio', 'bmr', 'bodyFatPercentage', 'muscleMass', 'softwareSource', 'externalReference', 'rawMeasurements', 'observations']"
+    [scrollable]="true"
+    [emptyMessage]="'No hay antropometrias registradas.'"
+    title="Mediciones extraidas"
+    formWidth="full"
+    (onActionClick)="openDetail($event.row)"
+    (onEdit)="openEdit($event)"
+    (onDelete)="delete($event)">
+  </app-table-generic>
+
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(64rem, 94vw)' }"
+    [header]="selected ? 'Editar medicion' : 'Nueva medicion'">
+    <app-form-generic
+      [fields]="fields"
+      [initialValues]="form"
+      [isSubmitting]="saving"
+      [columnsPerRow]="2"
+      formWidth="full"
+      [submitLabel]="selected ? 'Guardar cambios' : 'Guardar medicion'"
+      cancelLabel="Cancelar"
+      (formSubmit)="save($event)"
+      (formCancel)="closeDialog()">
+    </app-form-generic>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="detailDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(58rem, 94vw)' }"
+    header="Detalle antropometrico"
+    (onHide)="closeDetail()">
+    <div class="detail-grid">
+      @for (group of detailGroups; track group.title) {
+        <section>
+          <h3>{{ group.title }}</h3>
+          <dl>
+            @for (item of group.items; track item[0]) {
+              <div>
+                <dt>{{ item[0] }}</dt>
+                <dd>{{ item[1] || '-' }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+      }
+    </div>
+  </p-dialog>
+</section>

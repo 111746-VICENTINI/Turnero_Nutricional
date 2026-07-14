@@ -1,0 +1,82 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Valores de laboratorio</h2>
+    </div>
+
+    <p-button
+      icon="pi pi-plus"
+      label="Nuevo analisis"
+      type="button"
+      (onClick)="openCreate()">
+    </p-button>
+  </div>
+
+  <div class="lab-highlight-grid">
+    @for (item of highlights; track item.label) {
+      <article [class]="'status-' + item.status.toLowerCase().replace(' ', '-')">
+        <span>{{ item.label }}</span>
+        <strong>{{ item.value ?? '-' }} <small>{{ item.unit }}</small></strong>
+        <em>{{ item.status }}</em>
+      </article>
+    }
+  </div>
+
+  <app-table-generic
+    [data]="history.laboratories || []"
+    [columns]="columns"
+    [actions]="actions"
+    [globalFilterFields]="['date', 'glucose', 'cholesterol', 'hdl', 'ldl', 'triglycerides', 'vitaminD', 'vitaminB12',
+     'iron', 'ferritin', 'insulin', 'hba1c', 'pcr', 't3', 'tsh', 't4', 'hemoglobin', 'customParameters', 'observations']"
+    [scrollable]="true"
+    [emptyMessage]="'No hay analisis registrados.'"
+    title="Analisis cargados"
+    formWidth="full"
+    (onActionClick)="openDetail($event.row)"
+    (onEdit)="openEdit($event)"
+    (onDelete)="delete($event)">
+  </app-table-generic>
+
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(58rem, 94vw)' }"
+    [header]="selected ? 'Editar analisis' : 'Nuevo analisis'">
+    <app-form-generic
+      [fields]="fields"
+      [initialValues]="form"
+      [isSubmitting]="saving"
+      [columnsPerRow]="3"
+      formWidth="full"
+      [submitLabel]="selected ? 'Guardar cambios' : 'Agregar analisis'"
+      cancelLabel="Cancelar"
+      (formSubmit)="save($event)"
+      (formCancel)="closeDialog()">
+    </app-form-generic>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="detailDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(62rem, 94vw)' }"
+    header="Detalle de laboratorio"
+    (onHide)="closeDetail()">
+    <div class="lab-detail-grid">
+      @for (group of detailGroups; track group.title) {
+        <section>
+          <h3>{{ group.title }}</h3>
+          <dl>
+            @for (item of group.items; track item[0]) {
+              <div>
+                <dt>{{ item[0] }}</dt>
+                <dd>{{ item[1] || '-' }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+      }
+    </div>
+  </p-dialog>
+</section>

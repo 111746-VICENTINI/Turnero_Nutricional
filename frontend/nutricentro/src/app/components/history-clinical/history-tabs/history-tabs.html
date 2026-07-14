@@ -3,11 +3,13 @@
     <p-tablist>
       <p-tab value="summary" (click)="selectTab('summary')"><i class="pi pi-id-card"></i> Resumen</p-tab>
       <p-tab value="consultations" (click)="selectTab('consultations')"><i class="pi pi-history"></i> Controles</p-tab>
+      <p-tab value="appointments" (click)="selectTab('appointments')"><i class="pi pi-calendar-clock"></i> Turnos</p-tab>
       <p-tab value="anthropometry" (click)="selectTab('anthropometry')"><i class="pi pi-chart-line"></i> Antropometria</p-tab>
       <p-tab value="laboratory" (click)="selectTab('laboratory')"><i class="pi pi-chart-bar"></i> Laboratorio</p-tab>
       <p-tab value="settings" (click)="selectTab('settings')"><i class="pi pi-sitemap"></i> Antecedentes</p-tab>
       <p-tab value="nutrition" (click)="selectTab('nutrition')"><i class="pi pi-apple"></i> Nutricion</p-tab>
       <p-tab value="plans" (click)="selectTab('plans')"><i class="pi pi-list-check"></i> Plan Alimentario</p-tab>
+      <p-tab value="communications" (click)="selectTab('communications')"><i class="pi pi-whatsapp"></i> Comunicaciones</p-tab>
       <p-tab value="files" (click)="selectTab('files')"><i class="pi pi-folder-open"></i> Archivos</p-tab>
     </p-tablist>
 
@@ -22,8 +24,67 @@
       <p-tabpanel value="consultations">
         <app-tab-consultations
           [history]="history"
+          [appointmentContextId]="appointmentContextId"
+          (appointmentSelected)="openAppointment($event)"
           (saved)="notifyChange()">
         </app-tab-consultations>
+      </p-tabpanel>
+
+      <p-tabpanel value="appointments">
+        <section class="patient-section">
+          <div class="section-heading">
+            <div>
+              <h2>Turnos del paciente</h2>
+            </div>
+          </div>
+
+          <div class="appointment-timeline">
+            @for (appointment of appointments; track appointment.id) {
+              <article class="appointment-item">
+                <div class="appointment-date">
+                  <strong>{{ appointment.date | date: 'dd/MM' }}</strong>
+                  <span>{{ formatTime(appointment.time) }}</span>
+                </div>
+
+                <div class="appointment-content">
+                  <div class="appointment-head">
+                    <div>
+                      <h3>{{ appointment.professionalFullName }}</h3>
+                      <p>{{ appointment.reason || 'Sin motivo' }}</p>
+                    </div>
+                    <p-tag
+                      [value]="statusLabel(appointment.status)"
+                      [severity]="statusSeverity[appointment.status]"
+                      [icon]="statusIcon(appointment.status)">
+                    </p-tag>
+                  </div>
+
+                  <div class="appointment-links">
+                    <span><i class="pi pi-user"></i> {{ appointment.patientFullName }}</span>
+                    <span><i class="pi pi-link"></i> {{ linkedRecordsCount(appointment.id) }} consulta vinculada</span>
+                    @if (appointmentConsultationId(appointment.id)) {
+                      <span><i class="pi pi-stethoscope"></i> Consulta #{{ appointmentConsultationId(appointment.id) }}</span>
+                    }
+                  </div>
+                </div>
+
+                <p-button
+                  icon="pi pi-eye"
+                  label="Ver turno"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="openAppointment(appointment.id)">
+                </p-button>
+              </article>
+            } @empty {
+              <div class="empty-panel">
+                <i class="pi pi-calendar-times"></i>
+                <strong>Sin turnos registrados</strong>
+              </div>
+            }
+          </div>
+        </section>
       </p-tabpanel>
 
       <p-tabpanel value="anthropometry">
@@ -52,6 +113,51 @@
           [history]="history"
           (saved)="notifyChange()">
         </app-tab-plans>
+      </p-tabpanel>
+
+      <p-tabpanel value="communications">
+        <section class="patient-section">
+          <div class="section-heading">
+            <div>
+              <h2>Comunicaciones</h2>
+            </div>
+          </div>
+
+          @if (communicationsLoading) {
+            <div class="empty-panel">
+              <i class="pi pi-spin pi-spinner"></i>
+              <strong>Cargando comunicaciones</strong>
+            </div>
+          } @else if (communicationEvents.length) {
+            <div class="communication-timeline">
+              @for (event of communicationEvents; track event.appointmentId + event.occurredAt + event.title) {
+                <article class="communication-item" [ngClass]="'tone-' + event.tone">
+                  <span class="communication-icon">
+                    <i [class]="event.icon"></i>
+                  </span>
+                  <div>
+                    <strong>{{ event.title }}</strong>
+                    <time>{{ event.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+                    <p>{{ event.detail }}</p>
+                  </div>
+                  <p-button
+                    icon="pi pi-calendar"
+                    label="Turno"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    (onClick)="openAppointment(event.appointmentId)">
+                  </p-button>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="empty-panel">
+              <i class="pi pi-whatsapp"></i>
+              <strong>Sin comunicaciones registradas</strong>
+            </div>
+          }
+        </section>
       </p-tabpanel>
 
       <p-tabpanel value="files">

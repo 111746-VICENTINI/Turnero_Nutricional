@@ -33,3 +33,190 @@
   min-width: 0;
   padding: 0;
 }
+
+.patient-section {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.section-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.section-heading h2 {
+  color: #10201d;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.section-heading p {
+  color: #66736f;
+  margin: 0.25rem 0 0;
+}
+
+.appointment-timeline,
+.communication-timeline {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.appointment-item,
+.communication-item {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dbe4ea;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0.85rem;
+}
+
+.appointment-item {
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+}
+
+.appointment-date {
+  align-items: center;
+  background: #f7faf8;
+  border: 1px solid #e6edf0;
+  border-radius: 8px;
+  display: grid;
+  justify-items: center;
+  min-height: 4.4rem;
+}
+
+.appointment-date strong {
+  color: #10201d;
+  font-size: 1rem;
+}
+
+.appointment-date span {
+  color: #2f7d63;
+  font-weight: 800;
+}
+
+.appointment-content {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.appointment-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.appointment-head h3 {
+  color: #10201d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.appointment-head p,
+.communication-item p {
+  color: #66736f;
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.appointment-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.appointment-links span {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #e6edf0;
+  border-radius: 999px;
+  color: #52615d;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.communication-item {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.communication-icon {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 2.4rem;
+  justify-content: center;
+  width: 2.4rem;
+}
+
+.communication-item.tone-success .communication-icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.communication-item.tone-info .communication-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.communication-item.tone-danger .communication-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.communication-item strong {
+  color: #10201d;
+  display: block;
+}
+
+.communication-item time {
+  color: #66736f;
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.empty-panel {
+  align-items: center;
+  background: #fbfdfc;
+  border: 1px dashed #cbd8d2;
+  border-radius: 8px;
+  color: #66736f;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  min-height: 12rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.empty-panel i {
+  color: #2f7d63;
+  font-size: 1.8rem;
+}
+
+.empty-panel strong {
+  color: #10201d;
+}
+
+.empty-panel p {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .appointment-item,
+  .communication-item,
+  .appointment-head {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+}

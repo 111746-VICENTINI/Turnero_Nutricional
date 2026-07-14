@@ -1,0 +1,134 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <h2>Resumen</h2>
+  </div>
+
+  <div class="summary-grid">
+    <article class="info-panel state-panel">
+      <span>Estado de la consulta</span>
+      <div class="state-grid">
+        @for (item of consultationState; track item.label) {
+          <div [class]="'state-' + item.tone">
+            <small>{{ item.label }}</small>
+            <strong>{{ item.value }}</strong>
+          </div>
+        }
+      </div>
+    </article>
+
+    @if (hasConsultation && !planDelivered) {
+      <article class="info-panel pending-panel">
+        <span>Plan alimentario</span>
+        <strong>Plan alimentario pendiente</strong>
+        <p>La consulta ya fue registrada y el plan no fue entregado.</p>
+      </article>
+    } @else if (planDelivered) {
+      <article class="info-panel sent-panel">
+        <span>Plan alimentario</span>
+        <strong>Plan enviado</strong>
+        <p>
+          {{ activePlan?.planDeliveredDate ? (activePlan?.planDeliveredDate | date: 'dd/MM/yyyy') : 'Fecha sin registrar' }}
+          · {{ activePlan?.planDeliveryMedium || 'Medio sin registrar' }}
+        </p>
+      </article>
+    }
+
+    @if (hasConsultation && !materialDelivered) {
+      <article class="info-panel pending-panel">
+        <span>Material</span>
+        <strong>Material pendiente</strong>
+        <p>Menus/Registro/Antropometria todavia no fue entregado.</p>
+      </article>
+    } @else if (materialDelivered) {
+      <article class="info-panel sent-panel">
+        <span>Material</span>
+        <strong>Material enviado</strong>
+        <p>{{ activePlan?.menuDeliveredDate ? (activePlan?.menuDeliveredDate | date: 'dd/MM/yyyy') : 'Fecha sin registrar' }}</p>
+      </article>
+    }
+
+    <article class="info-panel wide">
+      <span>Objetivo</span>
+      <strong>{{ primaryGoal }}</strong>
+      <p>{{ latestConsultation?.treatment || activePlan?.description || 'Sin objetivo reciente' }}</p>
+    </article>
+
+    <article class="info-panel">
+      <span>Ultima consulta</span>
+      <strong>{{ latestConsultation?.date ? (latestConsultation?.date | date: 'dd/MM/yyyy') : '-' }}</strong>
+      <p>{{ latestConsultation?.observations || latestConsultation?.reason || 'Sin observaciones' }}</p>
+    </article>
+
+    <article class="info-panel">
+      <span>Actividad fisica</span>
+      <strong>{{ nutritionData?.physicalActivity || '-' }}</strong>
+      <p>Veces por semana {{ nutritionData?.activityFrequency || '-' }} · Duración {{ nutritionData?.activityDuration || '-' }}</p>
+    </article>
+
+    <article class="info-panel">
+      <span>Proximo turno</span>
+      <strong>{{ latestConsultation?.nextConsultation || 'Sin turno' }}</strong>
+      <p>Revisar agenda y confirmar turno.</p>
+    </article>
+
+    <article class="info-panel chart-panel">
+      <span>Dashboard visual</span>
+      @for (metric of chartMetrics; track metric.label) {
+        <div class="bar-row">
+          <div>
+            <strong>{{ metric.label }}</strong>
+            <small>{{ metric.display }}</small>
+          </div>
+          <div class="bar-track">
+            <span [style.width]="barWidth(metric.value, metric.max)"></span>
+          </div>
+        </div>
+      }
+    </article>
+
+    <article class="info-panel">
+      <span>Ultima antropometria</span>
+      <dl class="anthropometry">
+        <div>
+          <dt>Peso</dt>
+          <dd>{{ latestAnthropometry?.weight ?? '-' }} kg</dd>
+        </div>
+        <div>
+          <dt>IMC</dt>
+          <dd>{{ latestAnthropometry?.bmi ?? '-' }}</dd>
+        </div>
+        <div>
+          <dt>Grasa</dt>
+          <dd>{{ latestAnthropometry?.bodyFatPercentage ?? '-' }}%</dd>
+        </div>
+        <div>
+          <dt>Músculo</dt>
+          <dd>{{ latestAnthropometry?.muscleMass ?? '-' }} kg</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="info-panel lab-panel">
+      <span>Últimos laboratorios</span>
+      <div class="lab-grid">
+        @for (item of laboratoryHighlights; track item.label) {
+          <div>
+            <small>{{ item.label }}</small>
+            <strong>{{ item.value ?? '-' }}</strong>
+          </div>
+        }
+      </div>
+    </article>
+
+    <article class="info-panel">
+      <span>Plan activo</span>
+      <strong>{{ activePlan?.title || '-' }}</strong>
+      <p>{{ activePlan?.menu || activePlan?.description || 'Sin plan activo cargado' }}</p>
+    </article>
+
+    <article class="info-panel">
+      <span>Observaciones importantes</span>
+      <strong>{{ importantObservations }}</strong>
+    </article>
+  </div>
+</section>

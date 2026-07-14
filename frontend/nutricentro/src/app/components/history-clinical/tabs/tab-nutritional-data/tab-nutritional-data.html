@@ -1,0 +1,20 @@
+<section class="tab-surface">
+  <div class="section-title">
+    <div>
+      <h2>Nutrición y habitos alimentarios</h2>
+    </div>
+  </div>
+
+  <div class="edit-panel">
+    <app-form-generic
+      [fields]="fields"
+      [initialValues]="form"
+      [isSubmitting]="saving"
+      [columnsPerRow]="4"
+      formWidth="full"
+      submitLabel="Guardar nutricion"
+      cancelLabel="Restaurar"
+      (formSubmit)="save($event)">
+    </app-form-generic>
+  </div>
+</section>

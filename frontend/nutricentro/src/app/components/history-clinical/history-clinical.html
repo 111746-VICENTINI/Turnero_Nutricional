@@ -90,7 +90,7 @@
               {{ followUpStatus.lastConsultationDate ? (followUpStatus.lastConsultationDate | date: 'dd/MM/yyyy') : '-' }}
             </strong>
             <small>
-              {{ followUpStatus.daysSinceLastConsultation ?? 0 }} dias desde el ultimo control
+              {{ followUpStatus.daysSinceLastConsultation ?? 0 }} días desde el ultimo control
             </small>
           </div>
         </section>
@@ -109,7 +109,7 @@
         </article>
 
         <article>
-          <span>Ultima consulta</span>
+          <span>Última consulta</span>
           <strong>
             {{ latestConsultation?.date ? (latestConsultation?.date | date: 'dd/MM/yyyy') : '-' }}
           </strong>
@@ -125,7 +125,7 @@
       <!-- alertas -->
       <section class="alerts-panel" aria-label="Alertas clinicas">
         <div>
-          <span class="panel-label">Alertas clinicas</span>
+          <span class="panel-label">Alertas clínicas</span>
           <div class="alert-list">
             @if (clinicalAlerts.length) {
               @for (alert of clinicalAlerts; track alert.prefix + alert.label) {
@@ -147,7 +147,7 @@
         </div>
 
         <div class="medication-box">
-          <span>Medicacion habitual</span>
+          <span>Medicación habitual</span>
           <strong>{{ medications }}</strong>
         </div>
       </section>
@@ -195,8 +195,8 @@
 } @else {
   <section class="history-shell">
     <div class="empty-state">
-      <h2>No se encontro su historia clinica</h2>
-      <p>Volve a seleccionar el paciente desde el listado.</p>
+      <h2>No se encontró su historia clínica</h2>
+      <p>Volvé a seleccionar el paciente desde el listado.</p>
     </div>
   </section>
 }

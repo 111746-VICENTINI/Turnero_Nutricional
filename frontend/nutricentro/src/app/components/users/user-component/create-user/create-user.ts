@@ -15,8 +15,8 @@ import { RoleService } from '../../../../core/services/role-service';
 import { UserService } from '../services/user-service';
 import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
 import {FormGeneric} from '../../../../shared/components/form-generic/form-generic';
-import {ROLE_LABELS} from '../../../../shared/constants/roles';
-import {USER_STATUS_OPTIONS} from '../../../../shared/constants/user-status';
+import {ROLE_LABELS} from '../../../../shared/enums/roles';
+import {USER_STATUS_OPTIONS} from '../../../../shared/enums/user-status';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 

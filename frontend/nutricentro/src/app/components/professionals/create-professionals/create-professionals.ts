@@ -9,8 +9,8 @@ import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} 
 import {ProfessionalService} from '../services/professional-service';
 import {SpecialtyService} from '../specialties/services/specialty-service';
 import {toIsoLocalDate} from '../../../shared/utils/date-utils';
-import {Gender_Options} from '../../../shared/constants/genders';
-import {PERSON_STATUS_OPTIONS} from '../../../shared/constants/person-status';
+import {Gender_Options} from '../../../shared/enums/genders';
+import {PERSON_STATUS_OPTIONS} from '../../../shared/enums/person-status';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 

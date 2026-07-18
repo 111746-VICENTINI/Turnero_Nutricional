@@ -18,7 +18,7 @@ import {
   APPOINTMENT_STATUS_LABELS,
   APPOINTMENT_STATUS_SEVERITY,
   AppointmentStatus
-} from '../../../shared/constants/appointment-status';
+} from '../../../shared/enums/appointment-status';
 import {formatLocalTime} from '../../../shared/utils/date-utils';
 
 @Component({

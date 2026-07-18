@@ -1,5 +1,5 @@
-import {GenderType} from '../../../shared/constants/genders';
-import {PersonStatus} from '../../../shared/constants/person-status';
+import {GenderType} from '../../../shared/enums/genders';
+import {PersonStatus} from '../../../shared/enums/person-status';
 
 export interface PatientRequestDTO {
   firstName: string,

@@ -1,4 +1,4 @@
-import {PersonStatus} from '../../shared/constants/person-status';
+import {PersonStatus} from '../../shared/enums/person-status';
 
 export interface UserResponseDTO {
   id: number | string,

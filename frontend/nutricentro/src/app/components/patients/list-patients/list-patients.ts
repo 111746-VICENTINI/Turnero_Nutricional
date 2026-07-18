@@ -8,8 +8,8 @@ import {MessageService} from 'primeng/api';
 import {Router} from '@angular/router';
 import {TableActionConfig, TableColumnConfig, TableFilterConfig} from '../../../shared/components/table-generic/model/table-model';
 import {TableState} from '../../../core/models/paginacion-general';
-import {Gender_Options, GenderType} from '../../../shared/constants/genders';
-import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/constants/person-status';
+import {Gender_Options, GenderType} from '../../../shared/enums/genders';
+import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/enums/person-status';
 import {getLabel} from '../../../shared/utils/utils-enum';
 import {ProfessionalService} from '../../professionals/services/professional-service';
 
@@ -135,9 +135,7 @@ export class ListPatients {
   }
 
   viewPatient(patient: PatientResponseDTO): void {
-    this.router.navigate(['/medical-history', patient.id], {
-      queryParams: { tab: 'summary' }
-    });
+    this.router.navigate(['/patient', patient.id]);
   }
 
   viewHistory(patient: PatientResponseDTO): void {

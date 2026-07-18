@@ -13,7 +13,8 @@ import {
   TableFilterConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
 import {TableState} from '../../../../core/models/paginacion-general';
-import {PERSON_STATUS_OPTIONS} from '../../../../shared/constants/person-status';
+import {getLabel} from '../../../../shared/utils/utils-enum';
+import {USER_STATUS_LABELS, USER_STATUS_OPTIONS, UserStatus} from '../../../../shared/enums/user-status';
 
 @Component({
   selector: 'app-users-list',
@@ -33,13 +34,6 @@ export class UsersList implements OnInit {
     { field: 'username', header: 'Usuario' },
     { field: 'email', header: 'Email' },
     {
-      field: 'isActive',
-      header: 'Activo',
-      type: 'boolean',
-      alignCenter: true,
-      width: '7rem',
-    },
-    {
       field: 'roles',
       header: 'Roles',
       type: 'custom',
@@ -51,6 +45,10 @@ export class UsersList implements OnInit {
           .join(', ');
       },
     },
+    { field: 'isActive', header: 'Activo', type: 'custom', alignCenter: true,
+      formatFn: value => getLabel(value as UserStatus, USER_STATUS_LABELS),
+      tagSeverityFn: value => value === UserStatus.ACTIVE ? 'success' : 'danger'
+    }
   ];
 
   actions: TableActionConfig<UserResponseDTO>[] = [
@@ -61,15 +59,6 @@ export class UsersList implements OnInit {
 
   filterConfigs: TableFilterConfig[] = [
     {
-      field: 'isActive',
-      label: 'Estado',
-      placeholder: 'Todos',
-      options: [
-        { label: 'Todos', value: null },
-        ...PERSON_STATUS_OPTIONS
-      ]
-    },
-    {
       field: 'roles',
       label: 'Rol',
       placeholder: 'Todos',
@@ -78,6 +67,15 @@ export class UsersList implements OnInit {
         { label: 'Administrador', value: 'ADMIN' },
         { label: 'Secretaria', value: 'SECRETARY' },
         { label: 'Profesional', value: 'PROFESSIONAL' }
+      ]
+    },
+    {
+      field: 'isActive',
+      label: 'Estado',
+      placeholder: 'Todos',
+      options: [
+        { label: 'Todos', value: null },
+        ...USER_STATUS_OPTIONS
       ]
     }
   ];

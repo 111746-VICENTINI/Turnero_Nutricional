@@ -9,8 +9,8 @@ import {ProfessionalService} from '../services/professional-service';
 import {Toast} from 'primeng/toast';
 import {TableState} from '../../../core/models/paginacion-general';
 import {SpecialtyOnlyNameDTO} from '../specialties/models/specialty-model';
-import {Gender_Options} from '../../../shared/constants/genders';
-import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/constants/person-status';
+import {Gender_Options} from '../../../shared/enums/genders';
+import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/enums/person-status';
 import {getLabel} from '../../../shared/utils/utils-enum';
 import {SpecialtyService} from '../specialties/services/specialty-service';
 

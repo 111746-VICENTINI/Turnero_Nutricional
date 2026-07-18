@@ -1,4 +1,4 @@
-import {AppointmentStatus} from '../../../shared/constants/appointment-status';
+import {AppointmentStatus} from '../../../shared/enums/appointment-status';
 
 export interface AppointmentRequestDTO{
   date: string;
@@ -106,14 +106,4 @@ export interface AppointmentTimelineEventResponseDTO {
   observations?: string;
   notificationRequested?: boolean;
   notificationRequestedAt?: string;
-}
-
-export interface AppointmentRow {
-  id: number;
-  date: string;
-  hour: string;
-  patient: string;
-  professional: string;
-  status: AppointmentStatus;
-  reason: string;
 }

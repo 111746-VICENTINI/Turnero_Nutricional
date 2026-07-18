@@ -70,7 +70,10 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
             throw new ApiException("Ya existe un horario activo para ese rango", HttpStatus.CONFLICT.value());
         }
 
-        ProfessionalScheduleEntity schedule = new ProfessionalScheduleEntity();
+        ProfessionalScheduleEntity schedule = scheduleRepository
+                .findByProfessionalIdAndDayOfWeekAndStartTime(professional.getId(), dto.getDayOfWeek(), dto.getStartTime())
+                .filter(existingSchedule -> existingSchedule.getStatus() == PersonStatus.INACTIVE)
+                .orElseGet(ProfessionalScheduleEntity::new);
         schedule.setProfessional(professional);
         schedule.setDayOfWeek(dto.getDayOfWeek());
         schedule.setStartTime(dto.getStartTime());
@@ -113,6 +116,10 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         PersonStatus status = dto.getStatus() != null ? dto.getStatus() : schedule.getStatus();
 
         validate(startTime, endTime, duration, bufferMinutes, maxDailyAppointments);
+        if (scheduleRepository.existsByProfessionalIdAndDayOfWeekAndStartTimeAndIdNot(
+                schedule.getProfessional().getId(), day, startTime, schedule.getId())) {
+            throw new ApiException("Ya existe un horario para ese profesional, dia e inicio", HttpStatus.CONFLICT.value());
+        }
         if (status == PersonStatus.ACTIVE && hasOverlap(schedule.getId(), schedule.getProfessional().getId(), day, startTime, endTime)) {
             throw new ApiException("El horario se superpone con otra franja activa", HttpStatus.CONFLICT.value());
         }

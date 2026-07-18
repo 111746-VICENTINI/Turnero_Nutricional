@@ -24,6 +24,8 @@ public interface ProfessionalScheduleRepository extends JpaRepository<Profession
     List<ProfessionalScheduleEntity> findByProfessionalId(Long professionalId);
     List<ProfessionalScheduleEntity> findByProfessionalIdAndStatus(Long professionalId, PersonStatus status);
     List<ProfessionalScheduleEntity> findByProfessionalIdAndDayOfWeekAndStatus(Long professionalId, DayOfWeek dayOfWeek, PersonStatus status);
+    Optional<ProfessionalScheduleEntity> findByProfessionalIdAndDayOfWeekAndStartTime(Long professionalId, DayOfWeek dayOfWeek, LocalTime startTime);
+    boolean existsByProfessionalIdAndDayOfWeekAndStartTimeAndIdNot(Long professionalId, DayOfWeek dayOfWeek, LocalTime startTime, Long id);
 
     boolean existsByProfessionalIdAndDayOfWeekAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(Long professionalId, DayOfWeek dayOfWeek,
                                                                                                  PersonStatus status, LocalTime endTime,

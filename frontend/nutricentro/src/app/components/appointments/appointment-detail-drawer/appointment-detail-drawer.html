@@ -1,0 +1,253 @@
+<p-drawer
+  [visible]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  position="right"
+  [modal]="true"
+  [blockScroll]="true"
+  styleClass="appointment-detail-drawer"
+  [style]="{ width: 'min(48rem, 92vw)' }"
+  ariaCloseLabel="Cerrar detalle del turno"
+>
+  <ng-template pTemplate="header">
+    <div class="drawer-title">
+      <span class="eyebrow">Detalle del turno</span>
+      <strong>{{ appointment()?.patientFullName || 'Turno' }}</strong>
+    </div>
+  </ng-template>
+
+  @if (loading()) {
+    <div class="drawer-loading" aria-live="polite">
+      <span class="pi pi-spin pi-spinner"></span>
+      <p>Cargando detalle del turno...</p>
+    </div>
+  } @else if (appointment()) {
+    <div class="drawer-content">
+      <section class="hero-section">
+        <div class="hero-main">
+          <p-tag
+            [value]="statusLabel(appointment()?.status)"
+            [severity]="statusSeverity[appointment()!.status]"
+            [icon]="statusIcon(appointment()?.status)"
+          ></p-tag>
+          <h2>{{ appointment()?.patientFullName }}</h2>
+          <p>{{ appointment()?.reason || 'Sin motivo cargado' }}</p>
+        </div>
+
+        <div class="hero-meta">
+          <span><i class="pi pi-calendar"></i>{{ formatDate(appointment()?.date) }}</span>
+          <span><i class="pi pi-clock"></i>{{ formatTime(appointment()?.time) }}</span>
+          <span><i class="pi pi-hourglass"></i>{{ appointmentDuration() }}</span>
+          <span><i class="pi pi-user"></i>{{ appointment()?.professionalFullName }}</span>
+          <span><i class="pi pi-briefcase"></i>{{ specialtyText() }}</span>
+        </div>
+      </section>
+
+      <p-card styleClass="compact-card patient-card">
+        <div class="patient-summary">
+          <p-avatar
+            [label]="(patient()?.firstName?.[0] || 'P') + (patient()?.lastName?.[0] || '')"
+            shape="circle"
+            size="large"
+          ></p-avatar>
+
+          <div class="patient-main">
+            <strong>{{ fullName(patient()) }}</strong>
+            <span>{{ patient()?.age || '-' }} años · DNI {{ patient()?.document || '-' }}</span>
+            <span>{{ patient()?.mobile || 'Sin telefono' }}</span>
+            <span>{{ patient()?.email || 'Sin email' }}</span>
+          </div>
+
+          @if (whatsappUrl()) {
+            <a
+              class="whatsapp-link"
+              [href]="whatsappUrl()!"
+              target="_blank"
+              rel="noopener noreferrer"
+              pTooltip="Abrir WhatsApp"
+              tooltipPosition="left"
+              aria-label="Abrir WhatsApp del paciente"
+            >
+              <i class="pi pi-whatsapp"></i>
+            </a>
+          }
+        </div>
+
+        <div class="patient-facts">
+          <div>
+            <span>Última consulta</span>
+            <strong>{{ latestConsultation()?.date ? formatDate(latestConsultation()?.date) : 'Sin consultas' }}</strong>
+          </div>
+          <div>
+            <span>Próximo turno</span>
+            <strong>
+              @if (nextAppointment()) {
+                {{ formatDate(nextAppointment()?.date) }} · {{ formatTime(nextAppointment()?.time) }}
+              } @else {
+                Sin turno
+              }
+            </strong>
+          </div>
+        </div>
+
+        <div class="quick-links">
+          <p-button label="Ver paciente" icon="pi pi-user" severity="secondary" [outlined]="true" size="small" (onClick)="openPatient()"></p-button>
+          <p-button label="Editar paciente" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="editPatient()"></p-button>
+          <p-button label="Historial" icon="pi pi-book" severity="secondary" [outlined]="true" size="small" (onClick)="openPatientHistory()"></p-button>
+          <p-button label="Nuevo turno" icon="pi pi-plus" severity="secondary" [outlined]="true" size="small" (onClick)="createNewAppointment()"></p-button>
+        </div>
+      </p-card>
+
+      <section class="info-grid">
+        <p-card styleClass="compact-card">
+          <div class="section-title">
+            <i class="pi pi-dollar"></i>
+            <span>Resumen economico</span>
+          </div>
+
+          <div class="economic-detail">
+            <div>
+              <span>Costo aplicado</span>
+              <strong>{{ formatMoney(appointment()?.appliedFee, appointment()?.feeCurrency || 'ARS') }}</strong>
+            </div>
+            <div>
+              <span>Tipo</span>
+              <strong>{{ feeTypeLabel(appointment()?.feeType) }}</strong>
+            </div>
+            <div>
+              <span>Duracion</span>
+              <strong>{{ appointmentDuration() }}</strong>
+            </div>
+            <p-tag
+              [value]="appointment()?.feeEditable ? 'Editable' : 'Importe fijo'"
+              [severity]="appointment()?.feeEditable ? 'info' : 'secondary'"
+              icon="pi pi-lock">
+            </p-tag>
+            @if (appointment()?.feeEditable && canManageAppointments) {
+              <p-button label="Editar importe" icon="pi pi-pencil" severity="secondary" [outlined]="true" size="small" (onClick)="openEconomicDialog()"></p-button>
+            }
+          </div>
+        </p-card>
+      </section>
+
+      <p-card styleClass="compact-card timeline-card">
+        <div class="section-title">
+          <i class="pi pi-history"></i>
+          <span>Timeline</span>
+        </div>
+
+        @if (timelineItems().length) {
+          <p-timeline [value]="timelineItems()" align="left" styleClass="appointment-timeline">
+            <ng-template pTemplate="marker" let-item>
+              <span class="timeline-marker" [ngClass]="item.tone">
+                <i [ngClass]="item.icon"></i>
+              </span>
+            </ng-template>
+            <ng-template pTemplate="content" let-item>
+              <article class="timeline-event">
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <time>{{ item.date }}</time>
+                </div>
+                <p>{{ item.detail }}</p>
+              </article>
+            </ng-template>
+          </p-timeline>
+        } @else {
+          <div class="empty-inline">
+            <i class="pi pi-history"></i>
+            <span>Sin eventos registrados.</span>
+          </div>
+        }
+      </p-card>
+    </div>
+
+    <p-divider></p-divider>
+
+    <footer class="drawer-actions" aria-label="Acciones del turno">
+      @if (canConfirm) {
+        <p-button label="Confirmar" icon="pi pi-check" [loading]="actionLoading()" (onClick)="confirmAppointment()"></p-button>
+      }
+      @if (canMarkPresent) {
+        <p-button label="Paciente presente" icon="pi pi-user-plus" severity="success" [loading]="actionLoading()" (onClick)="markPatientPresent()"></p-button>
+      }
+      @if (canMarkAbsent) {
+        <p-button label="Ausente" icon="pi pi-user-minus" severity="secondary" [outlined]="true" [loading]="actionLoading()" (onClick)="markAbsent()"></p-button>
+      }
+      @if (canCorrectAbsent) {
+        <p-button label="Paciente llegó" icon="pi pi-user-plus" severity="success" [outlined]="true" [loading]="actionLoading()" (onClick)="markPatientPresent()"></p-button>
+      }
+      @if (canStartConsultation) {
+        <p-button label="Iniciar consulta" icon="pi pi-play" severity="info" [loading]="actionLoading()" (onClick)="startConsultation()"></p-button>
+      }
+      @if (currentConsultation()) {
+        <p-button label="Abrir consulta" icon="pi pi-external-link" severity="secondary" [outlined]="true" (onClick)="openConsultation()"></p-button>
+      }
+      @if (canFinishConsultation) {
+        <p-button label="Finalizar consulta" icon="pi pi-verified" severity="success" [loading]="actionLoading()" (onClick)="finishConsultation()"></p-button>
+      }
+      @if (canScheduleAgain) {
+        <p-button label="Programar nuevamente" icon="pi pi-calendar-plus" severity="secondary" [outlined]="true" (onClick)="createNewAppointment()"></p-button>
+      }
+      @if (canReschedule) {
+        <p-button label="Reprogramar" icon="pi pi-calendar-clock" severity="secondary" [outlined]="true" (onClick)="rescheduleAppointment()"></p-button>
+      }
+      @if (canCancel) {
+        <p-button label="Cancelar" icon="pi pi-ban" severity="danger" [outlined]="true" [loading]="actionLoading()" (onClick)="cancelAppointment()"></p-button>
+      }
+    </footer>
+  } @else {
+    <div class="drawer-loading">
+      <span class="pi pi-calendar-times"></span>
+      <p>Selecciona un turno para ver el detalle.</p>
+    </div>
+  }
+
+  <p-dialog
+    [(visible)]="followUpDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="false"
+    [style]="{ width: 'min(28rem, 92vw)' }"
+    header="Consulta finalizada">
+    <div class="follow-up-dialog">
+      <i class="pi pi-calendar-plus"></i>
+      <h3>Desea programar un proximo control?</h3>
+      <p>La consulta quedo guardada y el turno fue marcado como completado.</p>
+      <div>
+        <p-button label="Si, programar" icon="pi pi-plus" (onClick)="scheduleFollowUp()"></p-button>
+        <p-button label="No, volver a Mi Dia" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="closeFollowUpDialog()"></p-button>
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="economicDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: 'min(28rem, 92vw)' }"
+    header="Resumen economico">
+    <div class="economic-form">
+      <label>
+        <span>Tipo</span>
+        <select [(ngModel)]="economicDraftType">
+          <option value="FIRST">Primera consulta</option>
+          <option value="CONTROL">Control</option>
+          <option value="ONLINE">Online</option>
+        </select>
+      </label>
+      <label>
+        <span>Importe</span>
+        <input type="number" min="0" step="100" [(ngModel)]="economicDraftFee" />
+      </label>
+      <label>
+        <span>Moneda</span>
+        <input type="text" maxlength="3" [(ngModel)]="economicDraftCurrency" />
+      </label>
+    </div>
+
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="economicDialogVisible = false"></p-button>
+      <p-button label="Guardar" icon="pi pi-check" [loading]="actionLoading()" (onClick)="saveEconomicSummary()"></p-button>
+    </ng-template>
+  </p-dialog>
+</p-drawer>

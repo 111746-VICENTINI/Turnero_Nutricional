@@ -1,0 +1,497 @@
+:host {
+  display: contents;
+}
+
+:host ::ng-deep .appointment-detail-drawer .p-drawer-content {
+  padding: 0 1.25rem 1rem;
+}
+
+.drawer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.drawer-title strong {
+  color: #111827;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eyebrow {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.drawer-loading {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+  min-height: 18rem;
+  text-align: center;
+}
+
+.drawer-loading .pi {
+  color: #0f766e;
+  font-size: 2rem;
+}
+
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #eefdf9 100%);
+  border: 1px solid #dbe7e5;
+  border-radius: 8px;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  padding: 1rem;
+}
+
+.hero-main {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hero-main h2 {
+  color: #0f172a;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.hero-main p {
+  color: #475569;
+  margin: 0;
+}
+
+.hero-meta {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hero-meta span {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hero-meta i {
+  color: #0f766e;
+}
+
+:host ::ng-deep .compact-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+:host ::ng-deep .compact-card .p-card-body {
+  padding: 1rem;
+}
+
+:host ::ng-deep .compact-card .p-card-content {
+  padding: 0;
+}
+
+.patient-summary {
+  align-items: center;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.patient-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.patient-main strong {
+  color: #111827;
+  font-size: 1rem;
+}
+
+.patient-main span,
+.patient-facts span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.whatsapp-link {
+  align-items: center;
+  background: #dcfce7;
+  border-radius: 999px;
+  color: #15803d;
+  display: inline-flex;
+  height: 2.3rem;
+  justify-content: center;
+  text-decoration: none;
+  width: 2.3rem;
+}
+
+.patient-facts {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.patient-facts div {
+  background: #f8fafc;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+}
+
+.patient-facts strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+.section-title {
+  align-items: center;
+  color: #0f172a;
+  display: flex;
+  font-weight: 700;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.section-title i {
+  color: #0f766e;
+}
+
+.whatsapp-state {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.consultation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.economic-detail {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.economic-detail div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem;
+}
+
+.economic-detail span,
+.economic-form span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.economic-detail strong {
+  color: #0f172a;
+}
+
+.economic-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.economic-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.economic-form input,
+.economic-form select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+  min-height: 2.55rem;
+  outline: 0;
+  padding: 0 0.7rem;
+  width: 100%;
+}
+
+.consultation-summary p,
+.timeline-event p {
+  color: #475569;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.consultation-summary small {
+  color: #64748b;
+}
+
+.time-pair {
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  gap: 0.6rem;
+}
+
+.empty-inline {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.85rem;
+}
+
+.timeline-card {
+  min-height: 12rem;
+}
+
+.consultation-workspace-card {
+  border-color: #99f6e4;
+}
+
+.consultation-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.patient-context {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.patient-context div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.2rem;
+  min-height: 5rem;
+  padding: 0.75rem;
+}
+
+.patient-context span,
+.clinical-editor label {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.patient-context strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.patient-context small {
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.clinical-editor {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.clinical-editor label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.clinical-editor label.full {
+  grid-column: 1 / -1;
+}
+
+.clinical-editor textarea {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font: inherit;
+  line-height: 1.45;
+  min-height: 4.5rem;
+  outline: 0;
+  padding: 0.7rem;
+  resize: vertical;
+}
+
+.clinical-editor textarea:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
+.workspace-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.follow-up-dialog {
+  align-items: center;
+  color: #64748b;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.follow-up-dialog > i {
+  align-items: center;
+  background: #ecfdf5;
+  border-radius: 999px;
+  color: #15803d;
+  display: inline-flex;
+  font-size: 1.6rem;
+  height: 3.5rem;
+  justify-content: center;
+  width: 3.5rem;
+}
+
+.follow-up-dialog h3 {
+  color: #0f172a;
+  margin: 0;
+}
+
+.follow-up-dialog p {
+  margin: 0;
+}
+
+.follow-up-dialog div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+:host ::ng-deep .appointment-timeline .p-timeline-event-opposite {
+  display: none;
+}
+
+:host ::ng-deep .appointment-timeline .p-timeline-event-content {
+  padding: 0 0 1rem 0.85rem;
+}
+
+.timeline-marker {
+  align-items: center;
+  background: #e2e8f0;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  color: #475569;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.timeline-marker.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.timeline-marker.info {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.timeline-marker.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.timeline-event {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.timeline-event div {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.timeline-event strong {
+  color: #111827;
+  font-size: 0.92rem;
+}
+
+.timeline-event time {
+  color: #64748b;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.drawer-actions {
+  background: #ffffff;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-bottom: 0.5rem;
+  position: sticky;
+}
+
+@media (max-width: 1180px) {
+  .hero-section,
+  .info-grid,
+  .patient-context,
+  .clinical-editor {
+    grid-template-columns: 1fr;
+  }
+}

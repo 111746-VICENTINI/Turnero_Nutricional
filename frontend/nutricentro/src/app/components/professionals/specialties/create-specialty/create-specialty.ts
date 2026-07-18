@@ -57,7 +57,7 @@ export class CreateSpecialty implements OnInit {
       },
       {
         name: 'description',
-        label: 'Descripcion',
+        label: 'Descripción',
         type: 'text',
         required: false,
         autocomplete: 'description'
@@ -67,8 +67,12 @@ export class CreateSpecialty implements OnInit {
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'isActive',
-        label: 'Especialidad activa',
-        type: 'checkbox'
+        label: 'Estado',
+        type: 'select',
+        options: [
+          { label: 'Activo', value: true },
+          { label: 'Inactivo', value: false }
+        ]
       });
     }
   }

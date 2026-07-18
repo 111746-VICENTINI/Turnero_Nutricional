@@ -4,9 +4,8 @@
 <section class="availability-page">
   <header class="availability-header">
     <div>
-      <span class="eyebrow">Configuracion</span>
       <h1>Disponibilidad profesional</h1>
-      <p>Planifica dias de atencion, pausas, modalidad y excepciones que alimentan automaticamente la Agenda.</p>
+      <p>Planifica días y horarios de atención, honorarios y vacaciones.</p>
     </div>
 
     <div class="header-actions">
@@ -39,12 +38,12 @@
 
   <details class="availability-settings">
     <summary>
-      <span>Configuracion secundaria</span>
+      <span>Configuraciones</span>
       <small>{{ selectedProfessionalLabel }} · {{ feeSummary }}</small>
     </summary>
     <div class="planning-summary">
       <article>
-        <span>Slots reales esta semana</span>
+        <span>Horarios de esta semana</span>
         <strong>{{ totalWeeklySlots }}</strong>
       </article>
       <article>
@@ -58,7 +57,7 @@
     </div>
     <div class="whatsapp-details">
       <div>
-        <span>Numero configurado</span>
+        <span>Número configurado</span>
         <strong>{{ whatsappStatus?.phoneNumberId || 'No configurado' }}</strong>
       </div>
       <div>
@@ -88,9 +87,9 @@
     </div>
 
     <div class="legend">
-      <span><i class="dot available"></i> Atencion</span>
+      <span><i class="dot available"></i> Atención</span>
       <span><i class="dot slot"></i> Slot disponible</span>
-      <span><i class="dot exception"></i> Excepcion</span>
+      <span><i class="dot exception"></i> Excepción</span>
     </div>
   </section>
 
@@ -115,9 +114,9 @@
         @if (hasFullDayBlock(dayDateByKey(day.key))) {
           <div class="blocked-day-only">
             <i class="pi pi-ban"></i>
-            <strong>Dia bloqueado</strong>
+            <strong>Día bloqueado</strong>
             @if (canEdit) {
-              <p-button label="Desbloquear dia" icon="pi pi-lock-open" size="large" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
+              <p-button label="Desbloquear día" icon="pi pi-lock-open" size="large" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
             }
           </div>
         } @else {
@@ -125,7 +124,7 @@
           @if (canEdit) {
             <button type="button" (click)="openCopyDialog(day.key)" [disabled]="!schedulesFor(day.key).length">
               <i class="pi pi-copy"></i>
-              Copiar dia
+              Copiar día
             </button>
             <button type="button" (click)="openExceptionDialog(dayDateByKey(day.key), 'BLOCKED')">
               <i class="pi pi-ban"></i>
@@ -157,14 +156,15 @@
               @if (canEdit) {
                 <footer>
                   <p-button label="Editar" icon="pi pi-pencil" size="small" severity="secondary" [text]="true" (onClick)="openScheduleDialog(day.key, schedule)"></p-button>
-                  <p-button label="Desactivar" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deleteSchedule(schedule)"></p-button>
+                  <p-button label="Desactivar" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deleteSchedule(schedule, dayDateByKey(day.key))"></p-button>
                 </footer>
               }
             </div>
           } @empty {
             <div class="empty-day">
               <i class="pi pi-calendar"></i>
-              <span>Sin atencion para este dia</span>
+              <span>Sin atención para este día</span>
+              <span>Agrega horarios con el +</span>
             </div>
           }
         </div>
@@ -222,18 +222,33 @@
     [header]="dayActionTitle">
     <div class="compact-form single-column">
       <label>
-        <span>Dia</span>
+        <span>Día</span>
         <p-select [(ngModel)]="dayActionDay" [options]="dayActionOptions" optionLabel="label" optionValue="key" appendTo="body"></p-select>
       </label>
-      <label>
-        <span>Alcance</span>
-        <p-select [(ngModel)]="dayActionScope" [options]="dayActionScopeOptions" optionLabel="label" optionValue="value" appendTo="body"></p-select>
-      </label>
+      <p class="dialog-help">{{ dayActionHelp }}</p>
     </div>
 
     <ng-template #footer>
       <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="dayActionDialogVisible = false"></p-button>
-      <p-button [label]="dayActionMode === 'ADD' ? 'Agregar dia' : 'Eliminar dia'" [icon]="dayActionMode === 'ADD' ? 'pi pi-calendar-plus' : 'pi pi-calendar-times'" [severity]="dayActionMode === 'ADD' ? 'secondary' : 'danger'" [loading]="saving" (onClick)="applyDayAction()"></p-button>
+      <p-button [label]="dayActionMode === 'ADD' ? 'Agregar día' : 'Eliminar día'" [icon]="dayActionMode === 'ADD' ? 'pi pi-calendar-plus' : 'pi pi-calendar-times'" [severity]="dayActionMode === 'ADD' ? 'secondary' : 'danger'" [loading]="saving" (onClick)="applyDayAction()"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="scheduleChoiceDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{width: '34rem'}"
+    [header]="scheduleScopeTitle">
+    <p class="dialog-intro">Elegí cómo aplicar el nuevo horario.</p>
+    <div class="copy-targets">
+      <button type="button" (click)="openSingleDateSchedule()">Solo este día</button>
+      <button type="button" (click)="openMonthSchedule()">Todas las semanas de este mes</button>
+      <button type="button" (click)="openHabitualSchedule()">Disponibilidad habitual</button>
+    </div>
+
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="scheduleChoiceDialogVisible = false"></p-button>
     </ng-template>
   </p-dialog>
 
@@ -245,7 +260,7 @@
     [header]="scheduleForm.id ? 'Editar bloque de atencion' : 'Nuevo bloque de atencion'">
     <div class="compact-form">
       <label>
-        <span>Dia</span>
+        <span>Día</span>
         <p-select [(ngModel)]="scheduleForm.dayOfWeek" [options]="weekDays" optionLabel="label" optionValue="key" appendTo="body"></p-select>
       </label>
       <label>
@@ -261,7 +276,7 @@
         <input type="time" [(ngModel)]="scheduleForm.endTime" />
       </label>
       <label>
-        <span>Duracion turno</span>
+        <span>Duración turno</span>
         <input type="number" min="15" step="5" [(ngModel)]="scheduleForm.slotDurationMinutes" />
       </label>
       <label>
@@ -269,13 +284,13 @@
         <input type="number" min="0" step="5" [(ngModel)]="scheduleForm.bufferMinutes" />
       </label>
       <label>
-        <span>Maximo diario</span>
+        <span>Máximo diario</span>
         <input type="number" min="1" [(ngModel)]="scheduleForm.maxDailyAppointments" placeholder="Opcional" />
       </label>
-      <label>
-        <span>Sede o sala</span>
-        <input type="text" [(ngModel)]="scheduleForm.locationKey" placeholder="Consultorio 1" />
-      </label>
+<!--      <label>-->
+<!--        <span>Sede o sala</span>-->
+<!--        <input type="text" [(ngModel)]="scheduleForm.locationKey" placeholder="Consultorio 1" />-->
+<!--      </label>-->
     </div>
 
     <section class="break-editor">
@@ -305,10 +320,10 @@
     [modal]="true"
     [draggable]="false"
     [style]="{width: '36rem'}"
-    header="Honorarios del profesional">
+    header="Honorarios de {{ selectedProfessionalLabel }}" >
     <section class="fee-panel">
       <div class="dialog-intro">
-        Estos valores se aplican a todos los bloques de {{ selectedProfessionalLabel }} y se copian al turno al momento de crearlo.
+        Estos valores se aplican a todos los bloques y quedan fijos al turno.
       </div>
       <div class="compact-form fee-form">
         <label>
@@ -345,7 +360,7 @@
     [modal]="true"
     [draggable]="false"
     [style]="{width: '40rem'}"
-    header="Excepcion puntual">
+    [header]="exceptionForm.type === 'SPECIAL_HOURS' ? 'Horario solamente para esta fecha' : 'Excepcion puntual'">
     <div class="compact-form">
       <label>
         <span>Fecha</span>
@@ -371,7 +386,7 @@
       }
       @if (exceptionForm.type === 'SPECIAL_HOURS') {
         <label>
-          <span>Duracion turno</span>
+          <span>Duración turno</span>
           <input type="number" min="15" step="5" [(ngModel)]="exceptionForm.slotDurationMinutes" />
         </label>
         <label>
@@ -391,7 +406,7 @@
 
     <ng-template #footer>
       <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="exceptionDialogVisible = false"></p-button>
-      <p-button label="Crear excepcion" icon="pi pi-check" [loading]="saving" (onClick)="saveException()"></p-button>
+      <p-button [label]="exceptionForm.type === 'SPECIAL_HOURS' ? 'Guardar horario' : 'Crear excepcion'" icon="pi pi-check" [loading]="saving" (onClick)="saveException()"></p-button>
     </ng-template>
   </p-dialog>
 
@@ -401,7 +416,7 @@
     [draggable]="false"
     [style]="{width: '34rem'}"
     header="Copiar horarios entre dias">
-    <p class="dialog-intro">Se copiaran los bloques activos de {{ copySourceDay }} hacia los dias seleccionados.</p>
+    <p class="dialog-intro">Se copiaran los bloques activos de {{ weekDayLabel(copySourceDay) }} hacia los días seleccionados.</p>
     <div class="copy-targets">
       @for (day of weekDays; track day.key) {
         <button

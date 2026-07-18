@@ -8,10 +8,10 @@ import { ToastModule } from 'primeng/toast';
 import { HistoryTabs } from './history-tabs/history-tabs';
 import {
   AntropometryResponseDTO,
-  ConsultationResponseDTO,
+  ConsultationResponseDTO, ContextMetric,
   LaboratoryResponseDTO,
   MedicalHistoryResponseDTO,
-  NutritionalDataDTO,
+  NutritionalDataDTO, PatientCommunicationItem,
 } from './models/history-clinical-model';
 import { PatientResponseDTO } from '../patients/models/patient-model';
 import { PatientService } from '../patients/services/patient-service';
@@ -25,22 +25,6 @@ import { AppointmentStatus } from '../../shared/enums/appointment-status';
 import {formatLocalTime} from '../../shared/utils/date-utils';
 import { FollowUpService } from '../../core/services/follow-up-service';
 import { PatientFollowUpStatusDTO } from '../../core/models/follow-up-model';
-
-interface ContextMetric {
-  label: string;
-  value: string;
-  trend: string;
-  tone: string;
-}
-
-interface PatientCommunicationItem {
-  appointmentId: number;
-  occurredAt: string;
-  title: string;
-  detail: string;
-  icon: string;
-  tone: string;
-}
 
 @Component({
   selector: 'app-history-clinical',
@@ -238,25 +222,12 @@ export class HistoryClinical implements OnInit {
       .sort((first, second) => this.appointmentTime(first) - this.appointmentTime(second))?.[0];
   }
 
-  get latestAppointment(): AppointmentResponseDTO | undefined {
-    return [...this.appointments]
-      .sort((first, second) => this.appointmentTime(second) - this.appointmentTime(first))?.[0];
-  }
-
   get absentCount(): number {
     return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.ABSENT).length;
   }
 
   get canceledCount(): number {
     return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.CANCELED).length;
-  }
-
-  get rescheduledCount(): number {
-    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.RESCHEDULED).length;
-  }
-
-  get completedCount(): number {
-    return this.appointments.filter((appointment) => appointment.status === AppointmentStatus.COMPLETED).length;
   }
 
   get lastCommunicationText(): string {
@@ -396,72 +367,162 @@ export class HistoryClinical implements OnInit {
   get anthropometryMetrics(): ContextMetric[] {
     const latest = this.latestAnthropometry;
     return [
-      { label: 'Peso', value: this.formatValue(latest?.weight, 'kg'), trend: this.formatDelta(latest?.weight, this.previousAnthropometry?.weight, 'kg'), tone: 'green' },
-      { label: 'IMC', value: this.formatValue(latest?.bmi, ''), trend: this.formatDelta(latest?.bmi, this.previousAnthropometry?.bmi, ''), tone: 'blue' },
-      { label: 'Grasa', value: this.formatValue(latest?.bodyFatPercentage, '%'), trend: this.formatDelta(latest?.bodyFatPercentage, this.previousAnthropometry?.bodyFatPercentage, '%'), tone: 'orange' },
-      { label: 'Musculo', value: this.formatValue(latest?.muscleMass, 'kg'), trend: this.formatDelta(latest?.muscleMass, this.previousAnthropometry?.muscleMass, 'kg'), tone: 'violet' },
-      { label: 'Ultima medicion', value: this.formatDate(latest?.date), trend: latest?.softwareSource || 'Sin origen', tone: 'gray' },
+      {
+        label: 'Peso',
+        value: this.formatValue(latest?.weight, 'kg'),
+        trend: this.formatDelta(latest?.weight, this.previousAnthropometry?.weight, 'kg'),
+        tone: 'green'
+      },
+      {
+        label: 'IMC',
+        value: this.formatValue(latest?.bmi, ''),
+        trend: this.formatDelta(latest?.bmi, this.previousAnthropometry?.bmi, ''),
+        tone: 'blue'
+      },
+      {
+        label: 'Grasa',
+        value: this.formatValue(latest?.bodyFatPercentage, '%'),
+        trend: this.formatDelta(latest?.bodyFatPercentage, this.previousAnthropometry?.bodyFatPercentage, '%'),
+        tone: 'orange'
+      },
+      {
+        label: 'Musculo',
+        value: this.formatValue(latest?.muscleMass, 'kg'),
+        trend: this.formatDelta(latest?.muscleMass, this.previousAnthropometry?.muscleMass, 'kg'),
+        tone: 'violet'
+      },
+      {
+        label: 'Ultima medicion',
+        value: this.formatDate(latest?.date),
+        trend: latest?.softwareSource || 'Sin origen',
+        tone: 'gray'
+      },
     ];
   }
 
   get laboratoryMetrics(): ContextMetric[] {
     const lab = this.latestLaboratory;
     return [
-      { label: 'Glucosa', value: this.formatValue(lab?.glucose, 'mg/dl'), trend: 'Ultimo valor', tone: 'green' },
-      { label: 'HDL', value: this.formatValue(lab?.hdl, 'mg/dl'), trend: 'Colesterol protector', tone: 'blue' },
-      { label: 'LDL', value: this.formatValue(lab?.ldl, 'mg/dl'), trend: 'Riesgo cardiometabolico', tone: 'orange' },
-      { label: 'Trigliceridos', value: this.formatValue(lab?.triglycerides, 'mg/dl'), trend: 'Ultimo valor', tone: 'orange' },
-      { label: 'Fecha', value: this.formatDate(lab?.date), trend: 'Laboratorio reciente', tone: 'gray' },
+      {label: 'Glucosa', value: this.formatValue(lab?.glucose, 'mg/dl'), trend: 'Ultimo valor', tone: 'green'},
+      {label: 'HDL', value: this.formatValue(lab?.hdl, 'mg/dl'), trend: 'Colesterol protector', tone: 'blue'},
+      {label: 'LDL', value: this.formatValue(lab?.ldl, 'mg/dl'), trend: 'Riesgo cardiometabolico', tone: 'orange'},
+      {
+        label: 'Trigliceridos',
+        value: this.formatValue(lab?.triglycerides, 'mg/dl'),
+        trend: 'Ultimo valor',
+        tone: 'orange'
+      },
+      {label: 'Fecha', value: this.formatDate(lab?.date), trend: 'Laboratorio reciente', tone: 'gray'},
     ];
   }
 
   get consultationMetrics(): ContextMetric[] {
     return [
-      { label: 'Consultas', value: String(this.history?.consultations?.length ?? 0), trend: 'Registradas', tone: 'green' },
-      { label: 'Ultima consulta', value: this.formatDate(this.latestConsultation?.date), trend: this.latestConsultation?.reason || 'Control', tone: 'gray' },
-      { label: 'Objetivo', value: this.primaryGoal, trend: 'Actual', tone: 'blue' },
-      { label: 'Proximo control', value: this.nextConsultationText, trend: 'Agenda', tone: 'orange' },
+      {
+        label: 'Consultas',
+        value: String(this.history?.consultations?.length ?? 0),
+        trend: 'Registradas',
+        tone: 'green'
+      },
+      {
+        label: 'Ultima consulta',
+        value: this.formatDate(this.latestConsultation?.date),
+        trend: this.latestConsultation?.reason || 'Control',
+        tone: 'gray'
+      },
+      {label: 'Objetivo', value: this.primaryGoal, trend: 'Actual', tone: 'blue'},
+      {label: 'Proximo control', value: this.nextConsultationText, trend: 'Agenda', tone: 'orange'},
     ];
   }
 
   get nutritionMetrics(): ContextMetric[] {
     const nutrition = this.history?.nutritionalData;
     return [
-      { label: 'Actividad', value: nutrition?.physicalActivity || '-', trend: nutrition?.activityFrequency || 'Sin frecuencia', tone: 'green' },
-      { label: 'Agua', value: nutrition?.waterIntake || '-', trend: 'Ingesta diaria', tone: 'blue' },
-      { label: 'Preferencias', value: nutrition?.favoriteFoods ? 'Cargadas' : '-', trend: 'Alimentos favoritos', tone: 'gray' },
-      { label: 'Restricciones', value: nutrition?.dislikedFoods ? 'Cargadas' : '-', trend: 'Rechazos/intolerancias', tone: 'orange' },
+      {
+        label: 'Actividad',
+        value: nutrition?.physicalActivity || '-',
+        trend: nutrition?.activityFrequency || 'Sin frecuencia',
+        tone: 'green'
+      },
+      {label: 'Agua', value: nutrition?.waterIntake || '-', trend: 'Ingesta diaria', tone: 'blue'},
+      {
+        label: 'Preferencias',
+        value: nutrition?.favoriteFoods ? 'Cargadas' : '-',
+        trend: 'Alimentos favoritos',
+        tone: 'gray'
+      },
+      {
+        label: 'Restricciones',
+        value: nutrition?.dislikedFoods ? 'Cargadas' : '-',
+        trend: 'Rechazos/intolerancias',
+        tone: 'orange'
+      },
     ];
   }
 
   get planMetrics(): ContextMetric[] {
     const plan = this.activePlan;
     return [
-      { label: 'Plan activo', value: plan?.title || '-', trend: plan?.active ? 'Activo' : 'Sin plan activo', tone: 'green' },
-      { label: 'Plan enviado', value: plan?.planDelivered ? 'Si' : 'No', trend: plan?.planDeliveredDate ? this.formatDate(plan.planDeliveredDate) : 'Pendiente', tone: plan?.planDelivered ? 'green' : this.latestConsultation ? 'orange' : 'gray' },
-      { label: 'Medio', value: plan?.planDeliveryMedium || '-', trend: 'WhatsApp / Email / PDF', tone: 'blue' },
-      { label: 'Material', value: plan?.menuDelivered ? 'Si' : 'No', trend: plan?.menuDeliveredDate ? this.formatDate(plan.menuDeliveredDate) : 'Pendiente', tone: plan?.menuDelivered ? 'green' : 'gray' },
-      { label: 'Kcal', value: this.formatValue(plan?.totalCalories, 'kcal'), trend: 'Totales calculados', tone: 'violet' },
+      {
+        label: 'Plan activo',
+        value: plan?.title || '-',
+        trend: plan?.active ? 'Activo' : 'Sin plan activo',
+        tone: 'green'
+      },
+      {
+        label: 'Plan enviado',
+        value: plan?.planDelivered ? 'Si' : 'No',
+        trend: plan?.planDeliveredDate ? this.formatDate(plan.planDeliveredDate) : 'Pendiente',
+        tone: plan?.planDelivered ? 'green' : this.latestConsultation ? 'orange' : 'gray'
+      },
+      {label: 'Medio', value: plan?.planDeliveryMedium || '-', trend: 'WhatsApp / Email / PDF', tone: 'blue'},
+      {
+        label: 'Material',
+        value: plan?.menuDelivered ? 'Si' : 'No',
+        trend: plan?.menuDeliveredDate ? this.formatDate(plan.menuDeliveredDate) : 'Pendiente',
+        tone: plan?.menuDelivered ? 'green' : 'gray'
+      },
+      {
+        label: 'Kcal',
+        value: this.formatValue(plan?.totalCalories, 'kcal'),
+        trend: 'Totales calculados',
+        tone: 'violet'
+      },
     ];
   }
 
   get fileMetrics(): ContextMetric[] {
     const files = this.history?.files ?? [];
     return [
-      { label: 'Archivos', value: String(files.length), trend: 'Adjuntos', tone: 'green' },
-      { label: 'Analisis', value: String(files.filter((file) => file.type === 'Analisis').length), trend: 'Clasificados', tone: 'blue' },
-      { label: 'Antropometria', value: String(files.filter((file) => file.type === 'Antropometria').length), trend: 'PDFs / informes', tone: 'orange' },
-      { label: 'Ultimo archivo', value: files[0]?.date ? this.formatDate(files[0].date) : '-', trend: files[0]?.originalName || 'Sin adjuntos', tone: 'gray' },
+      {label: 'Archivos', value: String(files.length), trend: 'Adjuntos', tone: 'green'},
+      {
+        label: 'Analisis',
+        value: String(files.filter((file) => file.type === 'Analisis').length),
+        trend: 'Clasificados',
+        tone: 'blue'
+      },
+      {
+        label: 'Antropometria',
+        value: String(files.filter((file) => file.type === 'Antropometria').length),
+        trend: 'PDFs / informes',
+        tone: 'orange'
+      },
+      {
+        label: 'Ultimo archivo',
+        value: files[0]?.date ? this.formatDate(files[0].date) : '-',
+        trend: files[0]?.originalName || 'Sin adjuntos',
+        tone: 'gray'
+      },
     ];
-  }
-
-  get lastMeasurementDate(): string | Date | null | undefined {
-    return this.latestAnthropometry?.date;
   }
 
   openWhatsApp(): void {
     if (!this.whatsappUrl) {
-      this.messageService.add({ severity: 'warn', summary: 'Número no disponible', detail: 'Agrega un número de celular.' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Número no disponible',
+        detail: 'Agrega un número de celular.'
+      });
       return;
     }
 
@@ -470,14 +531,14 @@ export class HistoryClinical implements OnInit {
 
   selectTab(tab: string): void {
     this.onTabChanged(tab);
-    document.querySelector('.clinical-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector('.clinical-tabs')?.scrollIntoView({behavior: 'smooth', block: 'start'});
   }
 
   onTabChanged(tab: string): void {
     this.activeTab = tab;
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { tab },
+      queryParams: {tab},
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
@@ -502,10 +563,6 @@ export class HistoryClinical implements OnInit {
         returnTo
       }
     });
-  }
-
-  openAntropoGym(): void {
-    window.open('https://antrosport.com/', '_blank', 'noopener');
   }
 
   activatePatient(): void {
@@ -551,7 +608,7 @@ export class HistoryClinical implements OnInit {
       .split(/[,;\n]/)
       .map((item) => item.trim())
       .filter(Boolean)
-      .map((label) => ({ label, tone, icon, prefix }));
+      .map((label) => ({label, tone, icon, prefix}));
   }
 
   private loadAppointments(patientId: number): void {
@@ -604,7 +661,7 @@ export class HistoryClinical implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        const response = error as {error?: {message?: string}};
+        const response = error as { error?: { message?: string } };
         this.messageService.add({
           severity: 'error',
           summary: 'No se pudo iniciar la consulta',
@@ -742,25 +799,5 @@ export class HistoryClinical implements OnInit {
 
     const sign = delta > 0 ? '+' : '';
     return `${sign}${delta.toFixed(1)}${unit ? ` ${unit}` : ''}`;
-  }
-
-  private rawValue(key: string, unit: string): string {
-    const raw = this.latestAnthropometry?.rawMeasurements;
-    if (!raw) {
-      return '-';
-    }
-
-    if (typeof raw === 'string') {
-      try {
-        const parsed = JSON.parse(raw) as Record<string, number>;
-        const value = parsed[key];
-        return value === undefined ? '-' : `${value} ${unit}`;
-      } catch {
-        return '-';
-      }
-    }
-
-    const value = raw[key];
-    return value === undefined ? '-' : `${value} ${unit}`;
   }
 }

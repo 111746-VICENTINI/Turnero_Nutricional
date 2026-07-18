@@ -13,13 +13,7 @@ import {AuthService} from '../../core/services/auth-service';
 import {NotificationResponseDTO} from '../../core/models/notification-model';
 import {NotificationService} from '../../core/services/notification-service';
 import {NotificationsPanel} from '../../shared/components/notifications/notifications-panel';
-
-interface NavigationItem {
-  label: string;
-  icon: string;
-  route: string;
-  roles: string[];
-}
+import {NavigationItem} from './drawer-model';
 
 @Component({
   selector: 'app-drawer',

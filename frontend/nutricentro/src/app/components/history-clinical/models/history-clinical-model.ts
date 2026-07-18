@@ -354,13 +354,18 @@ export interface FoodResponseDTO {
   source?: string | null;
 }
 
-export interface FoodRequestDTO {
-  externalId?: string | null;
-  name: string;
-  calories?: number | null;
-  protein?: number | null;
-  carbohydrates?: number | null;
-  fat?: number | null;
-  healthyFat?: number | null;
-  source?: string | null;
+export interface ContextMetric {
+  label: string;
+  value: string;
+  trend: string;
+  tone: string;
+}
+
+export interface PatientCommunicationItem {
+  appointmentId: number;
+  occurredAt: string;
+  title: string;
+  detail: string;
+  icon: string;
+  tone: string;
 }

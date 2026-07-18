@@ -9,14 +9,15 @@ import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {DatePickerModule} from 'primeng/datepicker';
 import {SelectModule} from 'primeng/select';
 import {TagModule} from 'primeng/tag';
+import {Toast} from 'primeng/toast';
 import {TooltipModule} from 'primeng/tooltip';
 import {AuthService} from '../../../core/services/auth-service';
 import {TableState} from '../../../core/models/paginacion-general';
 import {SearchAutocomplete} from '../../../shared/components/search-autocomplete/search-autocomplete';
 import {TableGeneric} from '../../../shared/components/table-generic/table-generic';
 import {TableActionConfig, TableColumnConfig, TableFilterConfig} from '../../../shared/components/table-generic/model/table-model';
-import {APPOINTMENT_STATUS_CLASS, APPOINTMENT_STATUS_ICON, APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_OPTIONS, APPOINTMENT_STATUS_SEVERITY, AppointmentStatus} from '../../../shared/constants/appointment-status';
-import {PersonStatus} from '../../../shared/constants/person-status';
+import {APPOINTMENT_STATUS_CLASS, APPOINTMENT_STATUS_ICON, APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_OPTIONS, APPOINTMENT_STATUS_SEVERITY, AppointmentStatus} from '../../../shared/enums/appointment-status';
+import {PersonStatus} from '../../../shared/enums/person-status';
 import {formatLocalTime, toIsoLocalDate} from '../../../shared/utils/date-utils';
 import {ProfessionalResponseDTO} from '../../professionals/models/professional-model';
 import {ProfessionalScheduleService} from '../../professionals/services/professional-schedule-service';
@@ -39,6 +40,7 @@ type AgendaViewMode = 'day' | 'week' | 'list';
     DatePickerModule,
     SelectModule,
     TagModule,
+    Toast,
     TooltipModule,
     SearchAutocomplete,
     TableGeneric,
@@ -95,7 +97,7 @@ export class ListAppointments implements OnDestroy {
   readonly professionalDetail = (item: unknown): string => {
     const professional = item as ProfessionalResponseDTO | undefined;
     return professional
-      ? `${this.specialtyText(professional)} - Matricula ${professional.registration || professional.tuition || '-'}`
+      ? `${this.specialtyText(professional)} - Matrícula ${professional.registration || professional.tuition || '-'}`
       : '';
   };
 
@@ -183,7 +185,7 @@ export class ListAppointments implements OnDestroy {
 
   get agendaScopeLabel(): string {
     if (this.isProfessionalOnly) {
-      return 'Mi agenda profesional';
+      return 'Mi agenda';
     }
     if (this.selectedProfessionalId) {
       return 'Agenda de profesional';
@@ -302,8 +304,8 @@ export class ListAppointments implements OnDestroy {
       },
       error: () => this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudieron cargar los profesionales'
+        summary: 'Agenda',
+        detail: 'No se pudo cargar la lista de profesionales para filtrar la agenda.'
       })
     });
   }
@@ -402,8 +404,8 @@ export class ListAppointments implements OnDestroy {
       },
       error: () => this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudieron cargar los turnos'
+        summary: 'Agenda',
+        detail: 'No se pudo cargar la agenda para la fecha seleccionada.'
       })
     });
   }
@@ -468,7 +470,7 @@ export class ListAppointments implements OnDestroy {
       error: () => this.messageService.add({
         severity: 'warn',
         summary: 'Horarios',
-        detail: 'No se pudieron cargar los horarios libres'
+        detail: 'No existen horarios disponibles para la fecha seleccionada.'
       })
     });
   }
@@ -498,6 +500,15 @@ export class ListAppointments implements OnDestroy {
 
   viewHistory(appointment: AppointmentResponseDTO): void {
     this.viewAppointment(appointment);
+  }
+
+  openConsultation(appointment: AppointmentResponseDTO): void {
+    this.router.navigate(['/medical-history', appointment.patientId], {
+      queryParams: {
+        tab: 'consultations',
+        appointmentId: appointment.id
+      }
+    });
   }
 
   onAppointmentUpdated(): void {
@@ -653,6 +664,10 @@ export class ListAppointments implements OnDestroy {
 
   canMarkAbsent(appointment: AppointmentResponseDTO): boolean {
     return this.canManagePresence && [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.RESCHEDULED].includes(appointment.status);
+  }
+
+  canCorrectAbsent(appointment: AppointmentResponseDTO): boolean {
+    return this.canManagePresence && appointment.status === AppointmentStatus.ABSENT && appointment.date === this.selectedDate;
   }
 
   canCancel(appointment: AppointmentResponseDTO): boolean {
@@ -819,6 +834,6 @@ export class ListAppointments implements OnDestroy {
   }
 
   private showError(detail: string): void {
-    this.messageService.add({severity: 'error', summary: 'Error', detail});
+    this.messageService.add({severity: 'error', summary: 'Agenda', detail});
   }
 }

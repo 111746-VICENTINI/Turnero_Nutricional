@@ -63,7 +63,7 @@
   border-radius: 8px;
   display: grid;
   gap: 0;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
 }
 
@@ -91,6 +91,26 @@
   font-size: 0.9rem;
   overflow-wrap: anywhere;
   text-transform: capitalize;
+}
+
+.own-agenda-banner {
+  align-items: center;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #065f46;
+  display: flex;
+  gap: 0.5rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.own-agenda-banner i {
+  color: #047857;
+}
+
+.own-agenda-banner strong {
+  font-size: 0.9rem;
 }
 
 .view-switcher {

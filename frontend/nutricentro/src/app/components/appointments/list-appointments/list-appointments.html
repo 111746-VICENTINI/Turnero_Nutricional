@@ -1,4 +1,5 @@
 <p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
 
 @if (isProfessionalWorkspace) {
   <section class="professional-day-page">
@@ -81,10 +82,6 @@
 
     <section class="agenda-context" aria-label="Contexto de agenda abierta">
       <article>
-        <span>Agenda</span>
-        <strong>{{ agendaScopeLabel }}</strong>
-      </article>
-      <article>
         <span>Profesional</span>
         <strong>{{ selectedProfessionalLabel }}</strong>
       </article>
@@ -96,13 +93,15 @@
         <span>Fecha</span>
         <strong>{{ selectedDateLabel }}</strong>
       </article>
-      <article>
-        <span>Semana</span>
-        <strong>{{ selectedWeekLabel }}</strong>
-      </article>
     </section>
 
-    <section class="professional-status-grid" aria-label="Resumen del dia profesional">
+    @if (isProfessionalOnly) {
+      <section class="own-agenda-banner">
+        <i class="pi pi-lock"></i>
+      </section>
+    }
+
+    <section class="professional-status-grid" aria-label="Resumen del día">
       <article class="summary-card total-card">
         <span class="summary-icon pi pi-users"></span>
         <div>
@@ -145,7 +144,6 @@
         <div class="section-heading">
           <div>
             <h2>Próximos pacientes</h2>
-            <p>Confirmados, pendientes y reprogramados.</p>
           </div>
         </div>
 
@@ -170,10 +168,13 @@
                 @if (canMarkPresent(item)) {
                   <p-button icon="pi pi-user-plus" label="Presente" size="small" severity="success" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
                 }
-                @if (canMarkAbsent(item)) {
-                  <p-button icon="pi pi-user-minus" label="Ausente" size="small" severity="secondary" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.ABSENT)"></p-button>
-                }
-                <p-button icon="pi pi-eye" label="Resumen" size="small" severity="secondary" [text]="true" (onClick)="viewAppointment(item)"></p-button>
+                  @if (canMarkAbsent(item)) {
+                    <p-button icon="pi pi-user-minus" label="Ausente" size="small" severity="secondary" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.ABSENT)"></p-button>
+                  }
+                  @if (canCorrectAbsent(item)) {
+                    <p-button icon="pi pi-user-plus" label="Paciente llegó" size="small" severity="success" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
+                  }
+                  <p-button icon="pi pi-eye" label="Resumen" size="small" severity="secondary" [text]="true" (onClick)="viewAppointment(item)"></p-button>
               </div>
             </article>
           } @empty {
@@ -206,8 +207,8 @@
               </button>
 
               <div class="quick-actions professional-actions">
-                <p-button icon="pi pi-play" label="Iniciar / continuar" size="small" severity="info" (onClick)="viewAppointment(item)"></p-button>
-                <p-button icon="pi pi-book" label="Expediente" size="small" severity="secondary" [outlined]="true" (onClick)="viewAppointment(item)"></p-button>
+                <p-button icon="pi pi-play" label="Abrir consulta" size="small" severity="info" (onClick)="openConsultation(item)"></p-button>
+                <p-button icon="pi pi-eye" label="Resumen" size="small" severity="secondary" [outlined]="true" (onClick)="viewAppointment(item)"></p-button>
               </div>
             </article>
           } @empty {
@@ -223,7 +224,7 @@
       <div class="professional-column">
         <div class="section-heading">
           <div>
-            <h2>Cierre del dia</h2>
+            <h2>Cierre del día</h2>
             <p>Finalizados y ausentes.</p>
           </div>
         </div>
@@ -242,6 +243,9 @@
               <strong>{{ item.patientFullName }}</strong>
               <p-tag value="Ausente" severity="secondary" icon="pi pi-user-minus"></p-tag>
             </button>
+            @if (canCorrectAbsent(item)) {
+              <p-button styleClass="correction-action" icon="pi pi-user-plus" label="Paciente llegó" size="small" severity="success" [outlined]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
+            }
           }
           @if (!finishedPatients.length && !absentPatients.length) {
             <div class="empty-state compact-empty">
@@ -263,7 +267,6 @@
 <section class="agenda-page">
   <header class="agenda-header">
     <div class="agenda-title">
-      <span class="eyebrow">Agenda</span>
       <h1>Centro operativo</h1>
       <p>{{ selectedRangeLabel }}</p>
     </div>
@@ -272,7 +275,7 @@
       <div class="view-switcher" aria-label="Vista de agenda">
         <button type="button" [class.active]="viewMode === 'day'" (click)="onViewModeChange('day')">
           <i class="pi pi-calendar"></i>
-          Dia
+          Día
         </button>
         <button type="button" [class.active]="viewMode === 'week'" (click)="onViewModeChange('week')">
           <i class="pi pi-table"></i>
@@ -343,7 +346,7 @@
       [suggestions]="agendaSearchSuggestions"
       [forceSelection]="false"
       [labelFn]="textLabel"
-      placeholder="Buscar paciente, DNI, telefono, profesional, matricula, especialidad o motivo"
+      placeholder="Buscar por paciente, dni, teléfono..."
       ariaLabel="Buscar en agenda"
       (complete)="completeAgendaSearch($event)"
       (valueChange)="onAgendaSearchChange($event)"
@@ -389,10 +392,6 @@
 
   <section class="agenda-context" aria-label="Contexto de agenda abierta">
     <article>
-      <span>Agenda</span>
-      <strong>{{ agendaScopeLabel }}</strong>
-    </article>
-    <article>
       <span>Profesional</span>
       <strong>{{ selectedProfessionalLabel }}</strong>
     </article>
@@ -404,21 +403,15 @@
       <span>Fecha</span>
       <strong>{{ selectedDateLabel }}</strong>
     </article>
-    <article>
-      <span>Semana</span>
-      <strong>{{ selectedWeekLabel }}</strong>
-    </article>
   </section>
 
-  <section class="status-grid" aria-label="Resumen de estados de turnos">
-    <article class="summary-card total-card">
-      <span class="summary-icon pi pi-calendar-clock"></span>
-      <div>
-        <strong>{{ totalRecords }}</strong>
-        <span>turnos visibles</span>
-      </div>
-    </article>
+  @if (isProfessionalOnly) {
+    <section class="own-agenda-banner">
+      <i class="pi pi-lock"></i>
+    </section>
+  }
 
+  <section class="status-grid" aria-label="Resumen de estados de turnos">
     @for (status of visibleStatusCards; track status) {
       <article class="summary-card" [ngClass]="statusClass(status)">
         <span class="summary-icon" [ngClass]="statusIcon(status)"></span>
@@ -428,6 +421,14 @@
         </div>
       </article>
     }
+
+    <article class="summary-card total-card">
+      <span class="summary-icon pi pi-calendar-clock"></span>
+      <div>
+        <strong>{{ totalRecords }}</strong>
+        <span>Turnos visibles</span>
+      </div>
+    </article>
   </section>
 
   @if (viewMode === 'day') {
@@ -458,8 +459,8 @@
                   <time>{{ formatTime(item.time) }}</time>
                   <div class="appointment-main">
                     <strong>{{ item.patientFullName }}</strong>
-                    <span>{{ item.professionalFullName }}</span>
-                    <p>{{ item.reason || 'Sin motivo cargado' }}</p>
+                    <span>Profesional: {{ item.professionalFullName }}</span>
+                    <p>{{ item.reason || 'Sin motivo de consulta' }}</p>
                   </div>
                   <p-tag
                     [value]="statusLabel(item.status)"
@@ -468,7 +469,7 @@
                   ></p-tag>
                 </button>
 
-                <div class="quick-actions" aria-label="Acciones rapidas">
+                <div class="quick-actions" aria-label="Acciones rápidas">
                   @if (canConfirm(item)) {
                     <p-button icon="pi pi-check" label="Confirmar" size="small" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.CONFIRMED)"></p-button>
                   }
@@ -478,8 +479,11 @@
                   @if (canMarkAbsent(item)) {
                     <p-button icon="pi pi-user-minus" label="Ausente" size="small" severity="secondary" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.ABSENT)"></p-button>
                   }
+                  @if (canCorrectAbsent(item)) {
+                    <p-button icon="pi pi-user-plus" label="Paciente llegó" size="small" severity="success" [text]="true" (onClick)="updateAppointmentStatus(item, AppointmentStatus.PATIENT_PRESENT)"></p-button>
+                  }
                   @if (canStartConsultation(item)) {
-                    <p-button icon="pi pi-play" label="Consulta" size="small" severity="info" [text]="true" (onClick)="viewAppointment(item)"></p-button>
+                    <p-button icon="pi pi-play" label="Abrir consulta" size="small" severity="info" [text]="true" (onClick)="openConsultation(item)"></p-button>
                   }
                   @if (canCancel(item)) {
                     <p-button icon="pi pi-ban" label="Cancelar" size="small" severity="danger" [text]="true" (onClick)="cancelAppointment(item)"></p-button>
@@ -490,8 +494,8 @@
           } @else {
             <div class="empty-state">
               <span class="pi pi-calendar-times"></span>
-              <strong>No hay turnos para esta fecha</strong>
-              <p>Desde aca podes crear el primer turno o cambiar de profesional para revisar disponibilidad.</p>
+              <strong>No hay turnos agendados para esta fecha</strong>
+              <p>Creá el primer turno o cambia de profesional para revisar disponibilidad.</p>
             </div>
           }
         </div>
@@ -508,7 +512,7 @@
         @if (!selectedProfessionalId) {
           <div class="empty-inline">
             <i class="pi pi-user"></i>
-            <span>Seleccioná un profesional para ver huecos disponibles.</span>
+            <span>Seleccioná un profesional para ver turnos disponibles.</span>
           </div>
         } @else if (slotsLoading) {
           <div class="empty-inline">
@@ -524,7 +528,7 @@
         } @else {
           <div class="empty-inline">
             <i class="pi pi-calendar-minus"></i>
-            <span>No hay horarios libres para los filtros actuales.</span>
+            <span>No hay horarios disponibles para hoy.</span>
           </div>
         }
       </aside>

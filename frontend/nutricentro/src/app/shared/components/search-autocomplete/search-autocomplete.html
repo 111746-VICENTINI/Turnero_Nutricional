@@ -1,0 +1,34 @@
+<div class="search-autocomplete" (keydown.escape)="clear()">
+  <i class="pi pi-search" aria-hidden="true"></i>
+  <p-autocomplete
+    [ngModel]="value"
+    [suggestions]="suggestions"
+    [dropdown]="true"
+    [forceSelection]="forceSelection"
+    [optionLabel]="resolvedOptionLabel"
+    [placeholder]="placeholder"
+    appendTo="body"
+    [ariaLabel]="ariaLabel"
+    (ngModelChange)="onModelChange($event)"
+    (completeMethod)="complete.emit($event)"
+    (onSelect)="onSelect($event)"
+    (onClear)="clear()">
+    <ng-template #selectedItem let-item>
+      {{ labelOf(item) }}
+    </ng-template>
+    <ng-template #item let-item>
+      <div class="search-option">
+        <strong>{{ labelOf(item) }}</strong>
+        @if (detailOf(item)) {
+          <span>{{ detailOf(item) }}</span>
+        }
+      </div>
+    </ng-template>
+  </p-autocomplete>
+
+  @if (hasValue) {
+    <button type="button" class="clear-button" aria-label="Limpiar busqueda" (click)="clear()">
+      <i class="pi pi-times"></i>
+    </button>
+  }
+</div>

@@ -1,3 +1,5 @@
+<p-confirmDialog></p-confirmDialog>
+
 <section class="tab-surface">
   <div class="section-title">
     <div>
@@ -80,6 +82,7 @@
   <p-dialog
     [(visible)]="dialogVisible"
     [modal]="true"
+    [closable]="false"
     [draggable]="false"
     [style]="{ width: 'min(60rem, 94vw)' }"
     [header]="selected ? 'Editar consulta' : 'Registrar consulta'">
@@ -92,7 +95,8 @@
       [submitLabel]="selected ? 'Guardar cambios' : 'Registrar consulta'"
       cancelLabel="Cancelar"
       (formSubmit)="save($event)"
-      (formCancel)="closeDialog()">
+      (formValueChange)="onFormValueChange($event)"
+      (formCancel)="requestCloseDialog()">
     </app-form-generic>
   </p-dialog>
 </section>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -21,7 +21,7 @@ import {PlanTotals} from './plan-model';
   templateUrl: './tab-plans.html',
   styleUrl: './tab-plans.css',
 })
-export class TabPlans {
+export class TabPlans implements OnChanges {
   @Input({ required: true }) history!: MedicalHistoryResponseDTO;
   @Output() saved = new EventEmitter<void>();
 
@@ -44,7 +44,7 @@ export class TabPlans {
   emailDialogVisible = false;
   emailSending = false;
   readonly maxEmailAttachmentBytes = 25_000_000;
-  emailDraft = this.emptyEmailDraft();
+  emailDraft = this.defaultEmailDraft();
 
   planFields: GenericFormField[] = [
     { name: 'title', label: 'Tipo de plan', type: 'text', placeholder: 'Plan hipocalorico, deportivo...' },
@@ -83,6 +83,12 @@ export class TabPlans {
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['history'] && this.history && !this.emailDialogVisible) {
+      this.emailDraft = this.emptyEmailDraft();
+    }
+  }
+
   get totals(): PlanTotals {
     return this.items.reduce<PlanTotals>(
       (acc, item) => {
@@ -98,35 +104,39 @@ export class TabPlans {
   }
 
   get patientEmail(): string {
-    return this.history.patient?.email?.trim() || '';
+    return this.history?.patient?.email?.trim() || '';
   }
 
   get patientName(): string {
-    const patient = this.history.patient;
+    const patient = this.history?.patient;
     return patient ? `${patient.firstName} ${patient.lastName}`.trim() : 'paciente';
   }
 
   get hasFoodPlan(): boolean {
-    return !!this.history.foodPlans?.length;
+    return !!this.history?.foodPlans?.length;
   }
 
   get hasAnthropometry(): boolean {
-    return !!this.history.anthropometries?.length;
+    return !!this.history?.anthropometries?.length;
   }
 
   get hasLaboratories(): boolean {
-    return !!this.history.laboratories?.length;
+    return !!this.history?.laboratories?.length;
   }
 
   get hasClinicalFiles(): boolean {
-    return !!this.history.files?.length;
+    return !!this.history?.files?.length;
+  }
+
+  get plans(): FoodPlanResponseDTO[] {
+    return this.history?.foodPlans ?? [];
   }
 
   get emailAttachmentSize(): number {
     if (!this.emailDraft.includeClinicalFiles) {
       return 0;
     }
-    return (this.history.files ?? []).reduce((total, file) => total + (file.size ?? 0), 0);
+    return (this.history?.files ?? []).reduce((total, file) => total + (file.size ?? 0), 0);
   }
 
   get canSendEmail(): boolean {
@@ -437,6 +447,18 @@ export class TabPlans {
       subject: `Plan alimentario - ${this.patientName}`,
       message: `Hola ${this.patientName},\n\nTe enviamos el material preparado desde NutriCentro.\n\nSaludos.`,
       includeFoodPlan: this.hasFoodPlan,
+      includeAnthropometry: false,
+      includeLaboratories: false,
+      includeClinicalFiles: false,
+    };
+  }
+
+  private defaultEmailDraft() {
+    return {
+      to: '',
+      subject: 'Plan alimentario - paciente',
+      message: 'Hola paciente,\n\nTe enviamos el material preparado desde NutriCentro.\n\nSaludos.',
+      includeFoodPlan: false,
       includeAnthropometry: false,
       includeLaboratories: false,
       includeClinicalFiles: false,

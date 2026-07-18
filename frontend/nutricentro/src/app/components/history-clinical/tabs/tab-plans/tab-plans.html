@@ -121,7 +121,7 @@
   </div>
 
   <app-table-generic
-    [data]="history.foodPlans || []"
+    [data]="plans"
     [columns]="planColumns"
     [actions]="planActions"
     [globalFilterFields]="['title', 'description', 'menu', 'notes', 'observations', 'menuMaterialName', 'menuMaterialUrl', 'pdfUrl']"

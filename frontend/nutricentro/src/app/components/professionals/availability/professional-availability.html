@@ -36,41 +36,41 @@
     </div>
   </header>
 
-  <details class="availability-settings">
-    <summary>
-      <span>Configuraciones</span>
-      <small>{{ selectedProfessionalLabel }} · {{ feeSummary }}</small>
-    </summary>
-    <div class="planning-summary">
-      <article>
-        <span>Horarios de esta semana</span>
-        <strong>{{ totalWeeklySlots }}</strong>
-      </article>
-      <article>
-        <span>Permisos</span>
-        <strong>{{ canEdit ? 'Edicion habilitada' : 'Solo lectura' }}</strong>
-      </article>
-      <article>
-        <span>WhatsApp</span>
-        <strong>{{ whatsappStatus?.connected ? 'Conectado' : 'Desconectado' }}</strong>
-      </article>
-    </div>
-    <div class="whatsapp-details">
-      <div>
-        <span>Número configurado</span>
-        <strong>{{ whatsappStatus?.phoneNumberId || 'No configurado' }}</strong>
-      </div>
-      <div>
-        <span>Ultimo envio</span>
-        <strong>{{ whatsappStatus?.lastSend || 'Sin registro' }}</strong>
-      </div>
-      <div>
-        <span>Ultimo error</span>
-        <strong>{{ whatsappStatus?.lastError || 'Sin registro' }}</strong>
-      </div>
-      <p-button label="Probar conexion" icon="pi pi-send" severity="secondary" [outlined]="true" [loading]="testingWhatsApp" (onClick)="testWhatsAppConnection()"></p-button>
-    </div>
-  </details>
+<!--  <details class="availability-settings">-->
+<!--    <summary>-->
+<!--      <span>Configuraciones</span>-->
+<!--      <small>{{ selectedProfessionalLabel }} · {{ feeSummary }}</small>-->
+<!--    </summary>-->
+<!--    <div class="planning-summary">-->
+<!--      <article>-->
+<!--        <span>Horarios de esta semana</span>-->
+<!--        <strong>{{ totalWeeklySlots }}</strong>-->
+<!--      </article>-->
+<!--      <article>-->
+<!--        <span>Permisos</span>-->
+<!--        <strong>{{ canEdit ? 'Edicion habilitada' : 'Solo lectura' }}</strong>-->
+<!--      </article>-->
+<!--      <article>-->
+<!--        <span>WhatsApp</span>-->
+<!--        <strong>{{ whatsappStatus?.connected ? 'Conectado' : 'Desconectado' }}</strong>-->
+<!--      </article>-->
+<!--    </div>-->
+<!--    <div class="whatsapp-details">-->
+<!--      <div>-->
+<!--        <span>Número configurado</span>-->
+<!--        <strong>{{ whatsappStatus?.phoneNumberId || 'No configurado' }}</strong>-->
+<!--      </div>-->
+<!--      <div>-->
+<!--        <span>Ultimo envio</span>-->
+<!--        <strong>{{ whatsappStatus?.lastSend || 'Sin registro' }}</strong>-->
+<!--      </div>-->
+<!--      <div>-->
+<!--        <span>Ultimo error</span>-->
+<!--        <strong>{{ whatsappStatus?.lastError || 'Sin registro' }}</strong>-->
+<!--      </div>-->
+<!--      <p-button label="Probar conexion" icon="pi pi-send" severity="secondary" [outlined]="true" [loading]="testingWhatsApp" (onClick)="testWhatsAppConnection()"></p-button>-->
+<!--    </div>-->
+<!--  </details>-->
 
   <section class="week-toolbar">
     <div class="week-controls">
@@ -84,6 +84,7 @@
       </p-datepicker>
       <p-button label="Hoy" icon="pi pi-calendar" severity="secondary" [outlined]="true" (onClick)="goToToday()"></p-button>
       <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" (onClick)="moveWeek(7)"></p-button>
+      <strong class="summary">{{ selectedProfessionalLabel }} · {{ feeSummary }} </strong>
     </div>
 
     <div class="legend">
@@ -115,6 +116,7 @@
           <div class="blocked-day-only">
             <i class="pi pi-ban"></i>
             <strong>Día bloqueado</strong>
+            <strong>{{exceptionForm.reason}}</strong>
             @if (canEdit) {
               <p-button label="Desbloquear día" icon="pi pi-lock-open" size="large" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
             }

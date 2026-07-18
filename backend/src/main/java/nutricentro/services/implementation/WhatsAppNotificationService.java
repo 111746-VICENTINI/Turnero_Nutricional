@@ -34,7 +34,7 @@ public class WhatsAppNotificationService {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final RestClient restClient;
-    private final AppointmentTimelineServiceappointmentTimelineService;
+    private final AppointmentTimelineService appointmentTimelineService;
     private final AppointmentTimelineEventRepository timelineEventRepository;
     private final String apiVersion;
     private final String phoneNumberId;

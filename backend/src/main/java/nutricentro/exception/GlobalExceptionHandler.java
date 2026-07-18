@@ -190,6 +190,12 @@ public class GlobalExceptionHandler {
         if (normalized.contains("LocalDate")) {
             return "Fecha invalida. Use el formato yyyy-MM-dd.";
         }
+        if (normalized.contains("java.util.Date") || normalized.contains("Date value")) {
+            return "Fecha invalida. Use el formato yyyy-MM-dd.";
+        }
+        if (normalized.contains("maxDailyAppointments")) {
+            return "El maximo diario debe ser un numero entero.";
+        }
         if (normalized.contains("AppointmentModality")) {
             return "Modalidad invalida.";
         }

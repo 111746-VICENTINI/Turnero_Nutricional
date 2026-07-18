@@ -101,7 +101,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private String buildMessage(PatientFollowUpStatusDTO status) {
         if (status.getStatus() == FollowUpStatus.OVER_ONE_YEAR) {
-            return "Paciente " + status.getPatientFullName() + " lleva mas de 1 anio sin controles.";
+            return "Paciente " + status.getPatientFullName() + " lleva mas de 1 año sin controles.";
         }
         if (status.getMonthsSinceLastConsultation() != null && status.getMonthsSinceLastConsultation() > 0) {
             return "Paciente " + status.getPatientFullName() + " no realiza un control hace "

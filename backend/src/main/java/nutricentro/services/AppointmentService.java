@@ -13,12 +13,24 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
+/** Gestiona el ciclo de vida de los turnos. */
 public interface AppointmentService {
+    /** Crea un turno validando disponibilidad y estado inicial. */
     AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto);
+
+    /** Obtiene un turno por identificador. */
     AppointmentResponseDTO getAppointmentById(Long id);
+
+    /** Actualiza datos y estado de un turno existente. */
     AppointmentResponseDTO updateAppointment(Long id, AppointmentUpdateDTO dto);
+
+    /** Cancela lógicamente un turno existente. */
     void deleteAppointment(Long id);
+
+    /** Lista turnos por estado. */
     List<AppointmentResponseDTO> getAppointmentsByStatus(AppointmentStatus status);
+
+    /** Busca turnos aplicando filtros y paginación. */
     Page<AppointmentResponseDTO> searchAppointments(
             AppointmentStatus status,
             LocalDate dateFrom,
@@ -29,4 +41,10 @@ public interface AppointmentService {
             String search,
             Pageable pageable
     );
+
+    /** Procesa una respuesta de texto recibida desde WhatsApp. */
+    void handleWhatsAppTextReply(String phone, String text);
+
+    /** Envía recordatorios pendientes según la configuración vigente. */
+    void sendDueAppointmentReminders();
 }

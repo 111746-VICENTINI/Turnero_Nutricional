@@ -1,0 +1,409 @@
+<p-toast></p-toast>
+
+<section class="fast-appointment-page">
+  <header class="page-header">
+    <div>
+      <h1>{{ pageTitle }}</h1>
+      <p>{{ subtitle }}</p>
+    </div>
+  </header>
+
+  @if (isQuickMode) {
+    <div class="fast-scheduler">
+      <main class="scheduler-main" aria-label="Creacion rapida de turno">
+        <section class="flow-block patient-block">
+          <div class="block-heading">
+            <div>
+              <span class="step-kicker">1</span>
+              <h2>Paciente</h2>
+            </div>
+            @if (selectedPatient) {
+              <p-button label="Quitar paciente" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="clearSelectedPatient()"></p-button>
+            } @else if (patientSearch.length >= 2) {
+              <p-button label="Crear paciente" icon="pi pi-user-plus" severity="secondary" [outlined]="true" (onClick)="openCreatePatientDialog()"></p-button>
+            }
+          </div>
+
+          <label class="search-field">
+            <span>Buscar por nombre, apellido, DNI o telefono</span>
+            <i class="pi pi-search"></i>
+            <input
+              #patientSearchInput
+              type="search"
+              [ngModel]="patientSearch"
+              (ngModelChange)="onPatientSearchChange($event)"
+              placeholder="Ej: Gomez, 30111222 o 351..."
+              aria-label="Buscar paciente"
+            />
+          </label>
+
+          @if (searchingPatients) {
+            <div class="inline-status">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Buscando pacientes...</span>
+            </div>
+          }
+
+          @if (selectedPatient) {
+            <article class="selected-patient">
+              <div class="avatar" aria-hidden="true">{{ selectedPatient.firstName.charAt(0) }}{{ selectedPatient.lastName.charAt(0) }}</div>
+              <div>
+                <strong>{{ selectedPatient.firstName }} {{ selectedPatient.lastName }} </strong>
+                <span>  DNI {{ selectedPatient.document }} - {{ selectedPatient.age || '-' }} años - {{ selectedPatient.mobile || 'Sin telefono' }}</span>
+              </div>
+            </article>
+
+            <div class="patient-context">
+              <div>
+                <span>Ultimo turno</span>
+                <strong>{{ lastPatientAppointment ? formatDate(lastPatientAppointment.date) + ' ' + formatTime(lastPatientAppointment.time) : 'Sin registro' }}</strong>
+              </div>
+              <div>
+                <span>Proximo turno</span>
+                <strong>{{ nextPatientAppointment ? formatDate(nextPatientAppointment.date) + ' ' + formatTime(nextPatientAppointment.time) : 'Sin turno' }}</strong>
+              </div>
+            </div>
+          } @else {
+            <div class="patient-results" aria-label="Resultados de pacientes">
+              @for (patient of patientResults; track patient.id) {
+                <button type="button" class="patient-result" (click)="selectPatient(patient)">
+                  <strong>{{ patient.firstName }} {{ patient.lastName }}</strong>
+                  <span>DNI {{ patient.document }} - {{ patient.mobile || 'Sin telefono' }}</span>
+                </button>
+              } @empty {
+                @if (patientSearch.length >= 2 && !searchingPatients) {
+                  <div class="empty-inline">
+                    <i class="pi pi-user"></i>
+                    <span>No hay pacientes para esa búsqueda.</span>
+                    <p-button label="Crear paciente" icon="pi pi-user-plus" size="small" (onClick)="openCreatePatientDialog()"></p-button>
+                  </div>
+                } @else {
+                  <div class="helper-inline">
+                    <i class="pi pi-bolt"></i>
+                    <span>El primer foco queda aca para agendar sin perder tiempo.</span>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </section>
+
+        <section class="flow-block" [class.disabled-block]="!selectedPatient">
+          <div class="block-heading">
+            <div>
+              <span class="step-kicker">2</span>
+              <h2>Profesional</h2>
+            </div>
+            @if (selectedProfessional) {
+              <p-tag [value]="selectedProfessionalSpecialty" severity="info"></p-tag>
+            }
+          </div>
+
+          <div class="professional-filters">
+            <label>
+              <span>Buscar profesional</span>
+              <input type="search" [(ngModel)]="professionalSearch" placeholder="Nombre o apellido" [disabled]="!selectedPatient" />
+            </label>
+            <label>
+              <span>Especialidad</span>
+              <p-select
+                [(ngModel)]="selectedSpecialtyId"
+                [options]="specialtyOptions"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                [disabled]="!selectedPatient"
+                (ngModelChange)="onSpecialtyChange()">
+              </p-select>
+            </label>
+          </div>
+
+          <div class="professional-grid">
+            @for (professional of filteredProfessionals; track professional.id) {
+              <button
+                type="button"
+                class="professional-card"
+                [class.selected]="selectedProfessional?.id === professional.id"
+                [disabled]="!selectedPatient"
+                (click)="selectProfessional(professional)">
+                <strong>{{ professional.firstName }} {{ professional.lastName }}</strong>
+                <span>{{ specialtyText(professional) }}</span>
+                <small>Matricula {{ professional.registration || professional.tuition || '-' }}</small>
+              </button>
+            } @empty {
+              <div class="empty-inline">
+                <i class="pi pi-user"></i>
+                <span>No hay profesionales activos para esos filtros.</span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="flow-block agenda-block" [class.disabled-block]="!selectedProfessional">
+          <div class="block-heading">
+            <div>
+              <span class="step-kicker">3</span>
+              <h2>Agenda del profesional</h2>
+            </div>
+            <p-datepicker
+              [(ngModel)]="selectedCalendarDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [disabled]="!selectedProfessional"
+              [minDate]="minDate"
+              appendTo="body"
+              (ngModelChange)="onDateChange($event)">
+            </p-datepicker>
+          </div>
+
+          @if (selectedProfessional) {
+            <div class="agenda-context">
+              <div>
+                <span>Profesional</span>
+                <strong>{{ selectedProfessional.firstName }} {{ selectedProfessional.lastName }}</strong>
+              </div>
+              <div>
+                <span>Especialidad</span>
+                <strong>{{ selectedProfessionalSpecialty }}</strong>
+              </div>
+              <div>
+                <span>Fecha</span>
+                <strong>{{ formatDate(selectedDate) }}</strong>
+              </div>
+            </div>
+          }
+
+          <div class="day-strip" aria-label="Dias cercanos">
+            @for (day of daysToShow; track day) {
+              <button type="button" [class.selected]="day === selectedDate" [disabled]="!selectedProfessional" (click)="selectDay(day)">
+                <span>{{ dayLabel(day) }}</span>
+                <small>{{ day === selectedDate ? 'Seleccionado' : 'Ver dia' }}</small>
+              </button>
+            }
+          </div>
+
+          <div class="agenda-columns">
+            <div class="slots-panel">
+              <div class="panel-title">
+                <strong>Horarios libres</strong>
+                @if (loadingSlots) {
+                  <span><i class="pi pi-spin pi-spinner"></i> Cargando</span>
+                } @else {
+                  <span>{{ availableSlots.length }} disponibles</span>
+                }
+              </div>
+
+              @if (availableSlots.length) {
+                <div class="slot-grid">
+                  @for (slot of availableSlots; track slot) {
+                    <button
+                      type="button"
+                      [class.selected]="selectedTime === formatTime(slot)"
+                      [class.occupied]="isSlotOccupied(slot)"
+                      (click)="selectTime(slot)">
+                      @if (selectedTime === formatTime(slot)) {
+                        <i class="pi pi-check"></i>
+                      }
+                      {{ formatTime(slot) }}
+                    </button>
+                  }
+                </div>
+              } @else {
+                <div class="empty-inline compact">
+                  <i class="pi pi-calendar-minus"></i>
+                  <span>{{ selectedProfessional ? 'Sin horarios libres para este dia.' : 'Elegir profesional para ver horarios.' }}</span>
+                  @if (selectedProfessional) {
+                    <p-button label="Administrar disponibilidad" icon="pi pi-calendar-plus" size="small" severity="secondary" (onClick)="goToProfessionalAvailability()"></p-button>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="busy-panel">
+              <div class="panel-title">
+                <strong>Ocupados</strong>
+                @if (loadingBusySlots) {
+                  <span><i class="pi pi-spin pi-spinner"></i></span>
+                } @else {
+                  <span>{{ occupiedAppointments.length }}</span>
+                }
+              </div>
+
+              <div class="busy-list">
+                @for (appointment of occupiedAppointments; track appointment.id) {
+                  <article class="busy-card">
+                    <strong>{{ formatTime(appointment.time) }}</strong>
+                    <span>{{ appointment.patientFullName }}</span>
+                    <p-tag
+                      [value]="statusLabels[appointment.status]"
+                      [icon]="statusIcon[appointment.status]"
+                      [severity]="statusSeverity[appointment.status]">
+                    </p-tag>
+                  </article>
+                } @empty {
+                  <div class="empty-inline compact">
+                    <i class="pi pi-check-circle"></i>
+                    <span>No hay turnos ocupados.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="summary-panel" aria-label="Resumen del turno">
+        <div class="summary-header">
+          <span class="step-kicker">4</span>
+          <h2>Resumen del turno</h2>
+        </div>
+
+        <div class="summary-list">
+          <div>
+            <span>Paciente</span>
+            <strong>{{ selectedPatient ? selectedPatient.firstName + ' ' + selectedPatient.lastName + ' - ' + selectedPatientPhone : 'Seleccionar paciente' }}</strong>
+          </div>
+          <div>
+            <span>Profesional</span>
+            <strong>{{ selectedProfessional ? selectedProfessional.firstName + ' ' + selectedProfessional.lastName + ' - ' + selectedProfessionalSpecialty : 'Seleccionar profesional' }}</strong>
+          </div>
+          <div>
+            <span>Fecha y hora</span>
+            <strong>{{ formatDate(selectedDate) }} - {{ selectedTime ? formatTime(selectedTime) : 'Elegir horario' }}</strong>
+          </div>
+          <div>
+            <span>Costo</span>
+            <strong>{{ formatMoney(appliedFee, feeCurrency) }}</strong>
+          </div>
+          <div>
+            <span>Duración</span>
+            <strong>{{ selectedDurationLabel }}</strong>
+          </div>
+        </div>
+
+        <section class="economic-summary">
+          <div class="panel-title">
+            <strong>Tipo y duración</strong>
+            <span>{{ selectedDurationLabel }}</span>
+          </div>
+          <div class="fee-controls">
+            <label>
+              <span>Consulta</span>
+              <select [(ngModel)]="selectedFeeType" (ngModelChange)="onFeeTypeChange()">
+                <option value="FIRST">1° consulta - 60 min</option>
+                <option value="CONTROL">Control - 30 min</option>
+                <option value="ONLINE">Online - 30 min</option>
+              </select>
+            </label>
+            <label>
+              <span>Importe</span>
+              <input type="number" min="0" step="100" [(ngModel)]="appliedFee" [disabled]="!canEditAppliedFee" placeholder="No informado" />
+            </label>
+            <label>
+              <span>Moneda</span>
+              <input type="text" maxlength="3" [(ngModel)]="feeCurrency" [disabled]="!canEditAppliedFee" />
+            </label>
+          </div>
+          @if (!canEditAppliedFee) {
+            <small>El profesional no permite modificar el importe al crear el turno.</small>
+          }
+        </section>
+
+        <label class="reason-field">
+          <span>Motivo de la consulta</span>
+          <textarea rows="4" [(ngModel)]="reason" placeholder="Ej: Mejorar hábitos, control mensual..."></textarea>
+        </label>
+
+        <div class="whatsapp-status">
+          <p-tag [value]="whatsappTag().label" [icon]="whatsappTag().icon" [severity]="whatsappTag().severity"></p-tag>
+          <span>{{ whatsappDetail }}</span>
+        </div>
+
+        <div class="summary-actions">
+          <p-button
+            [label]="mode === 'edit' ? 'Actualizar turno' : 'Crear turno'"
+            icon="pi pi-check"
+            [loading]="saving"
+            [disabled]="!canCreateAppointment"
+            (onClick)="saveQuickAppointment()">
+          </p-button>
+          <p-button styleClass="back-action" label="Volver" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="goBack()"></p-button>
+        </div>
+
+        @if (createdAppointment) {
+          <div class="created-result">
+            <i class="pi pi-check-circle"></i>
+            <div>
+              <strong>Turno {{ mode === 'edit' ? 'actualizado' : 'creado' }}</strong>
+              <span>{{ formatDate(createdAppointment.date) }} - {{ formatTime(createdAppointment.time) }}</span>
+            </div>
+          </div>
+        }
+      </aside>
+    </div>
+
+    <p-dialog
+      header="Crear paciente"
+      [(visible)]="createPatientDialogVisible"
+      [modal]="true"
+      [draggable]="false"
+      [style]="{width: '34rem'}">
+      <div class="create-patient-form">
+        <label>
+          <span>Nombre</span>
+          <input type="text" [(ngModel)]="newPatient.firstName" autocomplete="given-name" />
+        </label>
+        <label>
+          <span>Apellido</span>
+          <input type="text" [(ngModel)]="newPatient.lastName" autocomplete="family-name" />
+        </label>
+        <label>
+          <span>WhatsApp</span>
+          <input type="tel" [(ngModel)]="newPatient.mobile" autocomplete="tel" />
+        </label>
+        <label>
+          <span>DNI</span>
+          <input type="number" [(ngModel)]="newPatient.document" />
+        </label>
+        <label>
+          <span>Fecha de nacimiento</span>
+          <input type="date" [(ngModel)]="newPatient.birthDate" />
+        </label>
+        <label>
+          <span>Género</span>
+          <p-select
+            [(ngModel)]="newPatient.gender"
+            [options]="genderOptions"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body">
+          </p-select>
+        </label>
+        <label class="wide">
+          <span>Email</span>
+          <input type="email" [(ngModel)]="newPatient.email" autocomplete="email" />
+        </label>
+      </div>
+
+      <ng-template #footer>
+        <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="createPatientDialogVisible = false"></p-button>
+        <p-button label="Crear y seleccionar" icon="pi pi-user-plus" [loading]="creatingPatientSaving" (onClick)="createPatientInline()"></p-button>
+      </ng-template>
+    </p-dialog>
+  } @else {
+    <app-form-generic
+      [fields]="fields"
+      [initialValues]="initialValues"
+      [isSubmitting]="saving"
+      [columnsPerRow]="2"
+      [readonly]="!isFormEditable"
+      formWidth="full"
+      fontSize="md"
+      submitLabel="{{ submitLabel }}"
+      cancelLabel="Cancelar"
+      (formValueChange)="onFormValueChange($event)"
+      (formSubmit)="saveAppointment($event)"
+      (formCancel)="cancel()">
+    </app-form-generic>
+  }
+</section>

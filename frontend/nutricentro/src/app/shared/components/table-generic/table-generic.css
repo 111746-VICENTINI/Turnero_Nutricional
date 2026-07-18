@@ -4,7 +4,7 @@
   border-radius: 8px;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .table-toolbar {
@@ -35,11 +35,18 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
   min-width: 0;
 }
 
+.search-container p-iconfield {
+  flex: 1 1 18rem;
+  min-width: min(18rem, 100%);
+}
+
 .search-input {
-  min-width: 16rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .filter-button-wrapper {
@@ -167,6 +174,29 @@
   overflow-y: visible;
 }
 
+:host ::ng-deep .p-datatable {
+  overflow: visible;
+}
+
+:host ::ng-deep .p-paginator {
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.65rem;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+:host ::ng-deep .p-paginator .p-select {
+  min-width: 4.75rem;
+}
+
 :host ::ng-deep .action-button {
   height: 2rem;
   width: 2rem;
@@ -182,6 +212,15 @@
   .search-container p-iconfield,
   .search-input {
     width: 100%;
+  }
+
+  :host ::ng-deep .p-paginator {
+    justify-content: center;
+  }
+
+  .total-records {
+    flex-basis: 100%;
+    text-align: center;
   }
 
   .filter-actions {
@@ -257,7 +296,7 @@
 }
 
 .toolbar-2 .table-toolbar {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, auto);
 }
 
 .toolbar-3 .table-toolbar {

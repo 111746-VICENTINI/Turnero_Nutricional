@@ -80,6 +80,7 @@
     [scrollable]="scrollable"
     [lazy]="lazy"
     [totalRecords]="totalRecords"
+    [paginatorDropdownAppendTo]="'body'"
     scrollHeight="flex"
     [tableStyle]="{ 'min-width': '48rem' }"
     responsiveLayout="scroll"
@@ -139,7 +140,7 @@
             @switch (column.type) {
               @case ('boolean') {
                 <p-tag
-                  [value]="getNestedProperty(row, column.field) ? 'Sí' : 'No'"
+                  [value]="getNestedProperty(row, column.field) ? 'Activo' : 'Inactivo'"
                   [severity]="getNestedProperty(row, column.field) ? 'success' : 'danger'"
                 ></p-tag>
               }

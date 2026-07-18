@@ -310,7 +310,7 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
         return Number(value).toLocaleString('es-AR');
 
       case 'boolean':
-        return value ? 'Sí' : 'No';
+        return value ? 'Activo' : 'Inactivo';
 
       default:
         return String(value);

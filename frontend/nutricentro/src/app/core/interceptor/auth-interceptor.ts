@@ -8,7 +8,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const isPublicAuthRequest =
     req.url.includes('/v1/auth/login') ||
     req.url.includes('/v1/auth/password/forgot') ||
-    req.url.includes('/v1/auth/password/reset');
+    req.url.includes('/v1/auth/password/reset') ||
+    req.url.includes('/v1/auth/password/create');
 
   if (isPublicAuthRequest) {
     return next(req);

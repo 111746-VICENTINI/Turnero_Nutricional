@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -75,6 +76,18 @@ public class GlobalExceptionHandler {
                 .build();
         LOGGER.warn("IllegalArgumentException: {}", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorApi> handleAuthenticationException(AuthenticationException ex) {
+        ErrorApi error = ErrorApi.builder()
+                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.name())
+                .message("Credenciales invalidas")
+                .build();
+        LOGGER.warn("AuthenticationException: {}", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)
@@ -192,6 +205,9 @@ public class GlobalExceptionHandler {
         }
         if (normalized.contains("java.util.Date") || normalized.contains("Date value")) {
             return "Fecha invalida. Use el formato yyyy-MM-dd.";
+        }
+        if (normalized.contains("Unrecognized field")) {
+            return "El formulario envio campos no permitidos para esta operacion.";
         }
         if (normalized.contains("maxDailyAppointments")) {
             return "El maximo diario debe ser un numero entero.";

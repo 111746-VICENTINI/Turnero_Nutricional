@@ -29,6 +29,8 @@ import nutricentro.services.CurrentUserContext;
 import nutricentro.services.CurrentUserProvider;
 import nutricentro.services.email.EmailService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -62,6 +64,7 @@ public class EmailServiceImpl implements EmailService {
     private final ClinicalFileRepository clinicalFileRepository;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EmailResponseDTO send(EmailRequestDTO request) {
         List<String> recipients = cleanAddresses(request.getTo());
         if (recipients.isEmpty()) {

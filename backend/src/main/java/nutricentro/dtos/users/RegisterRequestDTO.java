@@ -13,16 +13,14 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterRequestDTO {
-	@NotBlank(message = "Username is required")
-	@NotNull(message = "Username is required")
-	private String username;
+    @NotBlank(message = "Username is required")
+    @NotNull(message = "Username is required")
+    private String username;
 
-	@Email(message = "Email format is invalid")
-	private String email;
+    @Email(message = "Email format is invalid")
+    @NotBlank(message = "Email is required")
+    @NotNull(message = "Email is required")
+    private String email;
 
-	@NotBlank(message = "La contraseña es requerida")
-	@NotNull(message = "La contraseña es requerida")
-	private String password;
-
-	private Set<String> roles;
+    private Set<String> roles;
 }

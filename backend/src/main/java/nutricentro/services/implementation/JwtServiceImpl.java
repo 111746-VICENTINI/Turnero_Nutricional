@@ -12,10 +12,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import javax.crypto.SecretKey;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +37,7 @@ public class JwtServiceImpl implements JwtService {
                 .expiration(Date.from(expiration))
                 .claim("userId", user.getId())
                 .claim("roles", roles)
-                .signWith(getSigningKey())
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -64,7 +64,7 @@ public class JwtServiceImpl implements JwtService {
                 .getPayload();
     }
 
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(getSecretBytes());
     }
 

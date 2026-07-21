@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 import {LoginForm} from './components/login/login-form/login-form';
+import {CreatePassword} from './components/login/create-password/create-password';
+import {ResetPassword} from './components/login/reset-password/reset-password';
+import {ChangePassword} from './components/login/change-password/change-password';
 import {authGuard, workspaceRedirectGuard} from './core/guard/auth-guard';
 import {Dashboard} from './layout/dashboard/dashboard';
 import {Drawer} from './layout/drawer/drawer';
@@ -22,6 +25,14 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginForm
+  },
+  {
+    path: 'create-password',
+    component: CreatePassword
+  },
+  {
+    path: 'reset-password',
+    component: ResetPassword
   },
   {
     path: '',
@@ -178,6 +189,12 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'SECRETARY'] }
       },
       // HISTORIAL CLINICO
+      {
+        path: 'change-password',
+        component: ChangePassword,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+      },
       {
         path: 'medical-history',
         component: HistoryClinical,

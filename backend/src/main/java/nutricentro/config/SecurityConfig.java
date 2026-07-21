@@ -5,6 +5,7 @@ import nutricentro.entities.UserEntity;
 import nutricentro.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -19,13 +20,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -36,6 +42,23 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList());
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -54,7 +77,12 @@ public class SecurityConfig {
                             ).permitAll()
 
 
-                            .requestMatchers("/api/v1/auth/**").permitAll()
+                            .requestMatchers(
+                                    "/api/v1/auth/login",
+                                    "/api/v1/auth/password/forgot",
+                                    "/api/v1/auth/password/reset",
+                                    "/api/v1/auth/password/create"
+                            ).permitAll()
                             .requestMatchers("/api/v1/whatsapp/webhook").permitAll()
                             .requestMatchers("/api/v1/whatsapp/status", "/api/v1/whatsapp/test-connection").hasAnyRole("ADMIN", "PROFESSIONAL")
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
@@ -125,16 +153,23 @@ public class SecurityConfig {
                     .username(user.getUsername())
                     .password(user.getPasswordHash())
                     .authorities(authorities)
-                    .disabled(!Boolean.TRUE.equals(user.getIsActive()))
+                    .disabled(!Boolean.TRUE.equals(user.getIsActive())
+                            || Boolean.FALSE.equals(user.getPasswordConfigured()))
                     .build();
         };
     }
 
     @Bean
     public JwtDecoder jwtDecoder(JwtProperties jwtProperties) {
-        byte[] secretBytes = jwtProperties.secret().getBytes(StandardCharsets.UTF_8);
+        String secret = jwtProperties.secret();
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must be configured and contain at least 32 characters");
+        }
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec secretKey = new SecretKeySpec(secretBytes, "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
+        return NimbusJwtDecoder.withSecretKey(secretKey)
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
     }
 
 }

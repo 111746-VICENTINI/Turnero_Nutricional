@@ -8,7 +8,9 @@ import nutricentro.enums.TokenType;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tokens")
+@Table(name = "tokens", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_tokens_token", columnNames = "token")
+})
 @Getter
 @Setter
 @NoArgsConstructor

@@ -38,7 +38,7 @@ export class LoginForm {
   private messageService = inject(MessageService);
 
   loginForm = this.fb.nonNullable.group({
-    username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
 
@@ -64,7 +64,7 @@ export class LoginForm {
         this.messageService.add({
           severity: 'error',
           summary: 'No se pudo ingresar',
-          detail: 'Revisá el usuario, la contraseña o que el servidor esté activo.',
+          detail: 'Revisa el email o la contraseña.',
         });
       },
     });
@@ -79,17 +79,17 @@ export class LoginForm {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campo requerido',
-        detail: 'Ingresá tu correo electrónico.',
+        detail: 'Ingresa tu correo electronico.',
       });
       return;
     }
 
     this.authService.requestPasswordReset(this.recoveryEmail).subscribe({
-      next: () => {
+      next: (response) => {
         this.messageService.add({
           severity: 'info',
           summary: 'Solicitud enviada',
-          detail: 'Si la cuenta existe, se generará la recuperación de contraseña.',
+          detail: response.message,
         });
 
         this.forgotPasswordDialog = false;

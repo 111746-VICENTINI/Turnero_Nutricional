@@ -31,6 +31,9 @@ public class UserEntity extends BaseEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "password_configured", nullable = false, columnDefinition = "boolean default true")
+    private Boolean passwordConfigured = true;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

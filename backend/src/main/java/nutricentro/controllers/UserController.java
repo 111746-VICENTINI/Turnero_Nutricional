@@ -45,6 +45,11 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
+    @PostMapping("/{id}/resend-invitation")
+    public ResponseEntity<UserResponseDTO> resendInvitation(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.resendInvitation(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);

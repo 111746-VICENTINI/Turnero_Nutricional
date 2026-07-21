@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PasswordResetResponseDTO {
     private String message;
-    private String token;
 }
 

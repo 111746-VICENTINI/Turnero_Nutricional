@@ -13,6 +13,7 @@ public interface UserService {
 	List<UserResponseDTO> findAll();
 	UserResponseDTO findById(Long id);
 	UserResponseDTO update(Long id, UpdateUserDTO request);
+	UserResponseDTO resendInvitation(Long id);
 	void delete(Long id);
 	Page<UserResponseDTO> searchUsers(String search, String role,	Boolean isActive, Pageable pageable);
 }

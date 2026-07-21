@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PasswordResetConfirmDTO {
-    @NotBlank(message = "El token es obligatorio")
-    private String token;
+public class ChangePasswordRequestDTO {
+    @NotBlank(message = "La contraseña actual es obligatoria")
+    private String currentPassword;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
     private String newPassword;
@@ -18,4 +18,3 @@ public class PasswordResetConfirmDTO {
     @NotBlank(message = "La confirmacion es obligatoria")
     private String confirmPassword;
 }
-

@@ -1,9 +1,8 @@
-import {PersonStatus} from '../../shared/enums/person-status';
-
 export interface UserResponseDTO {
   id: number | string,
   username: string,
-  isActive: PersonStatus,
+  isActive: boolean,
+  passwordConfigured: boolean,
   email: string;
   roles: string[];
 }
@@ -15,21 +14,20 @@ export interface AuthResponseDTO {
 }
 
 export interface AuthRequestDTO {
-  username?: string,
+  email: string,
   password: string
 }
 
 export interface RegisterRequestDTO {
   username: string;
   email: string;
-  password: string;
   roles: string[];
 }
 
 export interface UpdateUserDTO {
   username: string;
   email: string;
-  isActive: PersonStatus;
+  isActive: boolean;
   roles: string[];
 }
 

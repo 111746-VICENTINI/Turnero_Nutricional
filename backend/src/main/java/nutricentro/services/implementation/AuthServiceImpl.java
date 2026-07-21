@@ -1,121 +1,338 @@
 package nutricentro.services.implementation;
 
 import lombok.RequiredArgsConstructor;
+import nutricentro.config.AuthProperties;
+import nutricentro.config.EmailProperties;
 import nutricentro.dtos.auth.AuthRequestDTO;
 import nutricentro.dtos.auth.AuthResponseDTO;
+import nutricentro.dtos.auth.ChangePasswordRequestDTO;
+import nutricentro.dtos.auth.CreatePasswordRequestDTO;
 import nutricentro.dtos.auth.PasswordResetConfirmDTO;
 import nutricentro.dtos.auth.PasswordResetRequestDTO;
 import nutricentro.dtos.auth.PasswordResetResponseDTO;
+import nutricentro.dtos.email.EmailRequestDTO;
 import nutricentro.dtos.users.UserResponseDTO;
-import nutricentro.entities.PasswordResetTokenEntity;
 import nutricentro.entities.RoleEntity;
+import nutricentro.entities.TokenEntity;
 import nutricentro.entities.UserEntity;
-import nutricentro.repositories.PasswordResetTokenRepository;
+import nutricentro.enums.TokenType;
+import nutricentro.repositories.TokenRepository;
 import nutricentro.repositories.UserRepository;
 import nutricentro.services.AuthService;
 import nutricentro.services.JwtService;
+import nutricentro.services.PasswordPolicyService;
+import nutricentro.services.email.EmailService;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final int RESET_TOKEN_BYTES = 32;
-    private static final long RESET_TOKEN_EXPIRATION_MINUTES = 30;
+    private static final int TOKEN_BYTES = 32;
+    private static final String GENERIC_RESET_MESSAGE =
+            "Si el correo esta registrado, recibiras instrucciones para restablecer tu contraseña.";
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PasswordPolicyService passwordPolicyService;
+    private final EmailService emailService;
+    private final EmailProperties emailProperties;
+    private final AuthProperties authProperties;
 
     @Override
     public AuthResponseDTO login(AuthRequestDTO request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        String email = normalizeEmail(request.getEmail());
+        UserEntity user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(this::invalidCredentials);
 
-        UserEntity user = userRepository.findByUsernameIgnoreCase(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("credenciales invalidas"));
+        if (!canLogin(user)) {
+            throw invalidCredentials();
+        }
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
+            );
+        } catch (BadCredentialsException | DisabledException exception) {
+            throw invalidCredentials();
+        }
 
         String token = jwtService.generateToken(user);
-
-        UserResponseDTO userResponse = new UserResponseDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getIsActive(),
-                user.getRoles().stream()
-                        .map(RoleEntity::getName)
-                        .collect(Collectors.toSet()));
-
-        return new AuthResponseDTO(token, "Bearer", userResponse);
+        return new AuthResponseDTO(token, "Bearer", toUserResponse(user));
     }
 
     @Override
     @Transactional
     public PasswordResetResponseDTO requestPasswordReset(PasswordResetRequestDTO request) {
-        if (!StringUtils.hasText(request.getUsernameOrEmail())) {
-            throw new IllegalArgumentException("Username or email is required");
+        String email = normalizeEmail(request.getEmail());
+        UserEntity user = userRepository.findByEmailIgnoreCase(email).orElse(null);
+
+        if (user == null || !canLogin(user)) {
+            return genericResetResponse();
         }
 
-        UserEntity user = userRepository.findByUsernameIgnoreCase(request.getUsernameOrEmail())
-                .or(() -> userRepository.findByEmailIgnoreCase(request.getUsernameOrEmail()))
-                .orElse(null);
+        TokenIssue tokenIssue = issueToken(user, TokenType.PASSWORD_RESET,
+                authProperties.passwordResetTokenExpirationMinutes());
 
-        if (user == null) {
-            return new PasswordResetResponseDTO("If the account exists, a reset token was created.", null);
+        try {
+            sendPasswordResetEmail(user, tokenIssue.rawToken());
+        } catch (RuntimeException exception) {
+            markTokenUsed(tokenIssue.entity());
         }
 
-        String token = generateResetToken();
-        PasswordResetTokenEntity resetToken = new PasswordResetTokenEntity();
-        resetToken.setUser(user);
-        resetToken.setToken(token);
-        resetToken.setExpiresAt(LocalDateTime.now().plusMinutes(RESET_TOKEN_EXPIRATION_MINUTES));
-        resetToken.setUsed(false);
-        passwordResetTokenRepository.save(resetToken);
-
-        return new PasswordResetResponseDTO("Reset token created. Replace this response with email delivery.", token);
+        return genericResetResponse();
     }
 
     @Override
     @Transactional
     public void resetPassword(PasswordResetConfirmDTO request) {
-        PasswordResetTokenEntity token = passwordResetTokenRepository.findByToken(request.getToken())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
-
-        if (token.isUsed()) {
-            throw new IllegalArgumentException("Reset token already used");
-        }
-
-        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Reset token expired");
-        }
-
+        passwordPolicyService.validate(request.getNewPassword(), request.getConfirmPassword());
+        TokenEntity token = consumeToken(request.getToken(), TokenType.PASSWORD_RESET);
         UserEntity user = token.getUser();
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
 
-        token.setUsed(true);
-        token.setUsedAt(LocalDateTime.now());
-        passwordResetTokenRepository.save(token);
+        if (!canLogin(user)) {
+            throw new IllegalArgumentException("Token invalido o vencido");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordConfigured(true);
+        userRepository.save(user);
+        invalidateTemporaryTokens(user.getId());
     }
 
-    private String generateResetToken() {
-        byte[] randomBytes = new byte[RESET_TOKEN_BYTES];
+    @Override
+    @Transactional
+    public void createPassword(CreatePasswordRequestDTO request) {
+        passwordPolicyService.validate(request.getNewPassword(), request.getConfirmPassword());
+        TokenEntity token = consumeToken(request.getToken(), TokenType.FIRST_LOGIN);
+        UserEntity user = token.getUser();
+
+        if (!Boolean.TRUE.equals(user.getIsActive()) || Boolean.TRUE.equals(user.getPasswordConfigured())) {
+            throw new IllegalArgumentException("Token invalido o vencido");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordConfigured(true);
+        userRepository.save(user);
+        invalidateTemporaryTokens(user.getId());
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequestDTO request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            throw new IllegalArgumentException("Usuario no autenticado");
+        }
+
+        UserEntity user = userRepository.findByUsernameIgnoreCase(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no autenticado"));
+
+        if (!canLogin(user)) {
+            throw new IllegalArgumentException("Usuario no habilitado");
+        }
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser diferente");
+        }
+
+        passwordPolicyService.validate(request.getNewPassword(), request.getConfirmPassword());
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordConfigured(true);
+        userRepository.save(user);
+        invalidateTemporaryTokens(user.getId());
+    }
+
+    @Override
+    @Transactional
+    public void sendCreatePasswordInvitation(UserEntity user) {
+        if (!Boolean.TRUE.equals(user.getIsActive())
+                || Boolean.TRUE.equals(user.getPasswordConfigured())
+                || !StringUtils.hasText(user.getEmail())) {
+            throw new IllegalArgumentException("El usuario no tiene una invitacion pendiente");
+        }
+        TokenIssue tokenIssue = issueToken(user, TokenType.FIRST_LOGIN,
+                authProperties.firstLoginTokenExpirationMinutes());
+        sendCreatePasswordEmail(user, tokenIssue.rawToken());
+    }
+
+    @Override
+    @Transactional
+    public void invalidateCreatePasswordInvitations(Long userId) {
+        tokenRepository.invalidateActiveTokens(userId, TokenType.FIRST_LOGIN, LocalDateTime.now());
+    }
+
+    private TokenIssue issueToken(UserEntity user, TokenType tokenType, long expirationMinutes) {
+        tokenRepository.invalidateActiveTokens(user.getId(), tokenType, LocalDateTime.now());
+
+        String rawToken = generateRawToken();
+        TokenEntity token = TokenEntity.builder()
+                .user(user)
+                .token(hashToken(rawToken))
+                .tokenType(tokenType)
+                .expiresAt(LocalDateTime.now().plusMinutes(expirationMinutes))
+                .isUsed(false)
+                .build();
+
+        return new TokenIssue(rawToken, tokenRepository.save(token));
+    }
+
+    private TokenEntity consumeToken(String rawToken, TokenType tokenType) {
+        TokenEntity token = tokenRepository.findByTokenAndTokenType(hashToken(rawToken), tokenType)
+                .orElseThrow(() -> new IllegalArgumentException("Token invalido o vencido"));
+
+        LocalDateTime expiresAt = token.getExpiresAt();
+        if (Boolean.TRUE.equals(token.getIsUsed())
+                || !Boolean.TRUE.equals(token.getIsActive())
+                || expiresAt == null
+                || !expiresAt.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token invalido o vencido");
+        }
+
+        markTokenUsed(token);
+        return token;
+    }
+
+    private void markTokenUsed(TokenEntity token) {
+        token.setIsUsed(true);
+        token.setUsedAt(LocalDateTime.now());
+        tokenRepository.save(token);
+    }
+
+    private void invalidateTemporaryTokens(Long userId) {
+        tokenRepository.invalidateActiveTokens(userId, TokenType.FIRST_LOGIN, LocalDateTime.now());
+        tokenRepository.invalidateActiveTokens(userId, TokenType.PASSWORD_RESET, LocalDateTime.now());
+    }
+
+    private void sendCreatePasswordEmail(UserEntity user, String token) {
+        String link = buildFrontendLink("/create-password", token);
+        String html = """
+                <p style="margin:0 0 14px;">Hola %s!</p>
+                <p style="margin:0 0 18px;">Se creo tu usuario en NutriCentro. Para activar el acceso, hacé clic en el botón para configurar tu contraseña.</p>
+                <p style="margin:24px 0;">
+                  <a href="%s" style="background:#0f766e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700;display:inline-block;">Crear contraseña</a>
+                </p>
+                <p style="margin:0;">Este enlace vence en %d minutos y solo puede usarse una vez.</p>
+                """.formatted(user.getUsername(), link, authProperties.firstLoginTokenExpirationMinutes());
+
+        emailService.send(EmailRequestDTO.builder()
+                .to(List.of(user.getEmail()))
+                .subject("Crea tu contraseña de NutriCentro")
+                .htmlMessage(html)
+                .build());
+    }
+
+    private void sendPasswordResetEmail(UserEntity user, String token) {
+        String link = buildFrontendLink("/reset-password", token);
+        String html = """
+                <p style="margin:0 0 14px;">Hola %s!</p>
+                <p style="margin:0 0 18px;">Recibimos una solicitud para restablecer tu contraseña de NutriCentro.</p>
+                <p style="margin:24px 0;">
+                  <a href="%s" style="background:#0f766e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700;display:inline-block;">Restablecer contraseña</a>
+                </p>
+                <p style="margin:0;">Este enlace vence en %d minutos y solo puede usarse una vez. Si no solicitaste este cambio, podes ignorar este mensaje.</p>
+                """.formatted(user.getUsername(), link, authProperties.passwordResetTokenExpirationMinutes());
+
+        emailService.send(EmailRequestDTO.builder()
+                .to(List.of(user.getEmail()))
+                .subject("Restablece tu contraseña de NutriCentro")
+                .htmlMessage(html)
+                .build());
+    }
+
+    private String buildFrontendLink(String path, String token) {
+        String frontendUrl = emailProperties.frontendUrl();
+        if (!StringUtils.hasText(frontendUrl)) {
+            throw new IllegalStateException("Falta configurar email.frontend-url");
+        }
+        String normalizedBase = frontendUrl.endsWith("/")
+                ? frontendUrl.substring(0, frontendUrl.length() - 1)
+                : frontendUrl;
+        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+        return normalizedBase + path + "?token=" + encodedToken;
+    }
+
+    private String generateRawToken() {
+        byte[] randomBytes = new byte[TOKEN_BYTES];
         new SecureRandom().nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
+
+    private String hashToken(String rawToken) {
+        if (!StringUtils.hasText(rawToken)) {
+            throw new IllegalArgumentException("Token invalido o vencido");
+        }
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte item : digest) {
+                hex.append(String.format("%02x", item));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("No se pudo calcular el hash del token", exception);
+        }
+    }
+
+    private String normalizeEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw invalidCredentials();
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private boolean canLogin(UserEntity user) {
+        return Boolean.TRUE.equals(user.getIsActive())
+                && (user.getPasswordConfigured() == null || Boolean.TRUE.equals(user.getPasswordConfigured()));
+    }
+
+    private BadCredentialsException invalidCredentials() {
+        return new BadCredentialsException("Credenciales invalidas");
+    }
+
+    private PasswordResetResponseDTO genericResetResponse() {
+        return new PasswordResetResponseDTO(GENERIC_RESET_MESSAGE);
+    }
+
+    private UserResponseDTO toUserResponse(UserEntity user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getIsActive(),
+                user.getPasswordConfigured() == null || Boolean.TRUE.equals(user.getPasswordConfigured()),
+                user.getRoles().stream()
+                        .map(RoleEntity::getName)
+                        .collect(Collectors.toSet()));
+    }
+
+    private record TokenIssue(String rawToken, TokenEntity entity) {
+    }
 }
-
-

@@ -301,6 +301,9 @@ export class TableGeneric<T extends Record<string, any> = Record<string, any>>
     if (column.formatFn) {
       return column.formatFn(value, row);
     }
+    if (typeof value === 'boolean') {
+      return value ? 'Activo' : 'Inactivo';
+    }
 
     switch (column.type) {
       case 'date':

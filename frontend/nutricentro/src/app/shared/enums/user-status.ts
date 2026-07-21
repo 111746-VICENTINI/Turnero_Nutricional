@@ -1,15 +1,9 @@
-//back sin enum
-export enum UserStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE'
-}
-
 export const USER_STATUS_OPTIONS = [
-  { label: 'Activo', value: UserStatus.ACTIVE },
-  { label: 'Inactivo', value: UserStatus.INACTIVE },
+  { label: 'Activo', value: true },
+  { label: 'Inactivo', value: false },
 ];
 
-export const USER_STATUS_LABELS: Record<UserStatus, string> = {
-  [UserStatus.ACTIVE]: 'Activo',
-  [UserStatus.INACTIVE]: 'Inactivo'
+export const USER_STATUS_LABELS: Record<string, string> = {
+  true: 'Activo',
+  false: 'Inactivo'
 };

@@ -1,6 +1,6 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable, tap} from 'rxjs';
 import {AuthRequestDTO, AuthResponseDTO, UserResponseDTO} from '../models/login-model';
 import {environment} from '../../enviroment/enviroment';
@@ -14,6 +14,7 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
+  private pendingTermsToken: string | null = null;
   private sessionExpiredMessage = signal<string | null>(null);
   private userSignal = signal<UserResponseDTO | null>(this.readUserFromStorage());
   private rolesSignal = signal<string[]>(this.userSignal()?.roles ?? []);
@@ -30,23 +31,42 @@ export class AuthService {
 
     return this.http.post<AuthResponseDTO>(url, credentials).pipe(
       tap(response => {
+        this.pendingTermsToken = null;
 
-        localStorage.setItem(
-          this.tokenKey,
-          response.token
-        );
+        if (!this.hasAcceptedTerms(response.user)) {
+          this.pendingTermsToken = response.token;
+          return;
+        }
 
-        localStorage.setItem(
-          this.userKey,
-          JSON.stringify(response.user)
-        );
-
-        this.rolesSignal.set(response.user?.roles ?? []);
-        this.userSignal.set(response.user ?? null);
-
+        this.storeSession(response.token, response.user);
         this.redirectToWorkspace();
       })
     );
+  }
+
+  acceptTerms(): Observable<UserResponseDTO> {
+    const url = `${this.apiUrl}/terms/accept`;
+    const token = this.pendingTermsToken ?? this.getToken();
+    const options = token
+      ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+      : {};
+
+    return this.http.post<UserResponseDTO>(url, null, options).pipe(
+      tap(user => {
+        if (token) {
+          this.storeSession(token, user);
+        } else {
+          this.updateUserInStorage(user);
+        }
+        this.pendingTermsToken = null;
+        this.redirectToWorkspace();
+      })
+    );
+  }
+
+  cancelPendingTermsAcceptance(): void {
+    this.pendingTermsToken = null;
+    this.logout();
   }
 
   getCurrentUser(): UserResponseDTO | null {
@@ -136,10 +156,22 @@ export class AuthService {
   }
 
   private clearSession(): void {
+    this.pendingTermsToken = null;
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
     this.userSignal.set(null);
     this.rolesSignal.set([]);
+  }
+
+  private storeSession(token: string, user: UserResponseDTO): void {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.rolesSignal.set(user?.roles ?? []);
+    this.userSignal.set(user ?? null);
+  }
+
+  private hasAcceptedTerms(user: UserResponseDTO | null | undefined): boolean {
+    return user?.acceptedTerms !== false;
   }
 
   private readUserFromStorage(): UserResponseDTO | null {

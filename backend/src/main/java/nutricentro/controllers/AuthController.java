@@ -9,6 +9,7 @@ import nutricentro.dtos.auth.CreatePasswordRequestDTO;
 import nutricentro.dtos.auth.PasswordResetConfirmDTO;
 import nutricentro.dtos.auth.PasswordResetRequestDTO;
 import nutricentro.dtos.auth.PasswordResetResponseDTO;
+import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -52,5 +53,10 @@ public class AuthController {
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequestDTO request) {
         authService.changePassword(request);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/terms/accept")
+    public ResponseEntity<UserResponseDTO> acceptTerms() {
+        return ResponseEntity.ok(authService.acceptTerms());
     }
 }

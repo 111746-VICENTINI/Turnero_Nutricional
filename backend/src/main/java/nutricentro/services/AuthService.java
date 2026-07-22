@@ -7,6 +7,7 @@ import nutricentro.dtos.auth.CreatePasswordRequestDTO;
 import nutricentro.dtos.auth.PasswordResetConfirmDTO;
 import nutricentro.dtos.auth.PasswordResetRequestDTO;
 import nutricentro.dtos.auth.PasswordResetResponseDTO;
+import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.entities.UserEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public interface AuthService {
     void resetPassword(PasswordResetConfirmDTO request);
     void createPassword(CreatePasswordRequestDTO request);
     void changePassword(ChangePasswordRequestDTO request);
+    UserResponseDTO acceptTerms();
     void sendCreatePasswordInvitation(UserEntity user);
     void invalidateCreatePasswordInvitations(Long userId);
 }

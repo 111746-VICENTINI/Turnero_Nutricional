@@ -56,6 +56,8 @@ describe('AuthService', () => {
         email: 'user@test.com',
         isActive: true,
         passwordConfigured: true,
+        acceptedTerms: true,
+        acceptedTermsAt: '2026-07-22T10:00:00',
         roles: ['ADMIN'],
       },
     });
@@ -63,6 +65,50 @@ describe('AuthService', () => {
     expect(localStorage.getItem('auth_token')).toBe('header.eyJleHAiOjk5OTk5OTk5OTl9.signature');
     expect(service.getUserRoles()).toEqual(['ADMIN']);
     expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
+  });
+
+  it('keeps pending terms login out of storage until terms are accepted', () => {
+    service.login({ email: 'user@test.com', password: 'Password1' }).subscribe();
+
+    const loginRequest = httpMock.expectOne('/api/v1/auth/login');
+    loginRequest.flush({
+      token: 'header.eyJleHAiOjk5OTk5OTk5OTl9.signature',
+      tokenType: 'Bearer',
+      user: {
+        id: 1,
+        username: 'professional',
+        email: 'user@test.com',
+        isActive: true,
+        passwordConfigured: true,
+        acceptedTerms: false,
+        acceptedTermsAt: null,
+        roles: ['PROFESSIONAL'],
+      },
+    });
+
+    expect(localStorage.getItem('auth_token')).toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    service.acceptTerms().subscribe();
+
+    const acceptRequest = httpMock.expectOne('/api/v1/auth/terms/accept');
+    expect(acceptRequest.request.method).toBe('POST');
+    expect(acceptRequest.request.headers.get('Authorization'))
+      .toBe('Bearer header.eyJleHAiOjk5OTk5OTk5OTl9.signature');
+    acceptRequest.flush({
+      id: 1,
+      username: 'professional',
+      email: 'user@test.com',
+      isActive: true,
+      passwordConfigured: true,
+      acceptedTerms: true,
+      acceptedTermsAt: '2026-07-22T10:00:00',
+      roles: ['PROFESSIONAL'],
+    });
+
+    expect(localStorage.getItem('auth_token')).toBe('header.eyJleHAiOjk5OTk5OTk5OTl9.signature');
+    expect(service.getUserRoles()).toEqual(['PROFESSIONAL']);
+    expect(router.navigate).toHaveBeenCalledWith(['/mi-dia']);
   });
 
   it('creates initial password without storing temporary token', () => {

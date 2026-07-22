@@ -4,10 +4,12 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { RouterModule } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ToastModule } from 'primeng/toast';
+import { AuthResponseDTO } from '../../../core/models/login-model';
 import { AuthService } from '../../../core/services/auth-service';
 import { emailValidator, isValidEmail } from '../../../shared/utils/email-validation';
 
@@ -22,6 +24,7 @@ import { emailValidator, isValidEmail } from '../../../shared/utils/email-valida
     InputTextModule,
     PasswordModule,
     ButtonModule,
+    CheckboxModule,
     DialogModule,
     ToastModule,
   ],
@@ -31,8 +34,48 @@ import { emailValidator, isValidEmail } from '../../../shared/utils/email-valida
 })
 export class LoginForm {
   forgotPasswordDialog = false;
+  termsDialog = false;
+  termsAccepted = false;
+  acceptingTerms = false;
   recoveryEmail = '';
   loading = false;
+  readonly termsSections = [
+    {
+      title: '1. Alcance y uso autorizado',
+      text: 'Nutri Centro es una herramienta de gestión profesional para consultorios nutricionales.' +
+        ' Su uso esta reservado exclusivamente a usuarios autorizados por la institucion, de acuerdo con el rol asignado: administración, secretaria o profesional.'
+    },
+    {
+      title: '2. Información confidencial',
+      text: 'El sistema puede contener datos personales, turnos, agenda, historia clínica, antropometrías, resultados de laboratorio, consultas, archivos clínicos, planes alimentarios y otra información sensible de pacientes.' +
+        ' Toda informacion consultada o cargada debe tratarse como confidencial.'
+    },
+    {
+      title: '3. Responsabilidad del usuario',
+      text: 'Cada usuario es responsable por la veracidad, pertinencia y actualización de la información que registra, modifica o consulta. El acceso a datos clínicos debe responder a una finalidad profesional legítima vinculada con la atención, administración o seguimiento del paciente.'
+    },
+    {
+      title: '4. Credenciales y sesiones',
+      text: 'Las credenciales son personales e intransferibles. Está prohibido compartir usuario, contraseña, tokens de acceso o sesiones abiertas. En equipos compartidos o de uso público, el usuario debe cerrar sesión al finalizar y evitar que terceros visualicen información protegida.'
+    },
+    {
+      title: '5. Acceso según roles',
+      text: 'Las funciones y datos disponibles dependen de los permisos configurados para cada rol. Intentar acceder, divulgar, extraer o modificar información fuera de las responsabilidades asignadas constituye un uso indebido del sistema.'
+    },
+    {
+      title: '6. Protección de datos y normativa aplicable',
+      text: 'El usuario se compromete a utilizar el sistema respetando la normativa de privacidad, protección de datos personales, secreto profesional y confidencialidad aplicable. ' +
+        'La información clínica debe emplearse unicamente para fines asistenciales, administrativos o profesionales autorizados.'
+    },
+    {
+      title: '7. Uso adecuado del sistema',
+      text: 'No se permite utilizar el sistema para acciones que comprometan su seguridad, disponibilidad, integridad de datos o trazabilidad. Cualquier error, acceso indebido, pérdida de confidencialidad o sospecha de incidente debe informarse a la administración responsable.'
+    },
+    {
+      title: '8. Aceptación',
+      text: 'Al aceptar estos términos, el usuario declara haberlos leído y comprendido, y se compromete a cumplirlos durante todo el uso del sistema Nutri Centro.'
+    }
+  ];
 
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
@@ -52,8 +95,14 @@ export class LoginForm {
     this.loading = true;
 
     this.authService.login(this.loginForm.getRawValue()).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading = false;
+        if (this.mustAcceptTerms(response)) {
+          this.termsAccepted = false;
+          this.termsDialog = true;
+          return;
+        }
+
         this.messageService.add({
           severity: 'success',
           summary: 'Bienvenido',
@@ -69,6 +118,39 @@ export class LoginForm {
         });
       },
     });
+  }
+
+  acceptTerms(): void {
+    if (!this.termsAccepted || this.acceptingTerms) {
+      return;
+    }
+
+    this.acceptingTerms = true;
+    this.authService.acceptTerms().subscribe({
+      next: () => {
+        this.acceptingTerms = false;
+        this.termsDialog = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Términos aceptados',
+          detail: 'Ya podes ingresar al sistema.',
+        });
+      },
+      error: () => {
+        this.acceptingTerms = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo guardar',
+          detail: 'Intenta aceptar los términos nuevamente.',
+        });
+      },
+    });
+  }
+
+  cancelTermsAcceptance(): void {
+    this.termsDialog = false;
+    this.termsAccepted = false;
+    this.authService.cancelPendingTermsAcceptance();
   }
 
   openRecovery(): void {
@@ -127,5 +209,8 @@ export class LoginForm {
       return 'El email o la contraseña no son correctos.';
     }
     return message || 'No se pudo iniciar sesión. Intentá nuevamente.';
+  }
+  private mustAcceptTerms(response: AuthResponseDTO): boolean {
+    return response.user?.acceptedTerms === false;
   }
 }

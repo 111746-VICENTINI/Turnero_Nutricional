@@ -171,6 +171,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    public UserResponseDTO acceptTerms() {
+        UserEntity user = resolveAuthenticatedUser();
+
+        if (!canLogin(user)) {
+            throw new IllegalArgumentException("Usuario no habilitado");
+        }
+
+        if (!Boolean.TRUE.equals(user.getAcceptedTerms())) {
+            user.setAcceptedTerms(true);
+            user.setAcceptedTermsAt(LocalDateTime.now());
+            user = userRepository.save(user);
+        }
+
+        return toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
     public void sendCreatePasswordInvitation(UserEntity user) {
         if (!Boolean.TRUE.equals(user.getIsActive())
                 || Boolean.TRUE.equals(user.getPasswordConfigured())
@@ -379,6 +397,8 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getIsActive(),
                 user.getPasswordConfigured() == null || Boolean.TRUE.equals(user.getPasswordConfigured()),
+                user.getAcceptedTerms() == null || Boolean.TRUE.equals(user.getAcceptedTerms()),
+                user.getAcceptedTermsAt(),
                 user.getRoles().stream()
                         .map(RoleEntity::getName)
                         .collect(Collectors.toSet()));

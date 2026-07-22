@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,12 @@ public class UserEntity extends BaseEntity {
 
     @Column(name = "password_configured", nullable = false, columnDefinition = "boolean default true")
     private Boolean passwordConfigured = true;
+
+    @Column(name = "accepted_terms", nullable = false, columnDefinition = "boolean default true")
+    private Boolean acceptedTerms = true;
+
+    @Column(name = "accepted_terms_at")
+    private LocalDateTime acceptedTermsAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -61,6 +61,8 @@ public class UserServiceImpl implements UserService {
 		user.setEmail(normalizedEmail);
 		user.setPasswordHash(passwordEncoder.encode(generateUnrecoverablePassword()));
 		user.setPasswordConfigured(false);
+		user.setAcceptedTerms(false);
+		user.setAcceptedTermsAt(null);
 		user.setRoles(roles);
 		user.setIsActive(true);
 
@@ -166,7 +168,7 @@ public class UserServiceImpl implements UserService {
 				.collect(Collectors.toSet());
 
 		return new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(), user.getIsActive(),
-				isPasswordConfigured(user), roles);
+				isPasswordConfigured(user), isTermsAccepted(user), user.getAcceptedTermsAt(), roles);
 	}
 
 	private String generateUnrecoverablePassword() {
@@ -177,6 +179,10 @@ public class UserServiceImpl implements UserService {
 
 	private Boolean isPasswordConfigured(UserEntity user) {
 		return user.getPasswordConfigured() == null || Boolean.TRUE.equals(user.getPasswordConfigured());
+	}
+
+	private Boolean isTermsAccepted(UserEntity user) {
+		return user.getAcceptedTerms() == null || Boolean.TRUE.equals(user.getAcceptedTerms());
 	}
 
 	private void validateAdminContinuity(UserEntity user, Boolean requestedActive, Set<RoleEntity> requestedRoles) {

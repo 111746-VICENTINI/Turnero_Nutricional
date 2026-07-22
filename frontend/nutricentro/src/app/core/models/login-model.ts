@@ -3,6 +3,8 @@ export interface UserResponseDTO {
   username: string,
   isActive: boolean,
   passwordConfigured: boolean,
+  acceptedTerms: boolean,
+  acceptedTermsAt?: string | null,
   email: string;
   roles: string[];
 }

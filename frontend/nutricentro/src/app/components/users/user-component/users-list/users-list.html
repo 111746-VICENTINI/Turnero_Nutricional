@@ -1,4 +1,6 @@
 <section class="page-shell">
+  <p-toast></p-toast>
+
   <div class="page-header">
 
     <div>
@@ -27,6 +29,7 @@
     (onView)="viewUser($event)"
     (onEdit)="editUser($event)"
     (onDelete)="deleteUser($event)"
+    (onActionClick)="handleAction($event)"
     (tableStateChange)="onTableChange($event)"
   >
   </app-table-generic>

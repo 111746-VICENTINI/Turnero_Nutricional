@@ -43,6 +43,13 @@ export class UserService {
     );
   }
 
+  resendInvitation(id: number) {
+    return this.http.post<UserResponseDTO>(
+      `${this.apiUrl}/${id}/resend-invitation`,
+      {}
+    );
+  }
+
   searchUsers(filters: {
     search?: string;
     role?: string;

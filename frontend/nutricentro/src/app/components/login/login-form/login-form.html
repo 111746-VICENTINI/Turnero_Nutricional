@@ -10,21 +10,21 @@
 
     <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
       <div class="form-heading">
-        <h2>Iniciar sesión</h2>
+        <h2>Iniciar sesion</h2>
       </div>
 
       <div class="field">
-        <label for="username">Usuario</label>
+        <label for="email">Email</label>
         <input
-          id="username"
-          type="text"
+          id="email"
+          type="email"
           pInputText
-          formControlName="username"
-          autocomplete="username"
-          placeholder="admin"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="usuario@nutricentro.com"
         />
-        @if (loginForm.controls.username.invalid && loginForm.controls.username.touched) {
-          <small>El usuario es obligatorio.</small>
+        @if (loginForm.controls.email.invalid && loginForm.controls.email.touched) {
+          <small>Ingresa un email valido.</small>
         }
       </div>
 
@@ -54,7 +54,7 @@
       ></p-button>
 
       <p-button
-        label="¿Olvidaste tu contraseña?"
+        label="Olvidaste tu contraseña?"
         type="button"
         [link]="true"
         styleClass="recovery-button"
@@ -71,7 +71,7 @@
   [style]="{ width: '420px', maxWidth: '92vw' }"
 >
   <div class="recovery-dialog">
-    <p>Ingresá tu correo electrónico para recuperar tu contraseña.</p>
+    <p>Ingresa tu correo electronico para recuperar tu contraseña.</p>
 
     <input
       type="email"

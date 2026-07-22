@@ -157,9 +157,24 @@ export class AuthService {
    * Sends a password recovery email.
    * @param email - The user's email address.
    */
-  requestPasswordReset(email: string): Observable<void> {
+  requestPasswordReset(email: string): Observable<{ message: string }> {
     const url = `${this.apiUrl}/password/forgot`;
-    return this.http.post<void>(url, { usernameOrEmail: email });
+    return this.http.post<{ message: string }>(url, { email });
+  }
+
+  createPassword(token: string, newPassword: string, confirmPassword: string): Observable<void> {
+    const url = `${this.apiUrl}/password/create`;
+    return this.http.post<void>(url, { token, newPassword, confirmPassword });
+  }
+
+  resetPassword(token: string, newPassword: string, confirmPassword: string): Observable<void> {
+    const url = `${this.apiUrl}/password/reset`;
+    return this.http.post<void>(url, { token, newPassword, confirmPassword });
+  }
+
+  changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Observable<void> {
+    const url = `${this.apiUrl}/password/change`;
+    return this.http.post<void>(url, { currentPassword, newPassword, confirmPassword });
   }
 
 }

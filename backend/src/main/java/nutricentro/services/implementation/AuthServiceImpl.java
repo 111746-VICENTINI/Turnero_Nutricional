@@ -232,38 +232,56 @@ public class AuthServiceImpl implements AuthService {
 
     private void sendCreatePasswordEmail(UserEntity user, String token) {
         String link = buildFrontendLink("/create-password", token);
+        String expirationText = formatDuration(authProperties.firstLoginTokenExpirationMinutes());
         String html = """
-                <p style="margin:0 0 14px;">Hola %s!</p>
-                <p style="margin:0 0 18px;">Se creo tu usuario en NutriCentro. Para activar el acceso, hacé clic en el botón para configurar tu contraseña.</p>
+                <p style="margin:0 0 14px;">¡Hola!</p>
+                <p style="margin:0 0 18px;">Se creó una cuenta para vos en NutriCentro.</p>
+                <p style="margin:0 0 18px;">Para activar tu acceso, hacé clic en el siguiente botón y creá tu contraseña.</p>
                 <p style="margin:24px 0;">
                   <a href="%s" style="background:#0f766e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700;display:inline-block;">Crear contraseña</a>
                 </p>
-                <p style="margin:0;">Este enlace vence en %d minutos y solo puede usarse una vez.</p>
-                """.formatted(user.getUsername(), link, authProperties.firstLoginTokenExpirationMinutes());
+                <p style="margin:0 0 14px;">Este enlace estará disponible durante %s y solo podrá utilizarse una vez.</p>
+                <p style="margin:0;">Si no esperabas este correo, simplemente ignoralo.</p>
+                """.formatted(link, expirationText);
 
         emailService.send(EmailRequestDTO.builder()
                 .to(List.of(user.getEmail()))
-                .subject("Crea tu contraseña de NutriCentro")
+                .subject("Activá tu cuenta")
                 .htmlMessage(html)
                 .build());
     }
 
     private void sendPasswordResetEmail(UserEntity user, String token) {
         String link = buildFrontendLink("/reset-password", token);
+        String expirationText = formatDuration(authProperties.passwordResetTokenExpirationMinutes());
         String html = """
-                <p style="margin:0 0 14px;">Hola %s!</p>
-                <p style="margin:0 0 18px;">Recibimos una solicitud para restablecer tu contraseña de NutriCentro.</p>
+                <p style="margin:0 0 14px;">¡Hola!</p>
+                <p style="margin:0 0 18px;">Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+                <p style="margin:0 0 18px;">Para continuar, hacé clic en el siguiente botón.</p>
                 <p style="margin:24px 0;">
                   <a href="%s" style="background:#0f766e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:700;display:inline-block;">Restablecer contraseña</a>
                 </p>
-                <p style="margin:0;">Este enlace vence en %d minutos y solo puede usarse una vez. Si no solicitaste este cambio, podes ignorar este mensaje.</p>
-                """.formatted(user.getUsername(), link, authProperties.passwordResetTokenExpirationMinutes());
+                <p style="margin:0 0 14px;">Este enlace estará disponible durante %s y solo podrá utilizarse una vez.</p>
+                <p style="margin:0;">Si no solicitaste este cambio, simplemente ignorá este correo.</p>
+                """.formatted(link, expirationText);
 
         emailService.send(EmailRequestDTO.builder()
                 .to(List.of(user.getEmail()))
-                .subject("Restablece tu contraseña de NutriCentro")
+                .subject("Restablecé tu contraseña de NutriCentro")
                 .htmlMessage(html)
                 .build());
+    }
+
+    private String formatDuration(long minutes) {
+        if (minutes % 1_440 == 0) {
+            long days = minutes / 1_440;
+            return days == 1 ? "1 día" : days + " días";
+        }
+        if (minutes % 60 == 0) {
+            long hours = minutes / 60;
+            return hours == 1 ? "1 hora" : hours + " horas";
+        }
+        return minutes == 1 ? "1 minuto" : minutes + " minutos";
     }
 
     private String buildFrontendLink(String path, String token) {

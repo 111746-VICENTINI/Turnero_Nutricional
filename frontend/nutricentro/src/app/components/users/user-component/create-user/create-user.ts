@@ -13,10 +13,10 @@ import {
 } from '../../../../core/models/login-model';
 import { RoleService } from '../../../../core/services/role-service';
 import { UserService } from '../services/user-service';
-import {GenericFormField} from '../../../../shared/components/form-generic/model/form-model';
-import {FormGeneric} from '../../../../shared/components/form-generic/form-generic';
-import {ROLE_LABELS} from '../../../../shared/enums/roles';
-import {USER_STATUS_OPTIONS} from '../../../../shared/enums/user-status';
+import { GenericFormField } from '../../../../shared/components/form-generic/model/form-model';
+import { FormGeneric } from '../../../../shared/components/form-generic/form-generic';
+import { ROLE_LABELS } from '../../../../shared/enums/roles';
+import { USER_STATUS_OPTIONS } from '../../../../shared/enums/user-status';
 
 type UserFormMode = 'create' | 'view' | 'edit';
 
@@ -81,18 +81,6 @@ export class CreateUser implements OnInit {
       }
     ];
 
-    if (this.mode === 'create') {
-      this.fields.push({
-        name: 'password',
-        label: 'Contraseña',
-        type: 'password',
-        minLength: 4,
-        maxLength: 100,
-        required: true,
-        autocomplete: 'new-password'
-      });
-    }
-
     if (this.mode !== 'create') {
       this.fields.push({
         name: 'isActive',
@@ -116,11 +104,7 @@ export class CreateUser implements OnInit {
   }
 
   get pageTitle(): string {
-    if (this.mode === 'create') {
-      return 'Nuevo usuario';
-    }
-
-    return this.mode === 'view' ? 'Ver usuario' : 'Editar usuario';
+    return this.mode === 'create' ? 'Nuevo usuario' : this.mode === 'view' ? 'Ver usuario' : 'Editar usuario';
   }
 
   get submitLabel(): string {
@@ -145,7 +129,6 @@ export class CreateUser implements OnInit {
         this.initialValues = {
           username: user.username,
           email: user.email,
-          password: '',
           isActive: user.isActive,
           roles: [...user.roles],
         };
@@ -183,14 +166,13 @@ export class CreateUser implements OnInit {
     const request: RegisterRequestDTO = {
       username: formData['username'],
       email: formData['email'],
-      password: formData['password'],
       roles: formData['roles'],
     };
 
     this.userService.createUser(request).subscribe({
       next: () => {
         this.saving = false;
-        this.showSuccess('Usuario creado correctamente.');
+        this.showSuccess('Usuario creado correctamente. Se envió la invitación para crear contraseña.');
         this.goBack();
       },
       error: () => {
@@ -222,16 +204,17 @@ export class CreateUser implements OnInit {
     this.router.navigate(['/users']);
   }
 
+  editModeUser(): void {
+    this.mode = 'edit';
+    this.isFormEditable = true;
+    this.buildFields();
+  }
+
   private showSuccess(detail: string): void {
     this.messageService.add({ severity: 'success', summary: 'Listo', detail });
   }
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
-  }
-
-  editModeUser(): void {
-    this.mode = 'edit';
-    this.isFormEditable = true;
   }
 }

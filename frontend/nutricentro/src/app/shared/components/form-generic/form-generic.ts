@@ -18,6 +18,7 @@ import {InputMaskDirective} from 'primeng/inputmask';
 import {InputGroupAddonModule} from 'primeng/inputgroupaddon';
 import {InputGroupModule} from 'primeng/inputgroup';
 import { Subscription } from 'rxjs';
+import { emailValidator } from '../../utils/email-validation';
 
 @Component({
   selector: 'app-form-generic',
@@ -99,7 +100,7 @@ export class FormGeneric implements OnChanges, OnDestroy {
       }
 
       if (field.type === 'email') {
-        validators.push(Validators.email);
+        validators.push(emailValidator());
       }
 
       if (field.type === 'number') {

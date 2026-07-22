@@ -12,6 +12,7 @@ import {Gender_Options, GenderType} from '../../../shared/enums/genders';
 import {PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus} from '../../../shared/enums/person-status';
 import {getLabel} from '../../../shared/utils/utils-enum';
 import {ProfessionalService} from '../../professionals/services/professional-service';
+import {AuthService} from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-list-patients',
@@ -30,6 +31,7 @@ export class ListPatients {
 
   private patientService = inject(PatientService);
   private professionalService = inject(ProfessionalService);
+  private authService = inject(AuthService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
@@ -45,7 +47,7 @@ export class ListPatients {
 
   actions: TableActionConfig<PatientResponseDTO>[] = [
     { field: 'view', label: 'Ver', icon: 'pi pi-eye', severity: 'secondary' },
-    { field: 'history', label: 'Historial', icon: 'pi pi-book', severity: 'secondary' },
+    { field: 'history', label: 'Historial', icon: 'pi pi-book', severity: 'secondary', visible: () => this.canSeeClinicalHistoryAction() },
     { field: 'edit', label: 'Editar', icon: 'pi pi-pencil', severity: 'info' },
     { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
   ];
@@ -142,6 +144,11 @@ export class ListPatients {
     this.router.navigate(['/medical-history', patient.id], {
       queryParams: { tab: 'consultations' }
     });
+  }
+
+  private canSeeClinicalHistoryAction(): boolean {
+    const roles = this.authService.getUserRoles();
+    return roles.includes('ADMIN') || roles.includes('PROFESSIONAL');
   }
 
   deletePatient(patient: PatientResponseDTO): void {

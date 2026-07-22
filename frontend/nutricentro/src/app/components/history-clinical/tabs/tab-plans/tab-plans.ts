@@ -14,6 +14,7 @@ import { FoodPlanItemDTO, FoodPlanRequestDTO, FoodPlanResponseDTO, FoodResponseD
 import { HistoryClinicalService } from '../../services/history-clinical-service';
 import { EmailService } from '../../../../core/services/email-service';
 import {PlanTotals} from './plan-model';
+import {isValidEmail} from '../../../../shared/utils/email-validation';
 
 @Component({
   selector: 'app-tab-plans',
@@ -141,7 +142,7 @@ export class TabPlans implements OnChanges {
 
   get canSendEmail(): boolean {
     return !this.emailSending
-      && this.isValidEmail(this.emailDraft.to)
+      && isValidEmail(this.emailDraft.to)
       && !!this.emailDraft.subject.trim()
       && !!this.emailDraft.message.trim()
       && this.emailAttachmentSize <= this.maxEmailAttachmentBytes;
@@ -305,7 +306,7 @@ export class TabPlans implements OnChanges {
       return;
     }
 
-    if (!this.isValidEmail(this.patientEmail)) {
+    if (!isValidEmail(this.patientEmail)) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Email invalido',
@@ -465,7 +466,4 @@ export class TabPlans implements OnChanges {
     };
   }
 
-  private isValidEmail(value: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-  }
 }

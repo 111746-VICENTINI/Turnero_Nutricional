@@ -62,9 +62,8 @@ export class Drawer implements OnInit, OnDestroy {
     {label: 'Mi Día', icon: 'pi pi-sun', route: '/mi-dia', roles: ['PROFESSIONAL']},
     {label: 'Pacientes', icon: 'pi pi-user', route: '/patient', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Profesionales', icon: 'pi pi-id-card', route: '/professional', roles: ['ADMIN']},
-    {label: 'Disponibilidad', icon: 'pi pi-calendar-plus', route: '/availability', roles: ['ADMIN', 'PROFESSIONAL']},
+    {label: 'Disponibilidad', icon: 'pi pi-calendar-plus', route: '/availability', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Usuarios', icon: 'pi pi-users', route: '/users', roles: ['ADMIN']},
-    {label: 'Cuenta', icon: 'pi pi-key', route: '/change-password', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Configuración', icon: 'pi pi-cog', route: '/specialty', roles: ['ADMIN']}
   ];
 

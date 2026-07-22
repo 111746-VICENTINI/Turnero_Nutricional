@@ -78,8 +78,7 @@ export class CreateUser implements OnInit {
         type: 'email',
         required: true,
         autocomplete: 'email',
-        placeholder: 'ejemplo@gmail.com',
-        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i
+        placeholder: 'ejemplo@gmail.com'
       }
     ];
 

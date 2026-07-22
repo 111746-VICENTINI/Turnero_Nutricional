@@ -112,8 +112,7 @@ export class CreateProfessionals implements OnInit {
         type: 'email',
         placeholder: 'ejemplo@correo.com',
         required: false,
-        autocomplete: 'email',
-        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i
+        autocomplete: 'email'
       },
       {
         name: 'mobile',

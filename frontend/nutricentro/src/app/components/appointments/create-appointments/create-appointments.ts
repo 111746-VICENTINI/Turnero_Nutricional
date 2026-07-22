@@ -21,6 +21,7 @@ import {
 import {Gender_Options, GenderType} from '../../../shared/enums/genders';
 import {PersonStatus} from '../../../shared/enums/person-status';
 import {formatLocalTime, toIsoLocalDate} from '../../../shared/utils/date-utils';
+import {isValidEmail} from '../../../shared/utils/email-validation';
 import {PatientResponseDTO} from '../../patients/models/patient-model';
 import {PatientService} from '../../patients/services/patient-service';
 import {ProfessionalResponseDTO} from '../../professionals/models/professional-model';
@@ -467,6 +468,11 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
   }
 
   createPatientInline(): void {
+    if (this.newPatient.email.trim() && !isValidEmail(this.newPatient.email)) {
+      this.showError('Ingresa un email valido.');
+      return;
+    }
+
     if (!this.canCreatePatientInline()) {
       this.showError('Completa los datos minimos del paciente.');
       return;

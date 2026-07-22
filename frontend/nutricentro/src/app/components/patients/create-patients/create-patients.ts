@@ -92,7 +92,6 @@ export class CreatePatients implements OnInit {
         label: 'Email',
         type: 'email',
         placeholder: 'ejemplo@correo.com',
-        pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|com\.ar|org|net|edu|gov|es)$/i,
         required: false,
         autocomplete: 'email'
       },

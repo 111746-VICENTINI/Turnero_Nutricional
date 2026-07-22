@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/services/auth-service';
+import { emailValidator, isValidEmail } from '../../../shared/utils/email-validation';
 
 @Component({
   selector: 'app-login-form',
@@ -38,7 +39,7 @@ export class LoginForm {
   private messageService = inject(MessageService);
 
   loginForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, emailValidator()]],
     password: ['', Validators.required],
   });
 
@@ -84,7 +85,16 @@ export class LoginForm {
       return;
     }
 
-    this.authService.requestPasswordReset(this.recoveryEmail).subscribe({
+    if (!isValidEmail(this.recoveryEmail)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Email invalido',
+        detail: 'Ingresa un email valido.',
+      });
+      return;
+    }
+
+    this.authService.requestPasswordReset(this.recoveryEmail.trim()).subscribe({
       next: (response) => {
         this.messageService.add({
           severity: 'info',

@@ -84,8 +84,32 @@
             </app-notifications-panel>
           </p-popover>
         }
-        <span class="username">{{ getFullName() }}</span>
-        <i class="pi pi-user"></i>
+        <button
+          pRipple
+          type="button"
+          class="user-trigger"
+          (click)="toggleUserMenu($event, userPopover)"
+          aria-label="Menú de usuario">
+          <span class="username">{{ getFullName() }}</span>
+          <i class="pi pi-user"></i>
+        </button>
+
+        <p-popover #userPopover styleClass="user-popover">
+          <div class="user-menu">
+            <button type="button" pRipple class="user-menu-action" (click)="openAccount(userPopover)">
+              <i class="pi pi-id-card"></i>
+              <span>Mis datos</span>
+            </button>
+            <button type="button" pRipple class="user-menu-action" (click)="openChangePassword(userPopover)">
+              <i class="pi pi-key"></i>
+              <span>Cambiar contraseña</span>
+            </button>
+            <button type="button" pRipple class="user-menu-action danger" (click)="logoutFromMenu(userPopover)">
+              <i class="pi pi-sign-out"></i>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </p-popover>
       </div>
     </header>
 
@@ -94,3 +118,32 @@
     </main>
   </div>
 </div>
+
+<p-drawer
+  [(visible)]="accountDrawerVisible"
+  position="right"
+  header="Mis datos"
+  styleClass="account-drawer">
+  <div class="account-summary">
+    <div>
+      <span>Usuario</span>
+      <strong>{{ actualUser()?.username || '-' }}</strong>
+    </div>
+    <div>
+      <span>Email</span>
+      <strong>{{ actualUser()?.email || '-' }}</strong>
+    </div>
+    <div>
+      <span>Roles</span>
+      <strong>{{ actualUser()?.roles?.join(', ') || '-' }}</strong>
+    </div>
+  </div>
+</p-drawer>
+
+<p-drawer
+  [(visible)]="passwordDrawerVisible"
+  position="right"
+  header="Cambiar contraseña"
+  styleClass="password-drawer">
+  <app-change-password></app-change-password>
+</p-drawer>

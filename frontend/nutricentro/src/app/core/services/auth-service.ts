@@ -15,7 +15,9 @@ export class AuthService {
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
   private sessionExpiredMessage = signal<string | null>(null);
-  private rolesSignal = signal<string[]>(this.getUserRoles());
+  private userSignal = signal<UserResponseDTO | null>(this.readUserFromStorage());
+  private rolesSignal = signal<string[]>(this.userSignal()?.roles ?? []);
+  public currentUser = this.userSignal.asReadonly();
   public roles = this.rolesSignal.asReadonly();
 
   constructor() {
@@ -40,6 +42,7 @@ export class AuthService {
         );
 
         this.rolesSignal.set(response.user?.roles ?? []);
+        this.userSignal.set(response.user ?? null);
 
         this.redirectToWorkspace();
       })
@@ -47,14 +50,7 @@ export class AuthService {
   }
 
   getCurrentUser(): UserResponseDTO | null {
-
-    const user = localStorage.getItem(this.userKey);
-
-    if (!user) {
-      return null;
-    }
-
-    return JSON.parse(user);
+    return this.userSignal();
   }
 
   redirectToWorkspace(): void {
@@ -121,8 +117,7 @@ export class AuthService {
    * Devuelve el objeto de usuario almacenado en localStorage, o null si no se encuentra
    */
   getUser(): UserResponseDTO | null {
-    const user = localStorage.getItem(this.userKey);
-    return user ? JSON.parse(user) : null;
+    return this.getCurrentUser();
   }
 
   /**
@@ -131,6 +126,8 @@ export class AuthService {
    */
   updateUserInStorage(user: UserResponseDTO): void {
     localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.userSignal.set(user);
+    this.rolesSignal.set(user.roles ?? []);
   }
 
   getUserRoles(): string[] {
@@ -141,7 +138,13 @@ export class AuthService {
   private clearSession(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    this.userSignal.set(null);
     this.rolesSignal.set([]);
+  }
+
+  private readUserFromStorage(): UserResponseDTO | null {
+    const user = localStorage.getItem(this.userKey);
+    return user ? JSON.parse(user) : null;
   }
 
   private isTokenExpired(token: string): boolean {

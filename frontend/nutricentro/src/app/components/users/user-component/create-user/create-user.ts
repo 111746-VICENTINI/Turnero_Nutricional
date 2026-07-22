@@ -12,6 +12,7 @@ import {
   UserResponseDTO,
 } from '../../../../core/models/login-model';
 import { RoleService } from '../../../../core/services/role-service';
+import { AuthService } from '../../../../core/services/auth-service';
 import { UserService } from '../services/user-service';
 import { GenericFormField } from '../../../../shared/components/form-generic/model/form-model';
 import { FormGeneric } from '../../../../shared/components/form-generic/form-generic';
@@ -38,6 +39,7 @@ export class CreateUser implements OnInit {
   initialValues: Record<string, any> = {};
 
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private roleService = inject(RoleService);
   private messageService = inject(MessageService);
   private router = inject(Router);
@@ -149,8 +151,9 @@ export class CreateUser implements OnInit {
       };
 
       this.userService.updateUser(this.userId!, request).subscribe({
-        next: () => {
+        next: (updatedUser) => {
           this.saving = false;
+          this.syncCurrentUser(updatedUser);
           this.showSuccess('Usuario actualizado correctamente.');
           this.goBack();
         },
@@ -216,5 +219,12 @@ export class CreateUser implements OnInit {
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
+  }
+
+  private syncCurrentUser(user: UserResponseDTO): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && Number(currentUser.id) === Number(user.id)) {
+      this.authService.updateUserInStorage(user);
+    }
   }
 }

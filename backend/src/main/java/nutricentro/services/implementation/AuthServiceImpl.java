@@ -16,18 +16,21 @@ import nutricentro.entities.RoleEntity;
 import nutricentro.entities.TokenEntity;
 import nutricentro.entities.UserEntity;
 import nutricentro.enums.TokenType;
+import nutricentro.exception.ApiException;
 import nutricentro.repositories.TokenRepository;
 import nutricentro.repositories.UserRepository;
 import nutricentro.services.AuthService;
 import nutricentro.services.JwtService;
 import nutricentro.services.PasswordPolicyService;
 import nutricentro.services.email.EmailService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,8 +71,12 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(this::invalidCredentials);
 
-        if (!canLogin(user)) {
-            throw invalidCredentials();
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            throw new ApiException("El usuario se encuentra desactivado", HttpStatus.FORBIDDEN.value());
+        }
+        if (Boolean.FALSE.equals(user.getPasswordConfigured())) {
+            throw new ApiException("Tenes que crear tu contrasena antes de iniciar sesion. Revisa el correo de invitacion.",
+                    HttpStatus.FORBIDDEN.value());
         }
 
         try {
@@ -143,14 +150,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void changePassword(ChangePasswordRequestDTO request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getName())) {
-            throw new IllegalArgumentException("Usuario no autenticado");
-        }
-
-        UserEntity user = userRepository.findByUsernameIgnoreCase(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no autenticado"));
+        UserEntity user = resolveAuthenticatedUser();
 
         if (!canLogin(user)) {
             throw new IllegalArgumentException("Usuario no habilitado");
@@ -324,6 +324,39 @@ public class AuthServiceImpl implements AuthService {
             throw invalidCredentials();
         }
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private UserEntity resolveAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            throw new IllegalArgumentException("Usuario no autenticado");
+        }
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuthentication) {
+            Long userId = parseUserId(jwtAuthentication.getTokenAttributes().get("userId"));
+            if (userId != null) {
+                return userRepository.findById(userId)
+                        .orElseThrow(() -> new IllegalArgumentException("Usuario no autenticado"));
+            }
+        }
+
+        return userRepository.findByUsernameIgnoreCase(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no autenticado"));
+    }
+
+    private Long parseUserId(Object userId) {
+        if (userId instanceof Number number) {
+            return number.longValue();
+        }
+        if (userId instanceof String text && StringUtils.hasText(text)) {
+            try {
+                return Long.parseLong(text);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private boolean canLogin(UserEntity user) {

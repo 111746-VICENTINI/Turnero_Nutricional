@@ -59,12 +59,12 @@ export class LoginForm {
           detail: 'Inicio de sesión exitoso',
         });
       },
-      error: () => {
+      error: (error) => {
         this.loading = false;
         this.messageService.add({
           severity: 'error',
           summary: 'No se pudo ingresar',
-          detail: 'Revisa el email o la contraseña.',
+          detail: this.resolveLoginErrorMessage(error),
         });
       },
     });
@@ -103,5 +103,19 @@ export class LoginForm {
         });
       },
     });
+  }
+
+  private resolveLoginErrorMessage(error: any): string {
+    const message = error?.error?.message;
+    if (error?.status === 403 && message) {
+      return message;
+    }
+    if (error?.status === 400 && message) {
+      return message;
+    }
+    if (error?.status === 401) {
+      return 'El email o la contraseña no son correctos.';
+    }
+    return message || 'No se pudo iniciar sesión. Intentá nuevamente.';
   }
 }

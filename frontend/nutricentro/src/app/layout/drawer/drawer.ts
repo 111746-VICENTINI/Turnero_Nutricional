@@ -6,10 +6,12 @@ import {ConfirmationService} from 'primeng/api';
 import {AvatarModule} from 'primeng/avatar';
 import {ButtonModule} from 'primeng/button';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
+import {DrawerModule} from 'primeng/drawer';
 import {Popover} from 'primeng/popover';
 import {RippleModule} from 'primeng/ripple';
 import {StyleClassModule} from 'primeng/styleclass';
 import {AuthService} from '../../core/services/auth-service';
+import {ChangePassword} from '../../components/login/change-password/change-password';
 import {NotificationResponseDTO} from '../../core/models/notification-model';
 import {NotificationService} from '../../core/services/notification-service';
 import {NotificationsPanel} from '../../shared/components/notifications/notifications-panel';
@@ -26,10 +28,12 @@ import {NavigationItem} from './drawer-model';
     RouterLinkActive,
     ButtonModule,
     ConfirmDialogModule,
+    DrawerModule,
     Popover,
     RippleModule,
     StyleClassModule,
-    NotificationsPanel
+    NotificationsPanel,
+    ChangePassword
   ],
   templateUrl: './drawer.html',
   styleUrl: './drawer.css',
@@ -38,13 +42,15 @@ import {NavigationItem} from './drawer-model';
 export class Drawer implements OnInit, OnDestroy {
   sidebarExpanded = false;
   sidebarVisible = true;
+  accountDrawerVisible = false;
+  passwordDrawerVisible = false;
 
   private readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly notificationService = inject(NotificationService);
   readonly router = inject(Router);
   readonly roles = this.authService.roles;
-  readonly actualUser = this.authService.getCurrentUser();
+  readonly actualUser = this.authService.currentUser;
   notifications: NotificationResponseDTO[] = [];
   notificationsLoading = false;
   unreadNotificationsCount = 0;
@@ -134,6 +140,25 @@ export class Drawer implements OnInit, OnDestroy {
     this.loadNotifications();
   }
 
+  toggleUserMenu(event: Event, popover: Popover): void {
+    popover.toggle(event);
+  }
+
+  openAccount(popover: Popover): void {
+    popover.hide();
+    this.accountDrawerVisible = true;
+  }
+
+  openChangePassword(popover: Popover): void {
+    popover.hide();
+    this.passwordDrawerVisible = true;
+  }
+
+  logoutFromMenu(popover: Popover): void {
+    popover.hide();
+    this.logout();
+  }
+
   loadNotifications(): void {
     if (!this.canSeeNotifications || this.notificationsLoading) {
       return;
@@ -200,7 +225,7 @@ export class Drawer implements OnInit, OnDestroy {
   }
 
   getFullName(): string {
-    return `${this.actualUser?.username ?? 'usuario'}`;
+    return `${this.actualUser()?.username ?? 'usuario'}`;
   }
 
   private syncUnreadCountFromList(): void {

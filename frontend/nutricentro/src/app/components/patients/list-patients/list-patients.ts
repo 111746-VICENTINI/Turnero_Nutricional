@@ -39,7 +39,7 @@ export class ListPatients {
     { field: 'lastName', header: 'Apellido' },
     { field: 'firstName', header: 'Nombre' },
     { field: 'age', header: 'Edad', sortable: false },
-    { field: 'email', header: 'Email' },
+    { field: 'mobile', header: 'Celular' },
     { field: 'status', header: 'Activo', type: 'custom', alignCenter: true,
       formatFn: value => getLabel(value as PersonStatus, PERSON_STATUS_LABELS),
       tagSeverityFn: value => value === PersonStatus.ACTIVE ? 'success' : 'danger' }

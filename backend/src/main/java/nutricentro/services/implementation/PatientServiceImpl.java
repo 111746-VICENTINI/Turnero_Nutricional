@@ -10,6 +10,9 @@ import nutricentro.entities.PatientEntity;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 import nutricentro.repositories.PatientRepository;
+import nutricentro.repositories.AppointmentRepository;
+import nutricentro.repositories.ConsultationRepository;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.PatientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,9 +29,18 @@ import java.util.stream.Collectors;
 public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final ConsultationRepository consultationRepository;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
 
     @Override
     public List<PatientResponseDTO> getAllPatients() {
+        Long professionalId = scopedProfessionalId();
+        if (professionalId != null) {
+            return patientRepository.findAll(byProfessional(professionalId)).stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
         return patientRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -36,6 +48,7 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponseDTO getPatientById(Long id) {
         PatientEntity patient = patientRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+        validatePatientScope(patient.getId());
         return toResponse(patient);
     }
 
@@ -59,6 +72,7 @@ public class PatientServiceImpl implements PatientService {
     public void delete(Long id) {
         PatientEntity patient = patientRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+        validatePatientScope(patient.getId());
         patient.setStatus(PersonStatus.INACTIVE);
         patientRepository.save(patient);
     }
@@ -67,6 +81,7 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponseDTO update(Long id, PatientUpdateDTO patient) {
         PatientEntity patientEntity = patientRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+        validatePatientScope(patientEntity.getId());
         patientEntity.setFirstName(patient.getFirstName());
         patientEntity.setLastName(patient.getLastName());
         patientEntity.setEmail(patient.getEmail());
@@ -82,11 +97,14 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public Page<PatientResponseDTO> searchPatients(String search, GenderType gender, PersonStatus status, Long professionalId, Pageable pageable) {
+        Long scopedProfessionalId = currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : professionalId;
         Specification<PatientEntity> spec = Specification.allOf(
                 bySearch(search),
                 byGender(gender),
                 byStatus(status),
-                byProfessional(professionalId)
+                byProfessional(scopedProfessionalId)
         );
 
         return patientRepository
@@ -172,6 +190,21 @@ public class PatientServiceImpl implements PatientService {
 
             return root.get("id").in(appointmentSubquery);
         };
+    }
+
+    private void validatePatientScope(Long patientId) {
+        Long professionalId = scopedProfessionalId();
+        if (professionalId != null
+                && !appointmentRepository.existsByPatientIdAndProfessionalId(patientId, professionalId)
+                && !consultationRepository.existsByPatientIdAndProfessionalId(patientId, professionalId)) {
+            throw new EntityNotFoundException("Paciente no encontrado");
+        }
+    }
+
+    private Long scopedProfessionalId() {
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : null;
     }
 
 }

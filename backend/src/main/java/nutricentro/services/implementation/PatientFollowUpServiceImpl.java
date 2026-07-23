@@ -6,7 +6,6 @@ import nutricentro.dtos.followup.PatientFollowUpStatusDTO;
 import nutricentro.entities.AppointmentEntity;
 import nutricentro.entities.ConsultationEntity;
 import nutricentro.entities.PatientEntity;
-import nutricentro.entities.ProfessionalEntity;
 import nutricentro.enums.AppointmentStatus;
 import nutricentro.enums.ConsultationStatus;
 import nutricentro.enums.FollowUpStatus;
@@ -15,8 +14,7 @@ import nutricentro.exception.ApiException;
 import nutricentro.repositories.AppointmentRepository;
 import nutricentro.repositories.ConsultationRepository;
 import nutricentro.repositories.PatientRepository;
-import nutricentro.repositories.ProfessionalRepository;
-import nutricentro.repositories.UserRepository;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.CurrentUserContext;
 import nutricentro.services.CurrentUserProvider;
 import nutricentro.services.PatientFollowUpService;
@@ -44,9 +42,8 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
     private final AppointmentRepository appointmentRepository;
     private final ConsultationRepository consultationRepository;
     private final PatientRepository patientRepository;
-    private final ProfessionalRepository professionalRepository;
-    private final UserRepository userRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
 
     @Value("${patient-follow-up.thresholds.use-days:false}")
     private boolean useDayThresholds;
@@ -327,26 +324,9 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
             return null;
         }
         if ("PROFESSIONAL".equals(currentUser.role())) {
-            return resolveCurrentProfessional(currentUser)
-                    .map(ProfessionalEntity::getId)
-                    .orElseThrow(() -> new ApiException(
-                            "El usuario profesional no esta vinculado a un profesional",
-                            HttpStatus.FORBIDDEN.value()
-                    ));
+            return currentProfessionalProvider.requireCurrentProfessionalId();
         }
         throw new ApiException("No tenes permisos para consultar seguimiento de pacientes", HttpStatus.FORBIDDEN.value());
-    }
-
-    private java.util.Optional<ProfessionalEntity> resolveCurrentProfessional(CurrentUserContext currentUser) {
-        if (currentUser.userId() != null) {
-            java.util.Optional<ProfessionalEntity> byUser = professionalRepository.findByUserId(currentUser.userId());
-            if (byUser.isPresent()) {
-                return byUser;
-            }
-        }
-
-        return userRepository.findByUsernameIgnoreCase(currentUser.username())
-                .flatMap(user -> professionalRepository.findByEmailIgnoreCase(user.getEmail()));
     }
 
     private String fullName(String firstName, String lastName) {

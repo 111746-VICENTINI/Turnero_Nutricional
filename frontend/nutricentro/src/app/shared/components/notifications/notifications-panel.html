@@ -1,0 +1,84 @@
+<section class="notifications-panel">
+  <header>
+    <div>
+      <span>Notificaciones</span>
+      <strong>{{ unreadCount }} pendientes</strong>
+    </div>
+
+    <button
+      type="button"
+      class="mark-all-button"
+      [disabled]="!unreadCount"
+      (click)="markAllAsRead.emit()">
+      Marcar todas como leídas
+    </button>
+  </header>
+
+  @if (loading) {
+    <div class="notification-empty">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Cargando alertas...</span>
+    </div>
+  } @else if (notifications.length) {
+    <div class="notification-list">
+      @for (notification of notifications; track notification.key) {
+        <article
+          class="notification-item"
+          [class.notification-read]="notification.read"
+          [ngClass]="priorityClass(notification.priority)">
+          <div class="notification-icon">
+            <i [class]="notification.icon"></i>
+          </div>
+
+          <div class="notification-content">
+            <div class="notification-title-row">
+              <div>
+                <strong>{{ notification.patientFullName }}</strong>
+              </div>
+              <span class="priority-pill">{{ priorityLabel(notification.priority) }}</span>
+            </div>
+
+            <p>{{ notification.message }}</p>
+
+            <div class="notification-meta">
+              <span class="meta-highlight">
+                <i class="pi pi-clock"></i>
+                {{ inactivityText(notification) }} sin control
+              </span>
+              <span>
+                <i class="pi pi-id-card"></i>
+                {{ notification.professionalFullName || 'Sin profesional' }}
+              </span>
+              <span>
+                <i class="pi pi-calendar"></i>
+                {{ formatDate(notification.lastConsultationDate) }}
+              </span>
+            </div>
+
+            <div class="notification-actions">
+              <button
+                type="button"
+                class="link-button"
+                (click)="openPatient.emit(notification)">
+                Ver historial clinico
+              </button>
+              @if (!notification.read) {
+                <button
+                  type="button"
+                  class="link-button muted"
+                  (click)="markAsRead.emit(notification)">
+                  Marcar como leída
+                </button>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="notification-empty">
+      <i class="pi pi-check-circle"></i>
+      <span>Sin alertas pendientes</span>
+    </div>
+  }
+</section>

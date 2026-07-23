@@ -22,6 +22,7 @@ import {Gender_Options, GenderType} from '../../../shared/enums/genders';
 import {PersonStatus} from '../../../shared/enums/person-status';
 import {formatLocalTime, toIsoLocalDate} from '../../../shared/utils/date-utils';
 import {isValidEmail} from '../../../shared/utils/email-validation';
+import {AuthService} from '../../../core/services/auth-service';
 import {PatientResponseDTO} from '../../patients/models/patient-model';
 import {PatientService} from '../../patients/services/patient-service';
 import {ProfessionalResponseDTO} from '../../professionals/models/professional-model';
@@ -111,6 +112,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
   private professionalService = inject(ProfessionalService);
   private specialtyService = inject(SpecialtyService);
   private patientService = inject(PatientService);
+  private authService = inject(AuthService);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -240,6 +242,11 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedProfessional?.allowAppointmentFeeOverride !== false;
   }
 
+  get isProfessionalOnly(): boolean {
+    const roles = this.authService.getUserRoles();
+    return roles.includes('PROFESSIONAL') && !roles.includes('ADMIN') && !roles.includes('SECRETARY');
+  }
+
   get selectedDurationLabel(): string {
     return `${this.consultationDurationMinutes(this.selectedFeeType)} minutos`;
   }
@@ -314,6 +321,10 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         this.professionals = response.content;
         const professionalId = Number(this.route.snapshot.queryParamMap.get('professionalId'));
+        if (this.isProfessionalOnly && !this.selectedProfessional && this.professionals.length) {
+          this.selectProfessional(this.professionals[0], true);
+          return;
+        }
         if (professionalId && !this.selectedProfessional) {
           const professional = this.professionals.find(item => item.id === professionalId);
           if (professional) {
@@ -518,11 +529,13 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       status: this.selectedAppointment?.status ?? AppointmentStatus.PENDING,
       reason: this.reason,
       patientId: this.selectedPatient!.id,
-      professionalId: this.selectedProfessional!.id,
       appliedFee: this.appliedFee,
       feeType: this.selectedFeeType,
       feeCurrency: this.feeCurrency
     };
+    if (!this.isProfessionalOnly) {
+      request.professionalId = this.selectedProfessional!.id;
+    }
 
     const operation = this.mode === 'edit' && this.appointmentId
       ? this.appointmentsService.updateAppointment(this.appointmentId, request as AppointmentUpdateDTO)
@@ -561,7 +574,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
         status: formData['status'],
         reason: formData['reason'],
         patientId: formData['patientId'],
-        professionalId: formData['professionalId'],
+        professionalId: this.isProfessionalOnly ? undefined : formData['professionalId'],
         secretaryId: formData['secretaryId']
       };
 
@@ -587,7 +600,9 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const professionalId = Number(values['professionalId']);
+    const professionalId = this.isProfessionalOnly
+      ? this.selectedProfessional?.id
+      : Number(values['professionalId']);
     const date = toIsoLocalDate(values['date']);
     if (!professionalId || !date) {
       this.updateTimeOptions([], values);
@@ -740,7 +755,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
   goToProfessionalAvailability(): void {
     this.router.navigate(['/availability'], {
       queryParams: {
-        professionalId: this.selectedProfessional?.id,
+        professionalId: this.isProfessionalOnly ? undefined : this.selectedProfessional?.id,
         date: this.selectedDate,
         returnTo: this.router.url
       }
@@ -769,7 +784,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
 
     this.loadingBusySlots = true;
     this.appointmentsService.searchAppointments({
-      professionalId: this.selectedProfessional.id,
+      professionalId: this.isProfessionalOnly ? undefined : this.selectedProfessional.id,
       dateFrom: this.selectedDate,
       dateTo: this.selectedDate,
       page: 0,

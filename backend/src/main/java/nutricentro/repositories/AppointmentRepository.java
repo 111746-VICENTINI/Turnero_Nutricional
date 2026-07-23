@@ -30,6 +30,8 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
     /** Busca turnos de un paciente en una fecha excluyendo estados no bloqueantes. */
     List<AppointmentEntity> findByPatientIdAndDateAndStatusNotIn(Long patientId, LocalDate date, Collection<AppointmentStatus> status);
 
+    boolean existsByPatientIdAndProfessionalId(Long patientId, Long professionalId);
+
     /** Busca turnos futuros de un profesional excluyendo estados no bloqueantes. */
     List<AppointmentEntity> findByProfessionalIdAndDateGreaterThanEqualAndStatusNotIn(
             Long professionalId,

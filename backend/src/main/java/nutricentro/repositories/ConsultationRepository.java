@@ -17,6 +17,7 @@ public interface ConsultationRepository extends JpaRepository<ConsultationEntity
     Optional<ConsultationEntity> findByAppointmentId(Long appointmentId);
     boolean existsByAppointmentId(Long appointmentId);
     boolean existsByAppointmentIdAndIdNot(Long appointmentId, Long id);
+    boolean existsByPatientIdAndProfessionalId(Long patientId, Long professionalId);
     long countByPatientIdAndProfessionalId(Long patientId, Long professionalId);
 
     // Busca consultas clinicas finalizadas para calcular seguimiento sin persistir datos derivados

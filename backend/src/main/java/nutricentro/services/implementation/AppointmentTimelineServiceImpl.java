@@ -12,6 +12,7 @@ import nutricentro.repositories.AppointmentRepository;
 import nutricentro.repositories.AppointmentTimelineEventRepository;
 import nutricentro.services.AppointmentSnapshot;
 import nutricentro.services.AppointmentTimelineService;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.CurrentUserContext;
 import nutricentro.services.CurrentUserProvider;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class AppointmentTimelineServiceImpl implements AppointmentTimelineServic
     private final AppointmentTimelineEventRepository timelineRepository;
     private final AppointmentRepository appointmentRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
     private final EntityManager entityManager;
 
     @Override
@@ -163,7 +165,14 @@ public class AppointmentTimelineServiceImpl implements AppointmentTimelineServic
     @Transactional(readOnly = true)
     /** Obtiene los eventos del timeline en orden cronológico. */
     public List<AppointmentTimelineEventResponseDTO> getTimeline(Long appointmentId) {
-        if (!appointmentRepository.existsById(appointmentId)) {
+        if (currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()) {
+            AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Turno no encontrado"));
+            Long professionalId = currentProfessionalProvider.requireCurrentProfessionalId();
+            if (appointment.getProfessional() == null || !professionalId.equals(appointment.getProfessional().getId())) {
+                throw new EntityNotFoundException("Turno no encontrado");
+            }
+        } else if (!appointmentRepository.existsById(appointmentId)) {
             throw new EntityNotFoundException("Turno no encontrado");
         }
         return timelineRepository.findByAppointmentIdOrderByOccurredAtAscIdAsc(appointmentId)

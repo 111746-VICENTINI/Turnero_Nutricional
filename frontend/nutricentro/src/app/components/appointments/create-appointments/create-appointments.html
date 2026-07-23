@@ -55,11 +55,11 @@
 
             <div class="patient-context">
               <div>
-                <span>Ultimo turno</span>
+                <span>Último turno</span>
                 <strong>{{ lastPatientAppointment ? formatDate(lastPatientAppointment.date) + ' ' + formatTime(lastPatientAppointment.time) : 'Sin registro' }}</strong>
               </div>
               <div>
-                <span>Proximo turno</span>
+                <span>Próximo turno</span>
                 <strong>{{ nextPatientAppointment ? formatDate(nextPatientAppointment.date) + ' ' + formatTime(nextPatientAppointment.time) : 'Sin turno' }}</strong>
               </div>
             </div>
@@ -99,24 +99,26 @@
             }
           </div>
 
-          <div class="professional-filters">
-            <label>
-              <span>Buscar profesional</span>
-              <input type="search" [(ngModel)]="professionalSearch" placeholder="Nombre o apellido" [disabled]="!selectedPatient" />
-            </label>
-            <label>
-              <span>Especialidad</span>
-              <p-select
-                [(ngModel)]="selectedSpecialtyId"
-                [options]="specialtyOptions"
-                optionLabel="label"
-                optionValue="value"
-                appendTo="body"
-                [disabled]="!selectedPatient"
-                (ngModelChange)="onSpecialtyChange()">
-              </p-select>
-            </label>
-          </div>
+          @if (!isProfessionalOnly) {
+            <div class="professional-filters">
+              <label>
+                <span>Buscar profesional</span>
+                <input type="search" [(ngModel)]="professionalSearch" placeholder="Nombre o apellido" [disabled]="!selectedPatient" />
+              </label>
+              <label>
+                <span>Especialidad</span>
+                <p-select
+                  [(ngModel)]="selectedSpecialtyId"
+                  [options]="specialtyOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body"
+                  [disabled]="!selectedPatient"
+                  (ngModelChange)="onSpecialtyChange()">
+                </p-select>
+              </label>
+            </div>
+          }
 
           <div class="professional-grid">
             @for (professional of filteredProfessionals; track professional.id) {

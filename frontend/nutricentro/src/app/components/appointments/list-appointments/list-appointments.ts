@@ -165,12 +165,12 @@ export class ListAppointments implements OnDestroy {
   }
 
   get isProfessionalWorkspace(): boolean {
-    return this.router.url.startsWith('/mi-dia');
+    return false;
   }
 
   get canManageAppointments(): boolean {
     const roles = this.authService.getUserRoles();
-    return roles.includes('ADMIN') || roles.includes('SECRETARY');
+    return roles.includes('ADMIN') || roles.includes('SECRETARY') || roles.includes('PROFESSIONAL');
   }
 
   get canManagePresence(): boolean {
@@ -291,8 +291,7 @@ export class ListAppointments implements OnDestroy {
         this.professionalSuggestions = this.professionals.filter(professional => this.professionalMatchesSpecialty(professional));
         this.selectedProfessionalModel = this.professionals.find(professional => professional.id === this.selectedProfessionalId);
         if (this.isProfessionalOnly) {
-          const currentEmail = this.authService.getCurrentUser()?.email?.toLowerCase();
-          const ownProfessional = this.professionals.find(professional => professional.email?.toLowerCase() === currentEmail);
+          const ownProfessional = this.professionals[0];
           if (ownProfessional) {
             this.selectedProfessionalModel = ownProfessional;
             this.selectedProfessionalId = ownProfessional.id;
@@ -387,7 +386,7 @@ export class ListAppointments implements OnDestroy {
     this.appointmentService.searchAppointments(<AppointmentFilters>{
       search: this.searchTerm,
       status: this.selectedStatus ?? undefined,
-      professionalId: this.selectedProfessionalId ?? undefined,
+      professionalId: this.isProfessionalOnly ? undefined : this.selectedProfessionalId ?? undefined,
       dateFrom,
       dateTo,
       page: requestPage,
@@ -480,7 +479,7 @@ export class ListAppointments implements OnDestroy {
       queryParams: {
         date: toIsoLocalDate(date),
         time,
-        professionalId: this.selectedProfessionalId ?? undefined,
+        professionalId: this.isProfessionalOnly ? undefined : this.selectedProfessionalId ?? undefined,
         returnTo: this.currentAgendaUrl()
       }
     });
@@ -758,7 +757,7 @@ export class ListAppointments implements OnDestroy {
       relativeTo: this.route,
       queryParams: {
         date: this.selectedDate,
-        professionalId: this.selectedProfessionalId ?? null,
+        professionalId: this.isProfessionalOnly ? null : this.selectedProfessionalId ?? null,
         specialtyId: this.selectedSpecialtyId ?? null,
         status: this.selectedStatus ?? null,
         view: this.viewMode
@@ -772,7 +771,7 @@ export class ListAppointments implements OnDestroy {
     const queryParams = new URLSearchParams();
     queryParams.set('date', this.selectedDate);
     queryParams.set('view', this.viewMode);
-    if (this.selectedProfessionalId) {
+    if (this.selectedProfessionalId && !this.isProfessionalOnly) {
       queryParams.set('professionalId', String(this.selectedProfessionalId));
     }
     if (this.selectedSpecialtyId) {

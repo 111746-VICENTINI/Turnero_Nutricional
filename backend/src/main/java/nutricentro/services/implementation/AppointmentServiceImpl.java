@@ -28,8 +28,7 @@ import nutricentro.services.AppointmentService;
 import nutricentro.services.AppointmentSnapshot;
 import nutricentro.services.AppointmentStateMachine;
 import nutricentro.services.AppointmentTimelineService;
-import nutricentro.services.CurrentUserContext;
-import nutricentro.services.CurrentUserProvider;
+import nutricentro.services.CurrentProfessionalProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +82,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentTimelineEventRepository appointmentTimelineEventRepository;
     private final ConsultationRepository consultationRepository;
     private final WhatsAppNotificationService whatsAppNotificationService;
-    private final CurrentUserProvider currentUserProvider;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
     @Value("${appointment.reminder.enabled:true}")
     private boolean reminderEnabled = true;
     @Value("${appointment.reminder.hours-before:24}")
@@ -127,7 +126,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         PatientEntity patient = patientRepository.findByIdForUpdate(dto.getPatientId())
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
-        ProfessionalEntity professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
+        Long professionalId = writableProfessionalId(dto.getProfessionalId(), null);
+        ProfessionalEntity professional = professionalRepository.findByIdForUpdate(professionalId)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
         validateActivePeople(patient, professional);
 
@@ -181,9 +181,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 : appointment.getPatient().getId();
         PatientEntity patient = patientRepository.findByIdForUpdate(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
-        Long professionalId = dto.getProfessionalId() != null
-                ? dto.getProfessionalId()
-                : appointment.getProfessional().getId();
+        Long professionalId = writableProfessionalId(dto.getProfessionalId(), appointment.getProfessional().getId());
         ProfessionalEntity professional = professionalRepository.findByIdForUpdate(professionalId)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
         validateProfessionalCanUseTarget(professional.getId());
@@ -399,19 +397,22 @@ public class AppointmentServiceImpl implements AppointmentService {
         return professionalId != null ? professionalId : requestedProfessionalId;
     }
 
+    private Long writableProfessionalId(Long requestedProfessionalId, Long currentAppointmentProfessionalId) {
+        Long professionalId = currentProfessionalId();
+        if (professionalId != null) {
+            return professionalId;
+        }
+        Long targetProfessionalId = requestedProfessionalId != null ? requestedProfessionalId : currentAppointmentProfessionalId;
+        if (targetProfessionalId == null) {
+            throw new ApiException("Debe indicar un profesional", HttpStatus.BAD_REQUEST.value());
+        }
+        return targetProfessionalId;
+    }
+
     private Long currentProfessionalId() {
-        CurrentUserContext currentUser = currentUserProvider.getCurrentUser();
-        if (!"PROFESSIONAL".equals(currentUser.role())) {
-            return null;
-        }
-        if (currentUser.userId() != null) {
-            return professionalRepository.findByUserId(currentUser.userId())
-                    .map(ProfessionalEntity::getId)
-                    .orElse(null);
-        }
-        return professionalRepository.findByEmailIgnoreCase(currentUser.username())
-                .map(ProfessionalEntity::getId)
-                .orElse(null);
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : null;
     }
 
     @Override

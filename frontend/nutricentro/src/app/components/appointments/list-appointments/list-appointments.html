@@ -5,7 +5,6 @@
   <section class="professional-day-page">
     <header class="professional-header">
       <div>
-        <span class="eyebrow">Mi Día</span>
         <h1>Pacientes de hoy</h1>
         <p>{{ selectedDateLabel }}</p>
       </div>
@@ -106,35 +105,35 @@
         <span class="summary-icon pi pi-users"></span>
         <div>
           <strong>{{ dailyAppointments.length }}</strong>
-          <span>pacientes</span>
+          <span>Pacientes</span>
         </div>
       </article>
       <article class="summary-card status-confirmed">
         <span class="summary-icon pi pi-check-circle"></span>
         <div>
           <strong>{{ statusCount(AppointmentStatus.CONFIRMED) }}</strong>
-          <span>confirmados</span>
+          <span>Confirmados</span>
         </div>
       </article>
       <article class="summary-card status-confirmed">
         <span class="summary-icon pi pi-user-plus"></span>
         <div>
           <strong>{{ presentPatients.length }}</strong>
-          <span>presentes / en curso</span>
+          <span>Presentes / En curso</span>
         </div>
       </article>
       <article class="summary-card status-completed">
         <span class="summary-icon pi pi-verified"></span>
         <div>
           <strong>{{ finishedPatients.length }}</strong>
-          <span>finalizados</span>
+          <span>Finalizados</span>
         </div>
       </article>
       <article class="summary-card status-rejected">
         <span class="summary-icon pi pi-user-minus"></span>
         <div>
           <strong>{{ absentPatients.length }}</strong>
-          <span>ausentes</span>
+          <span>Ausentes</span>
         </div>
       </article>
     </section>
@@ -180,7 +179,7 @@
           } @empty {
             <div class="empty-state compact-empty">
               <span class="pi pi-calendar-check"></span>
-              <strong>No hay pacientes pendientes</strong>
+              <strong>No hay pacientes</strong>
             </div>
           }
         </div>

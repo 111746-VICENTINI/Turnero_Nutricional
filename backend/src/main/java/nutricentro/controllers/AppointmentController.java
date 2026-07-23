@@ -31,7 +31,7 @@ public class AppointmentController {
     private final AppointmentTimelineService appointmentTimelineService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     /** Crea un turno desde la API. */
     public ResponseEntity<AppointmentResponseDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.createAppointment(dto));
@@ -104,7 +104,7 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETARY', 'PROFESSIONAL')")
     /** Cancela un turno existente. */
     public ResponseEntity<Void> deleteAppointment(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);

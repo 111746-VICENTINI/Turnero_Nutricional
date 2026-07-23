@@ -108,6 +108,12 @@ export class ListAppointments implements OnDestroy {
     { field: 'professionalFullName', header: 'Profesional', minWidth: '14rem' },
     { field: 'reason', header: 'Motivo', minWidth: '16rem' },
     {
+      field: 'appliedFee',
+      header: 'Costo',
+      width: '8rem',
+      formatFn: (_value, appointment) => this.formatMoney(appointment?.appliedFee, appointment?.feeCurrency || 'ARS')
+    },
+    {
       field: 'status',
       header: 'Estado',
       type: 'tag',
@@ -269,6 +275,14 @@ export class ListAppointments implements OnDestroy {
       AppointmentStatus.ABSENT,
       AppointmentStatus.CANCELED
     ];
+  }
+
+  get visibleFeeTotal(): number | undefined {
+    return this.feeTotal(this.appointment);
+  }
+
+  get dailyFeeTotal(): number | undefined {
+    return this.feeTotal(this.dailyAppointments);
   }
 
   get filteredFreeSlots(): string[] {
@@ -645,6 +659,14 @@ export class ListAppointments implements OnDestroy {
     return formatLocalTime(value);
   }
 
+  formatMoney(value?: number, currency = 'ARS'): string {
+    if (value === null || value === undefined) {
+      return 'No informado';
+    }
+    const symbol = currency === 'ARS' ? '$' : `${currency} `;
+    return `${symbol}${Number(value).toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+  }
+
   shortDateLabel(value: string): string {
     return this.parseIsoDate(value).toLocaleDateString('es-AR', {day: '2-digit', month: 'short'});
   }
@@ -703,6 +725,13 @@ export class ListAppointments implements OnDestroy {
     return [...items].sort((first, second) =>
       `${first.date}T${this.formatTime(first.time)}`.localeCompare(`${second.date}T${this.formatTime(second.time)}`)
     );
+  }
+
+  private feeTotal(items: AppointmentResponseDTO[]): number | undefined {
+    const values = items
+      .map(item => item.appliedFee)
+      .filter((value): value is number => value !== null && value !== undefined);
+    return values.length ? values.reduce((total, value) => total + Number(value), 0) : undefined;
   }
 
   private isTerminal(status: AppointmentStatus): boolean {

@@ -108,6 +108,13 @@
           <span>Pacientes</span>
         </div>
       </article>
+      <article class="summary-card total-card">
+        <span class="summary-icon pi pi-dollar"></span>
+        <div>
+          <strong>{{ formatMoney(dailyFeeTotal) }}</strong>
+          <span>Costo total</span>
+        </div>
+      </article>
       <article class="summary-card status-confirmed">
         <span class="summary-icon pi pi-check-circle"></span>
         <div>
@@ -155,6 +162,7 @@
                   <strong>{{ item.patientFullName }}</strong>
                   <span>{{ item.reason || 'Sin motivo cargado' }}</span>
                   <small>{{ item.professionalFullName }}</small>
+                  <small class="appointment-cost">Costo: {{ formatMoney(item.appliedFee, item.feeCurrency || 'ARS') }}</small>
                 </div>
                 <p-tag
                   [value]="statusLabel(item.status)"
@@ -421,13 +429,20 @@
       </article>
     }
 
-    <article class="summary-card total-card">
-      <span class="summary-icon pi pi-calendar-clock"></span>
-      <div>
-        <strong>{{ totalRecords }}</strong>
-        <span>Turnos visibles</span>
-      </div>
-    </article>
+      <article class="summary-card total-card">
+        <span class="summary-icon pi pi-calendar-clock"></span>
+        <div>
+          <strong>{{ totalRecords }}</strong>
+          <span>Turnos visibles</span>
+        </div>
+      </article>
+      <article class="summary-card total-card">
+        <span class="summary-icon pi pi-dollar"></span>
+        <div>
+          <strong>{{ formatMoney(visibleFeeTotal) }}</strong>
+          <span>Costo visible</span>
+        </div>
+      </article>
   </section>
 
   @if (viewMode === 'day') {
@@ -459,6 +474,7 @@
                   <div class="appointment-main">
                     <strong>{{ item.patientFullName }}</strong>
                     <span>Profesional: {{ item.professionalFullName }}</span>
+                    <span class="appointment-cost">Costo: {{ formatMoney(item.appliedFee, item.feeCurrency || 'ARS') }}</span>
                     <p>{{ item.reason || 'Sin motivo de consulta' }}</p>
                   </div>
                   <p-tag
@@ -556,6 +572,7 @@
               <button type="button" class="week-item" [ngClass]="statusClass(item.status)" (click)="viewAppointment(item)">
                 <span>{{ formatTime(item.time) }}</span>
                 <strong>{{ item.patientFullName }}</strong>
+                <small>{{ formatMoney(item.appliedFee, item.feeCurrency || 'ARS') }}</small>
                 <small>{{ statusLabel(item.status) }}</small>
               </button>
             } @empty {

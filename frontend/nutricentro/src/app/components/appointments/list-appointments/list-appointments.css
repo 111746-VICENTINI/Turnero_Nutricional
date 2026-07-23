@@ -168,7 +168,7 @@
 .status-grid {
   display: grid;
   gap: 0.45rem;
-  grid-template-columns: repeat(7, minmax(7.75rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(7.75rem, 1fr));
 }
 
 .summary-card {
@@ -387,6 +387,12 @@
 .appointment-main p {
   color: #6b7280;
   font-size: 0.84rem;
+}
+
+.appointment-main .appointment-cost,
+.professional-card-main .appointment-cost {
+  color: #047857;
+  font-weight: 800;
 }
 
 .appointment-main p {
@@ -609,7 +615,7 @@
 .professional-status-grid {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(5, minmax(9rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
 }
 
 .professional-board {

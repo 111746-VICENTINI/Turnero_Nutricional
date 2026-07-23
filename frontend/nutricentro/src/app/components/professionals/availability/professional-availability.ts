@@ -155,7 +155,7 @@ export class ProfessionalAvailability implements OnInit {
 
   get canEdit(): boolean {
     const roles = this.authService.roles();
-    return roles.includes('ADMIN') || roles.includes('PROFESSIONAL');
+    return roles.includes('ADMIN') || roles.includes('SECRETARY') || roles.includes('PROFESSIONAL');
   }
 
   get isProfessionalOnly(): boolean {

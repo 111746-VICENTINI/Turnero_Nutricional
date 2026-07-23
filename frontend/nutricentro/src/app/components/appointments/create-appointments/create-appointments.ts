@@ -3,8 +3,9 @@ import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, inje
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Subject, debounceTime, distinctUntilChanged, finalize, takeUntil} from 'rxjs';
-import {MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import {Button} from 'primeng/button';
+import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {DatePickerModule} from 'primeng/datepicker';
 import {DialogModule} from 'primeng/dialog';
 import {SelectModule} from 'primeng/select';
@@ -48,6 +49,7 @@ type WhatsAppStatus = 'idle' | 'pending' | 'sent' | 'failed';
     CommonModule,
     FormsModule,
     Button,
+    ConfirmDialogModule,
     DatePickerModule,
     DialogModule,
     FormGeneric,
@@ -57,6 +59,7 @@ type WhatsAppStatus = 'idle' | 'pending' | 'sent' | 'failed';
   ],
   templateUrl: './create-appointments.html',
   styleUrl: './create-appointments.css',
+  providers: [ConfirmationService]
 })
 /** Permite crear o reprogramar turnos desde una pantalla rapida de agenda. */
 export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
@@ -113,6 +116,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
   private specialtyService = inject(SpecialtyService);
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
+  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -521,6 +525,10 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.confirmDuplicateSameDayAppointment(() => this.persistQuickAppointment());
+  }
+
+  private persistQuickAppointment(): void {
     this.saving = true;
     this.whatsappStatus = 'pending';
     const request: AppointmentRequestDTO | AppointmentUpdateDTO = {
@@ -561,6 +569,50 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
             : 'No se pudo crear el turno con la fecha, horario y profesional seleccionados.'
         ));
       }
+    });
+  }
+
+  private confirmDuplicateSameDayAppointment(continueSave: () => void): void {
+    if (this.mode !== 'create' || !this.selectedPatient) {
+      continueSave();
+      return;
+    }
+
+    const selectedDate = toIsoLocalDate(this.selectedDate);
+    const selectedTime = this.formatTime(this.selectedTime);
+    this.appointmentsService.searchAppointments({
+      patientId: this.selectedPatient.id,
+      dateFrom: selectedDate,
+      dateTo: selectedDate,
+      page: 0,
+      size: 100,
+      sortBy: 'time',
+      direction: 'asc'
+    }).subscribe({
+      next: (page) => {
+        const hasDuplicateAppointment = page.content.some((appointment) =>
+          appointment.id !== this.appointmentId
+          && appointment.patientId === this.selectedPatient?.id
+          && appointment.date === selectedDate
+          && this.formatTime(appointment.time) !== selectedTime
+          && !this.isTerminal(appointment.status)
+        );
+
+        if (!hasDuplicateAppointment) {
+          continueSave();
+          return;
+        }
+
+        this.confirmationService.confirm({
+          message: 'Este paciente ya posee un turno agendado para ese mismo día en otro horario. ¿Desea agendarlo igualmente?',
+          header: 'Turno existente',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'Agendar igualmente',
+          rejectLabel: 'Cancelar',
+          accept: continueSave
+        });
+      },
+      error: () => continueSave()
     });
   }
 

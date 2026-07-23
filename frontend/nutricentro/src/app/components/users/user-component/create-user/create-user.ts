@@ -174,8 +174,15 @@ export class CreateUser implements OnInit {
     this.userService.createUser(request).subscribe({
       next: () => {
         this.saving = false;
-        this.showSuccess('Usuario creado correctamente. Se envió la invitación para crear contraseña.');
-        this.goBack();
+        this.router.navigate(['/users'], {
+          state: {
+            toast: {
+              severity: 'success',
+              summary: 'Listo',
+              detail: 'Usuario creado. Se envió la invitación para crear contraseña.'
+            }
+          }
+        });
       },
       error: () => {
         this.saving = false;

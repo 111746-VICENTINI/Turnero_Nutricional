@@ -66,6 +66,8 @@ public class InitialAdminBootstrapRunner implements ApplicationRunner {
         user.setEmail(email);
         user.setPasswordHash(generateTechnicalPasswordHash());
         user.setPasswordConfigured(false);
+        user.setAcceptedTerms(false);
+        user.setAcceptedTermsAt(null);
         user.setIsActive(true);
         user.getRoles().add(adminRole);
 

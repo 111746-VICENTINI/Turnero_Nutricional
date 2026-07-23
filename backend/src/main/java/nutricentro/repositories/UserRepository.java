@@ -35,4 +35,56 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
             where upper(role.name) = 'ADMIN'
             """)
     long countAdmins();
+
+    @Query("""
+            select distinct user
+            from UserEntity user
+            join user.roles role
+            where user.isActive = true
+              and upper(role.name) = 'PROFESSIONAL'
+              and not exists (
+                  select forbiddenRole.id
+                  from UserEntity forbiddenUser
+                  join forbiddenUser.roles forbiddenRole
+                  where forbiddenUser.id = user.id
+                    and upper(forbiddenRole.name) in ('ADMIN', 'SECRETARY')
+              )
+              and not exists (
+                  select professional.id
+                  from ProfessionalEntity professional
+                  where professional.user.id = user.id
+              )
+            order by user.username asc
+            """)
+    java.util.List<UserEntity> findActiveUnlinkedProfessionalUsers();
+
+    @Query("""
+            select distinct user
+            from UserEntity user
+            join user.roles role
+            where user.isActive = true
+              and upper(role.name) = 'PROFESSIONAL'
+              and not exists (
+                  select forbiddenRole.id
+                  from UserEntity forbiddenUser
+                  join forbiddenUser.roles forbiddenRole
+                  where forbiddenUser.id = user.id
+                    and upper(forbiddenRole.name) in ('ADMIN', 'SECRETARY')
+              )
+              and (
+                  not exists (
+                      select professional.id
+                      from ProfessionalEntity professional
+                      where professional.user.id = user.id
+                  )
+                  or exists (
+                      select professional.id
+                      from ProfessionalEntity professional
+                      where professional.user.id = user.id
+                        and professional.id = :professionalId
+                  )
+              )
+            order by user.username asc
+            """)
+    java.util.List<UserEntity> findActiveAvailableProfessionalUsers(@Param("professionalId") Long professionalId);
 }

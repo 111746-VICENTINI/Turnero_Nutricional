@@ -146,6 +146,34 @@
   padding-inline: 0;
 }
 
+.login-terms-acceptance {
+  align-items: flex-start;
+  color: #374151;
+  display: flex;
+  font-size: 0.92rem;
+  gap: 0.65rem;
+  line-height: 1.35;
+}
+
+.terms-link {
+  background: transparent;
+  border: 0;
+  color: #0f766e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.terms-link:hover {
+  color: #0b5f59;
+}
+
+:host ::ng-deep .login-terms-acceptance .p-checkbox.p-disabled {
+  opacity: 1;
+}
+
 :host ::ng-deep .dialog-submit {
   align-self: flex-end;
   background: #0f766e;

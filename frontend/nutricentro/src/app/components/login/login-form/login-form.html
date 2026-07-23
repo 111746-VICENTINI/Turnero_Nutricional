@@ -10,7 +10,7 @@
 
     <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
       <div class="form-heading">
-        <h2>Iniciar sesion</h2>
+        <h2>Iniciar sesión</h2>
       </div>
 
       <div class="field">
@@ -43,6 +43,22 @@
         @if (loginForm.controls.password.invalid && loginForm.controls.password.touched) {
           <small>La contraseña es obligatoria.</small>
         }
+      </div>
+
+      <div class="login-terms-acceptance">
+        <p-checkbox
+          inputId="loginTermsAccepted"
+          [(ngModel)]="loginTermsAccepted"
+          [ngModelOptions]="{ standalone: true }"
+          [binary]="true"
+          [disabled]="true"
+        ></p-checkbox>
+        <span>
+          He leído y acepto los
+          <button type="button" class="terms-link" (click)="openTermsReadOnly()">
+            Términos y Condiciones
+          </button>.
+        </span>
       </div>
 
       <p-button
@@ -93,9 +109,9 @@
   header="Términos y Condiciones de Uso"
   [(visible)]="termsDialog"
   [modal]="true"
-  [closable]="false"
-  [dismissableMask]="false"
-  [closeOnEscape]="false"
+  [closable]="!isTermsAcceptanceRequired"
+  [dismissableMask]="!isTermsAcceptanceRequired"
+  [closeOnEscape]="!isTermsAcceptanceRequired"
   [draggable]="false"
   [resizable]="false"
   styleClass="terms-dialog"
@@ -111,34 +127,47 @@
       }
     </div>
 
-    <label class="terms-acceptance" for="termsAccepted">
-      <p-checkbox
-        inputId="termsAccepted"
-        [(ngModel)]="termsAccepted"
-        [binary]="true"
-      ></p-checkbox>
-      <span>He leído y acepto los Términos y Condiciones.</span>
-    </label>
+    @if (isTermsAcceptanceRequired) {
+      <label class="terms-acceptance" for="termsAccepted">
+        <p-checkbox
+          inputId="termsAccepted"
+          [(ngModel)]="termsAccepted"
+          [binary]="true"
+        ></p-checkbox>
+        <span>He leído y acepto los Términos y Condiciones.</span>
+      </label>
+    }
   </div>
 
   <ng-template pTemplate="footer">
     <div class="terms-actions">
-      <p-button
-        label="Cancelar / Cerrar sesión"
-        type="button"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="cancelTermsAcceptance()"
-      ></p-button>
+      @if (isTermsAcceptanceRequired) {
+        <p-button
+          label="Cancelar"
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelTermsAcceptance()"
+        ></p-button>
 
-      <p-button
-        label="Aceptar"
-        type="button"
-        icon="pi pi-check"
-        [disabled]="!termsAccepted"
-        [loading]="acceptingTerms"
-        (onClick)="acceptTerms()"
-      ></p-button>
+        <p-button
+          label="Aceptar"
+          type="button"
+          icon="pi pi-check"
+          [disabled]="!termsAccepted"
+          [loading]="acceptingTerms"
+          (onClick)="acceptTerms()"
+        ></p-button>
+      } @else {
+        <p-button
+          label="Cerrar"
+          type="button"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeTermsReadOnly()"
+        ></p-button>
+      }
     </div>
   </ng-template>
 </p-dialog>

@@ -25,10 +25,10 @@ public class PasswordPolicyServiceImpl implements PasswordPolicyService {
             throw new IllegalArgumentException("La contraseña no puede superar los 100 caracteres");
         }
         if (!password.chars().anyMatch(Character::isUpperCase)) {
-            throw new IllegalArgumentException("La contraseña debe incluir al menos una mayuscula");
+            throw new IllegalArgumentException("La contraseña debe incluir al menos una mayúscula");
         }
         if (!password.chars().anyMatch(Character::isLowerCase)) {
-            throw new IllegalArgumentException("La contraseña debe incluir al menos una minuscula");
+            throw new IllegalArgumentException("La contraseña debe incluir al menos una minúscula");
         }
         if (!password.chars().anyMatch(Character::isDigit)) {
             throw new IllegalArgumentException("La contraseña debe incluir al menos un número");

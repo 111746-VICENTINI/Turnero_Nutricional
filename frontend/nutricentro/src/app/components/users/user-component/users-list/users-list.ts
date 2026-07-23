@@ -65,7 +65,7 @@ export class UsersList implements OnInit {
       severity: 'warn',
       visible: (user) => user.isActive === true && user.passwordConfigured === false
     },
-    { field: 'delete', label: 'Eliminar', icon: 'pi pi-trash', severity: 'danger' },
+    { field: 'delete', label: 'Desactivar', icon: 'pi pi-trash', severity: 'danger' },
   ];
 
   filterConfigs: TableFilterConfig[] = [
@@ -104,6 +104,7 @@ export class UsersList implements OnInit {
   };
 
   ngOnInit(): void {
+    this.showNavigationToast();
     this.loadUsers();
   }
 
@@ -205,5 +206,16 @@ export class UsersList implements OnInit {
   private mapSortField(field: string | undefined): string {
     const allowedFields = ['username', 'email', 'isActive', 'roles'];
     return field && allowedFields.includes(field) ? field : 'username';
+  }
+
+  private showNavigationToast(): void {
+    const toast = history.state?.toast;
+    if (!toast) {
+      return;
+    }
+
+    setTimeout(() => this.messageService.add(toast));
+    const { toast: _toast, ...state } = history.state;
+    history.replaceState(state, document.title);
   }
 }

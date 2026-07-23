@@ -36,7 +36,9 @@ export class LoginForm {
   forgotPasswordDialog = false;
   termsDialog = false;
   termsAccepted = false;
+  loginTermsAccepted = true;
   acceptingTerms = false;
+  termsDialogMode: 'required' | 'read' = 'read';
   recoveryEmail = '';
   loading = false;
   readonly termsSections = [
@@ -99,6 +101,7 @@ export class LoginForm {
         this.loading = false;
         if (this.mustAcceptTerms(response)) {
           this.termsAccepted = false;
+          this.termsDialogMode = 'required';
           this.termsDialog = true;
           return;
         }
@@ -151,6 +154,16 @@ export class LoginForm {
     this.termsDialog = false;
     this.termsAccepted = false;
     this.authService.cancelPendingTermsAcceptance();
+  }
+
+  openTermsReadOnly(): void {
+    this.termsDialogMode = 'read';
+    this.termsAccepted = true;
+    this.termsDialog = true;
+  }
+
+  closeTermsReadOnly(): void {
+    this.termsDialog = false;
   }
 
   openRecovery(): void {
@@ -212,5 +225,9 @@ export class LoginForm {
   }
   private mustAcceptTerms(response: AuthResponseDTO): boolean {
     return response.user?.acceptedTerms === false;
+  }
+
+  get isTermsAcceptanceRequired(): boolean {
+    return this.termsDialogMode === 'required';
   }
 }

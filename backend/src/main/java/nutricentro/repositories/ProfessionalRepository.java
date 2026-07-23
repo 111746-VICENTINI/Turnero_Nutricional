@@ -15,6 +15,8 @@ public interface ProfessionalRepository extends JpaRepository<ProfessionalEntity
     boolean existsBySpecialties_Id(Long id);
 
     Optional<ProfessionalEntity> findByUserId(Long userId);
+    boolean existsByUserId(Long userId);
+    boolean existsByUserIdAndIdNot(Long userId, Long id);
     Optional<ProfessionalEntity> findByEmailIgnoreCase(String email);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

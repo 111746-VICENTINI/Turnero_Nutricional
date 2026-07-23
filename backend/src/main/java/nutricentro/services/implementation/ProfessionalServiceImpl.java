@@ -8,13 +8,18 @@ import nutricentro.dtos.professionals.ProfessionalRequestDTO;
 import nutricentro.dtos.professionals.ProfessionalResponseDTO;
 import nutricentro.dtos.professionals.ProfessionalUpdateDTO;
 import nutricentro.dtos.specialties.SpecialtyOnlyNameDTO;
+import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.entities.ProfessionalEntity;
+import nutricentro.entities.RoleEntity;
 import nutricentro.entities.SpecialtyEntity;
+import nutricentro.entities.UserEntity;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 import nutricentro.exception.ApiException;
 import nutricentro.repositories.ProfessionalRepository;
 import nutricentro.repositories.SpecialtyRepository;
+import nutricentro.repositories.UserRepository;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.ProfessionalService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +39,8 @@ import java.util.stream.Collectors;
 public class ProfessionalServiceImpl implements ProfessionalService {
     private final ProfessionalRepository professionalRepository;
     private final SpecialtyRepository specialtyRepository;
+    private final UserRepository userRepository;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
 
     @Override
     public ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professional) {
@@ -49,6 +56,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         professionalEntity.setLastName(resolveRequiredText(professional.getLastName(), professionalEntity.getLastName(), "El apellido es obligatorio"));
         professionalEntity.setBirthDate(professional.getBirthDate());
         professionalEntity.setDocument(professional.getDocument());
+        professionalEntity.setUser(resolveProfessionalUser(professional.getUserId(), null));
         professionalEntity.setSpecialties(specialties);
         professionalEntity.setTuition(professional.getTuition());
         professionalEntity.setMobile(professional.getMobile());
@@ -68,6 +76,13 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
     @Override
     public List<ProfessionalResponseDTO> getAllProfessionals() {
+        Long currentProfessionalId = scopedProfessionalId();
+        if (currentProfessionalId != null) {
+            return professionalRepository.findById(currentProfessionalId)
+                    .stream()
+                    .map(this::toResponse)
+                    .toList();
+        }
         return professionalRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -75,6 +90,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     public ProfessionalResponseDTO getProfessionalById(Long id) {
         ProfessionalEntity professionalEntity = professionalRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+        validateProfessionalScope(professionalEntity.getId());
         return toResponse(professionalEntity);
     }
 
@@ -82,6 +98,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     public void delete(Long id) {
         ProfessionalEntity professionalEntity = professionalRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+        validateProfessionalScope(professionalEntity.getId());
         professionalEntity.setStatus(PersonStatus.INACTIVE);
         professionalRepository.save(professionalEntity);
     }
@@ -91,8 +108,19 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     public ProfessionalResponseDTO update(Long id, ProfessionalUpdateDTO professional) {
         ProfessionalEntity professionalEntity = professionalRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+        validateProfessionalScope(professionalEntity.getId());
 
         List<SpecialtyEntity> specialties = resolveSpecialtiesForUpdate(professionalEntity, professional.getSpecialtyIds());
+        if (scopedProfessionalId() != null) {
+            professionalEntity.setSpecialties(specialties);
+            applyFeeUpdates(professionalEntity,
+                    professional.getFirstConsultationFee(),
+                    professional.getFollowUpConsultationFee(),
+                    professional.getOnlineConsultationFee(),
+                    professional.getFeeCurrency(),
+                    professional.getAllowAppointmentFeeOverride());
+            return toResponse(professionalRepository.save(professionalEntity));
+        }
 
         professionalEntity.setFirstName(resolveRequiredText(professional.getFirstName(), professionalEntity.getFirstName(), "El nombre es obligatorio"));
         professionalEntity.setLastName(resolveRequiredText(professional.getLastName(), professionalEntity.getLastName(), "El apellido es obligatorio"));
@@ -114,6 +142,9 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         if (professional.getDocument() != null) {
             professionalEntity.setDocument(professional.getDocument());
         }
+        if (professional.getUserId() != null) {
+            professionalEntity.setUser(resolveProfessionalUser(professional.getUserId(), professionalEntity.getId()));
+        }
         professionalEntity.setSpecialties(specialties);
         professionalEntity.setTuition(resolveRequiredText(professional.getTuition(), professionalEntity.getTuition(), "La matricula es obligatoria"));
         if (professional.getRegistration() != null) {
@@ -131,7 +162,9 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
     @Override
     public Page<ProfessionalResponseDTO> searchProfessionals(String search, GenderType gender, PersonStatus status, Long specialtyId, Pageable pageable) {
+        Long currentProfessionalId = scopedProfessionalId();
         Specification<ProfessionalEntity> spec = Specification.allOf(
+                byId(currentProfessionalId),
                 bySearch(search),
                 byGender(gender),
                 byStatus(status),
@@ -141,11 +174,22 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         return professionalRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
+    @Override
+    public List<UserResponseDTO> getAvailableProfessionalUsers(Long professionalId) {
+        List<UserEntity> users = professionalId == null
+                ? userRepository.findActiveUnlinkedProfessionalUsers()
+                : userRepository.findActiveAvailableProfessionalUsers(professionalId);
+        return users.stream().map(this::toUserResponse).toList();
+    }
+
     private ProfessionalResponseDTO toResponse(ProfessionalEntity saved) {
         return ProfessionalResponseDTO.builder()
                 .id(saved.getId())
                 .age(calculateAge(saved.getBirthDate()))
                 .email(saved.getEmail())
+                .userId(saved.getUser() != null ? saved.getUser().getId() : null)
+                .username(saved.getUser() != null ? saved.getUser().getUsername() : null)
+                .userEmail(saved.getUser() != null ? saved.getUser().getEmail() : null)
                 .firstName(saved.getFirstName())
                 .lastName(saved.getLastName())
                 .mobile(saved.getMobile())
@@ -167,6 +211,65 @@ public class ProfessionalServiceImpl implements ProfessionalService {
                                 .build())
                         .toList())
                 .build();
+    }
+
+    private UserEntity resolveProfessionalUser(Long userId, Long professionalId) {
+        if (userId == null) {
+            throw new ApiException("El usuario asociado es obligatorio", HttpStatus.BAD_REQUEST.value());
+        }
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("El usuario asociado no existe", HttpStatus.BAD_REQUEST.value()));
+
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            throw new ApiException("El usuario asociado debe estar activo", HttpStatus.BAD_REQUEST.value());
+        }
+        if (!hasRole(user, "PROFESSIONAL")) {
+            throw new ApiException("El usuario asociado debe tener rol PROFESSIONAL", HttpStatus.BAD_REQUEST.value());
+        }
+        if (hasRole(user, "ADMIN") || hasRole(user, "SECRETARY")) {
+            throw new ApiException("No se puede asociar un usuario ADMIN o SECRETARY como profesional", HttpStatus.BAD_REQUEST.value());
+        }
+
+        boolean alreadyLinked = professionalId == null
+                ? professionalRepository.existsByUserId(userId)
+                : professionalRepository.existsByUserIdAndIdNot(userId, professionalId);
+        if (alreadyLinked) {
+            throw new ApiException("El usuario asociado ya esta vinculado a otro profesional", HttpStatus.CONFLICT.value());
+        }
+
+        return user;
+    }
+
+    private boolean hasRole(UserEntity user, String roleName) {
+        return user.getRoles() != null && user.getRoles().stream()
+                .map(RoleEntity::getName)
+                .anyMatch(role -> roleName.equalsIgnoreCase(role));
+    }
+
+    private void validateProfessionalScope(Long professionalId) {
+        Long currentProfessionalId = scopedProfessionalId();
+        if (currentProfessionalId != null && !currentProfessionalId.equals(professionalId)) {
+            throw new EntityNotFoundException("Profesional no encontrado");
+        }
+    }
+
+    private Long scopedProfessionalId() {
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : null;
+    }
+
+    private UserResponseDTO toUserResponse(UserEntity user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getIsActive(),
+                user.getPasswordConfigured() == null || Boolean.TRUE.equals(user.getPasswordConfigured()),
+                user.getAcceptedTerms() == null || Boolean.TRUE.equals(user.getAcceptedTerms()),
+                user.getAcceptedTermsAt(),
+                user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()));
     }
 
     private Integer calculateAge(LocalDate birthDate){
@@ -198,6 +301,12 @@ public class ProfessionalServiceImpl implements ProfessionalService {
                     cb.like(cb.lower(specialty.get("name")), pattern)
             );
         };
+    }
+
+    private Specification<ProfessionalEntity> byId(Long professionalId) {
+        return (root, query, cb) -> professionalId == null
+                ? cb.conjunction()
+                : cb.equal(root.get("id"), professionalId);
     }
 
     private List<SpecialtyEntity> resolveSpecialtiesForUpdate(ProfessionalEntity professional, List<Long> requestedIds) {

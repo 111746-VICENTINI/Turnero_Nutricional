@@ -29,6 +29,9 @@ public class ProfessionalResponseDTO {
     private String email;
     private String state;
     private Integer document;
+    private Long userId;
+    private String username;
+    private String userEmail;
     private String tuition;
     private String registration;
     private PersonStatus status;

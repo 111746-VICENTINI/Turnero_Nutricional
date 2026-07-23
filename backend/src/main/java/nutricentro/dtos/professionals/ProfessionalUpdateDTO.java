@@ -26,6 +26,7 @@ public class ProfessionalUpdateDTO {
 
     private Integer document;
     private List<Long> specialtyIds;
+    private Long userId;
     private String tuition;
 
     @Email(message = "El formato email no es válido")

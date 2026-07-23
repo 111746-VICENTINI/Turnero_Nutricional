@@ -20,6 +20,7 @@ import nutricentro.repositories.ProfessionalScheduleBreakRepository;
 import nutricentro.repositories.ProfessionalScheduleRepository;
 import nutricentro.services.AppointmentAvailabilityService;
 import nutricentro.services.AppointmentStateMachine;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.ProfessionalScheduleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
     private final AppointmentRepository appointmentRepository;
     private final AppointmentStateMachine appointmentStateMachine;
     private final AppointmentAvailabilityService appointmentAvailabilityService;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
 
     @Override
     @Transactional
@@ -53,7 +55,8 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
         validate(dto.getStartTime(), dto.getEndTime(), dto.getSlotDurationMinutes(),
                 dto.getBufferMinutes(), dto.getMaxDailyAppointments());
 
-        ProfessionalEntity professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
+        Long professionalId = scopedProfessionalId(dto.getProfessionalId());
+        ProfessionalEntity professional = professionalRepository.findByIdForUpdate(professionalId)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
         if (professional.getStatus() != PersonStatus.ACTIVE) {
             throw new ApiException("El profesional no está activo", HttpStatus.CONFLICT.value());
@@ -94,6 +97,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
     @Transactional
     public ProfessionalScheduleResponseDTO update(Long id, ProfessionalScheduleUpdateDTO dto) {
         ProfessionalScheduleEntity schedule = findScheduleForUpdate(id);
+        validateScheduleScope(schedule);
 
         LocalTime startTime = dto.getStartTime() != null ? dto.getStartTime() : schedule.getStartTime();
         LocalTime endTime = dto.getEndTime() != null ? dto.getEndTime() : schedule.getEndTime();
@@ -145,12 +149,14 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
 
     @Override
     public ProfessionalScheduleResponseDTO getById(Long id) {
-        return toResponse(findSchedule(id));
+        ProfessionalScheduleEntity schedule = findSchedule(id);
+        validateScheduleScope(schedule);
+        return toResponse(schedule);
     }
 
     @Override
     public List<ProfessionalScheduleResponseDTO> getByProfessional(Long professionalId) {
-        return scheduleRepository.findByProfessionalId(professionalId).stream()
+        return scheduleRepository.findByProfessionalId(scopedProfessionalId(professionalId)).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -159,6 +165,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
     @Transactional
     public void delete(Long id) {
         ProfessionalScheduleEntity schedule = findScheduleForUpdate(id);
+        validateScheduleScope(schedule);
         if (schedule.getStatus() == PersonStatus.INACTIVE) {
             return;
         }
@@ -181,7 +188,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
     @Override
     public List<LocalTime> getAvailableSlots(Long professionalId, LocalDate date, AppointmentModality modality,
                                              String locationKey, Integer durationMinutes) {
-        return appointmentAvailabilityService.getAvailableSlots(professionalId, date, modality, locationKey, durationMinutes);
+        return appointmentAvailabilityService.getAvailableSlots(scopedProfessionalId(professionalId), date, modality, locationKey, durationMinutes);
     }
 
     @Override
@@ -190,7 +197,7 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
                                                         PersonStatus status,
                                                         String search,
                                                         Pageable pageable) {
-        Specification<ProfessionalScheduleEntity> spec = Specification.allOf(byProfessional(professionalId),
+        Specification<ProfessionalScheduleEntity> spec = Specification.allOf(byProfessional(scopedProfessionalId(professionalId)),
                                                         byDay(dayOfWeek), byStatus(status), bySearch(search));
 
         return scheduleRepository.findAll(spec, pageable).map(this::toResponse);
@@ -396,6 +403,22 @@ public class ProfessionalScheduleServiceImpl implements ProfessionalScheduleServ
     private ProfessionalScheduleEntity findScheduleForUpdate(Long id) {
         return scheduleRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new EntityNotFoundException("Horario no encontrado"));
+    }
+
+    private Long scopedProfessionalId(Long requestedProfessionalId) {
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : requestedProfessionalId;
+    }
+
+    private void validateScheduleScope(ProfessionalScheduleEntity schedule) {
+        if (currentProfessionalProvider == null || !currentProfessionalProvider.isProfessional()) {
+            return;
+        }
+        Long currentProfessionalId = currentProfessionalProvider.requireCurrentProfessionalId();
+        if (schedule.getProfessional() == null || !currentProfessionalId.equals(schedule.getProfessional().getId())) {
+            throw new EntityNotFoundException("Horario no encontrado");
+        }
     }
 
     private ProfessionalScheduleResponseDTO toResponse(ProfessionalScheduleEntity schedule) {

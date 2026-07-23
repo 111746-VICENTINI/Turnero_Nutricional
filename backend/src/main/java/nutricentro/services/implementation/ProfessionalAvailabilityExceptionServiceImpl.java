@@ -13,6 +13,7 @@ import nutricentro.exception.ApiException;
 import nutricentro.repositories.ProfessionalAvailabilityExceptionRepository;
 import nutricentro.repositories.ProfessionalRepository;
 import nutricentro.repositories.ProfessionalScheduleRepository;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.ProfessionalAvailabilityExceptionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,15 +31,17 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
     private final ProfessionalAvailabilityExceptionRepository exceptionRepository;
     private final ProfessionalRepository professionalRepository;
     private final ProfessionalScheduleRepository scheduleRepository;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
 
     @Override
     @Transactional
     public ProfessionalAvailabilityExceptionResponseDTO create(ProfessionalAvailabilityExceptionRequestDTO dto) {
         validate(dto);
 
+        Long professionalId = scopedProfessionalId(dto.getProfessionalId());
         ProfessionalEntity professional = null;
-        if (dto.getProfessionalId() != null) {
-            professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
+        if (professionalId != null) {
+            professional = professionalRepository.findByIdForUpdate(professionalId)
                     .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
             if (professional.getStatus() != PersonStatus.ACTIVE) {
                 throw new ApiException("El profesional no está activo", HttpStatus.CONFLICT.value());
@@ -46,10 +49,12 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
         }
 
         validateTimedBlockAgainstAvailability(dto, professional);
+        validateOverlappingException(dto, professional);
 
         ProfessionalAvailabilityExceptionEntity exception = new ProfessionalAvailabilityExceptionEntity();
         exception.setProfessional(professional);
-        exception.setAppliesToAllProfessionals(Boolean.TRUE.equals(dto.getAppliesToAllProfessionals()));
+        exception.setAppliesToAllProfessionals(!isCurrentProfessionalUser()
+                && Boolean.TRUE.equals(dto.getAppliesToAllProfessionals()));
         exception.setDate(dto.getDate());
         exception.setStartTime(dto.getStartTime());
         exception.setEndTime(dto.getEndTime());
@@ -68,7 +73,7 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
     @Override
     @Transactional(readOnly = true)
     public List<ProfessionalAvailabilityExceptionResponseDTO> getByProfessionalAndDate(Long professionalId, LocalDate date) {
-        return exceptionRepository.findActiveForProfessionalAndDate(professionalId, date, PersonStatus.ACTIVE)
+        return exceptionRepository.findActiveForProfessionalAndDate(scopedProfessionalId(professionalId), date, PersonStatus.ACTIVE)
                 .stream().map(this::toResponse).toList();
     }
 
@@ -77,6 +82,7 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
     public void delete(Long id) {
         ProfessionalAvailabilityExceptionEntity exception = exceptionRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new EntityNotFoundException("Excepción de disponibilidad no encontrada"));
+        validateExceptionScope(exception);
         if (exception.getDate().isBefore(LocalDate.now())) {
             throw new ApiException("No es posible eliminar un bloque correspondiente a una fecha pasada.", HttpStatus.BAD_REQUEST.value());
         }
@@ -88,7 +94,9 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
         if (dto.getDate() == null || dto.getDate().isBefore(LocalDate.now())) {
             throw new ApiException("No es posible crear disponibilidad para fechas anteriores al día actual.", HttpStatus.BAD_REQUEST.value());
         }
-        if (!Boolean.TRUE.equals(dto.getAppliesToAllProfessionals()) && dto.getProfessionalId() == null) {
+        if (!isCurrentProfessionalUser()
+                && !Boolean.TRUE.equals(dto.getAppliesToAllProfessionals())
+                && dto.getProfessionalId() == null) {
             throw new ApiException("La excepción debe indicar un profesional o aplicar a todos", HttpStatus.BAD_REQUEST.value());
         }
         validateTimeRange(dto.getType(), dto.getStartTime(), dto.getEndTime(), dto.getSlotDurationMinutes());
@@ -149,6 +157,46 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
         }
     }
 
+    private void validateOverlappingException(ProfessionalAvailabilityExceptionRequestDTO dto,
+                                              ProfessionalEntity professional) {
+        if (professional == null) {
+            return;
+        }
+
+        List<ProfessionalAvailabilityExceptionEntity> activeExceptions = exceptionRepository
+                .findActiveForProfessionalAndDate(professional.getId(), dto.getDate(), PersonStatus.ACTIVE);
+        boolean fullDayBlockExists = activeExceptions.stream()
+                .anyMatch(exception -> exception.getType() != AvailabilityExceptionType.SPECIAL_HOURS
+                        && exception.getStartTime() == null
+                        && exception.getEndTime() == null);
+        if (fullDayBlockExists) {
+            throw new ApiException("El dia ya tiene una excepcion de dia completo.", HttpStatus.CONFLICT.value());
+        }
+
+        if (dto.getStartTime() == null || dto.getEndTime() == null) {
+            return;
+        }
+
+        boolean overlapsExistingException = activeExceptions.stream()
+                .filter(exception -> exception.getStartTime() != null && exception.getEndTime() != null)
+                .anyMatch(exception -> dto.getStartTime().isBefore(exception.getEndTime())
+                        && exception.getStartTime().isBefore(dto.getEndTime()));
+        if (overlapsExistingException) {
+            throw new ApiException("El horario seleccionado se superpone con otra excepcion existente.", HttpStatus.CONFLICT.value());
+        }
+
+        if (dto.getType() == AvailabilityExceptionType.SPECIAL_HOURS) {
+            boolean overlapsRegularSchedule = scheduleRepository.findByProfessionalIdAndDayOfWeekAndStatus(
+                            professional.getId(), dto.getDate().getDayOfWeek(), PersonStatus.ACTIVE)
+                    .stream()
+                    .anyMatch(schedule -> dto.getStartTime().isBefore(schedule.getEndTime())
+                            && schedule.getStartTime().isBefore(dto.getEndTime()));
+            if (overlapsRegularSchedule) {
+                throw new ApiException("El horario especial se superpone con un horario habitual existente.", HttpStatus.CONFLICT.value());
+            }
+        }
+    }
+
     private ProfessionalAvailabilityExceptionResponseDTO toResponse(ProfessionalAvailabilityExceptionEntity exception) {
         return ProfessionalAvailabilityExceptionResponseDTO.builder()
                 .id(exception.getId())
@@ -170,5 +218,25 @@ public class ProfessionalAvailabilityExceptionServiceImpl implements Professiona
 
     private String normalizeLocationKey(String locationKey) {
         return locationKey == null || locationKey.isBlank() ? null : locationKey.trim();
+    }
+
+    private Long scopedProfessionalId(Long requestedProfessionalId) {
+        return isCurrentProfessionalUser()
+                ? currentProfessionalProvider.requireCurrentProfessionalId()
+                : requestedProfessionalId;
+    }
+
+    private void validateExceptionScope(ProfessionalAvailabilityExceptionEntity exception) {
+        if (!isCurrentProfessionalUser()) {
+            return;
+        }
+        Long currentProfessionalId = currentProfessionalProvider.requireCurrentProfessionalId();
+        if (exception.getProfessional() == null || !currentProfessionalId.equals(exception.getProfessional().getId())) {
+            throw new EntityNotFoundException("Excepción de disponibilidad no encontrada");
+        }
+    }
+
+    private boolean isCurrentProfessionalUser() {
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional();
     }
 }

@@ -9,30 +9,34 @@
     </div>
 
     <div class="header-actions">
-      <p-select
-        [(ngModel)]="selectedSpecialtyId"
-        [options]="specialtyOptions"
-        optionLabel="label"
-        optionValue="value"
-        appendTo="body"
-        (ngModelChange)="onSpecialtyChange()"
-        ariaLabel="Filtrar por especialidad">
-      </p-select>
+      @if (!isProfessionalOnly) {
+        <p-select
+          [(ngModel)]="selectedSpecialtyId"
+          [options]="specialtyOptions"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          (ngModelChange)="onSpecialtyChange()"
+          ariaLabel="Filtrar por especialidad">
+        </p-select>
 
-      <app-search-autocomplete
-        [(value)]="selectedProfessionalModel"
-        [suggestions]="professionalSuggestions"
-        [forceSelection]="true"
-        [labelFn]="professionalLabel"
-        [detailFn]="professionalDetail"
-        placeholder="Buscar profesional"
-        ariaLabel="Buscar profesional"
-        (complete)="searchProfessionals($event)"
-        (selected)="onProfessionalChange()"
-        (cleared)="onProfessionalCleared()">
-      </app-search-autocomplete>
-      <p-button icon="pi pi-dollar" label="Honorarios" severity="secondary" [outlined]="true" [disabled]="!selectedProfessional" (onClick)="openFeeDialog()"></p-button>
-      <p-button icon="pi pi-refresh" label="Actualizar" severity="secondary" [outlined]="true" [loading]="loading" (onClick)="loadPlanner()"></p-button>
+        <app-search-autocomplete
+          [(value)]="selectedProfessionalModel"
+          [suggestions]="professionalSuggestions"
+          [forceSelection]="true"
+          [labelFn]="professionalLabel"
+          [detailFn]="professionalDetail"
+          placeholder="Buscar profesional"
+          ariaLabel="Buscar profesional"
+          (complete)="searchProfessionals($event)"
+          (selected)="onProfessionalChange()"
+          (cleared)="onProfessionalCleared()">
+        </app-search-autocomplete>
+      }
+      @if (canEdit) {
+        <p-button icon="pi pi-dollar" label="Honorarios" severity="contrast" [outlined]="true" [disabled]="!selectedProfessional" (onClick)="openFeeDialog()"></p-button>
+      }
+<!--      <p-button icon="pi pi-refresh" label="Actualizar" severity="secondary" [outlined]="true" [loading]="loading" (onClick)="loadPlanner()"></p-button>-->
     </div>
   </header>
 
@@ -88,7 +92,7 @@
     </div>
 
     <div class="legend">
-      <span><i class="dot available"></i> Atención</span>
+      <span><i class="dot available"></i> Atención habitual</span>
       <span><i class="dot slot"></i> Slot disponible</span>
       <span><i class="dot exception"></i> Excepción</span>
     </div>
@@ -116,7 +120,10 @@
           <div class="blocked-day-only">
             <i class="pi pi-ban"></i>
             <strong>Día bloqueado</strong>
-            <strong>{{exceptionForm.reason}}</strong>
+            @if (fullDayBlockReason(dayDateByKey(day.key)); as blockReason) {
+              <span>Motivo:</span>
+              <strong>{{ blockReason }}</strong>
+            }
             @if (canEdit) {
               <p-button label="Desbloquear día" icon="pi pi-lock-open" size="large" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
             }
@@ -227,6 +234,10 @@
         <span>Día</span>
         <p-select [(ngModel)]="dayActionDay" [options]="dayActionOptions" optionLabel="label" optionValue="key" appendTo="body"></p-select>
       </label>
+      <label>
+        <span>Alcance</span>
+        <p-select [(ngModel)]="dayActionScope" [options]="dayActionScopeOptions" optionLabel="label" optionValue="value" appendTo="body"></p-select>
+      </label>
       <p class="dialog-help">{{ dayActionHelp }}</p>
     </div>
 
@@ -333,12 +344,12 @@
           <input type="number" min="0" step="100" [(ngModel)]="feeForm.firstConsultationFee" placeholder="0" />
         </label>
         <label>
-          <span>Consulta de control</span>
+          <span>Control</span>
           <input type="number" min="0" step="100" [(ngModel)]="feeForm.followUpConsultationFee" placeholder="0" />
         </label>
         <label>
           <span>Consulta online</span>
-          <input type="number" min="0" step="100" [(ngModel)]="feeForm.onlineConsultationFee" placeholder="Opcional" />
+          <input type="number" min="0" step="100" [(ngModel)]="feeForm.onlineConsultationFee" placeholder="0" />
         </label>
         <label>
           <span>Moneda</span>
@@ -370,11 +381,11 @@
       </label>
       <label>
         <span>Tipo</span>
-        <p-select [(ngModel)]="exceptionForm.type" [options]="exceptionOptions" optionLabel="label" optionValue="value" appendTo="body"></p-select>
+        <p-select [(ngModel)]="exceptionForm.type" [options]="exceptionOptions" optionLabel="label" optionValue="value" appendTo="body" (ngModelChange)="onExceptionTypeChange()"></p-select>
       </label>
       <label class="check-row">
         <input type="checkbox" [(ngModel)]="exceptionForm.fullDay" [disabled]="exceptionForm.type === 'SPECIAL_HOURS'" />
-        <span>Todo el dia</span>
+        <span>Todo el día</span>
       </label>
       @if (!exceptionForm.fullDay || exceptionForm.type === 'SPECIAL_HOURS') {
         <label>

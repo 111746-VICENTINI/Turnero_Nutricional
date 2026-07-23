@@ -3,6 +3,7 @@ package nutricentro.services;
 import nutricentro.dtos.professionals.ProfessionalRequestDTO;
 import nutricentro.dtos.professionals.ProfessionalResponseDTO;
 import nutricentro.dtos.professionals.ProfessionalUpdateDTO;
+import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,5 @@ public interface ProfessionalService {
     ProfessionalResponseDTO update (Long id, ProfessionalUpdateDTO professional);
     Page<ProfessionalResponseDTO> searchProfessionals(String search, GenderType gender,
                                                       PersonStatus status, Long specialtyId, Pageable pageable);
+    List<UserResponseDTO> getAvailableProfessionalUsers(Long professionalId);
 }

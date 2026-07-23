@@ -30,7 +30,7 @@ export class ListSpecialties {
   columns: TableColumnConfig<SpecialtyResponseDTO>[] = [
     { field: 'name', header: 'Nombre' },
     { field: 'description', header: 'Descripción' },
-    { field: 'isActive', header: 'Activo', type: 'custom', alignCenter: true, }
+    { field: 'isActive', header: 'Activo', type: 'boolean', alignCenter: true, }
   ];
 
   actions: TableActionConfig<SpecialtyResponseDTO>[] = [

@@ -185,7 +185,7 @@ export const routes: Routes = [
         path: 'agenda/:id/edit',
         component: CreateAppointments,
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'SECRETARY'] }
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
       // HISTORIAL CLINICO
       {

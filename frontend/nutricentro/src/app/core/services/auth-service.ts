@@ -87,7 +87,7 @@ export class AuthService {
       return '/agenda';
     }
     if (roles.includes('PROFESSIONAL')) {
-      return '/mi-dia';
+      return '/agenda';
     }
 
     this.logout();

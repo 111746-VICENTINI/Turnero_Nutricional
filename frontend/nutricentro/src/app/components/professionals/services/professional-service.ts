@@ -3,6 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from '../../../enviroment/enviroment';
 import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} from '../models/professional-model';
 import {PageResponse} from '../../../core/models/paginacion-general';
+import {UserResponseDTO} from '../../../core/models/login-model';
 
 @Injectable({
   providedIn: 'root',
@@ -36,6 +37,14 @@ export class ProfessionalService {
 
   deleteProfessional(id: number){
     return this.http.patch<void>(`${this.apiUrl}/${id}`, {});
+  }
+
+  getAvailableProfessionalUsers(professionalId?: number) {
+    let params = new HttpParams();
+    if (professionalId) {
+      params = params.set('professionalId', String(professionalId));
+    }
+    return this.http.get<UserResponseDTO[]>(`${this.apiUrl}/available-users`, { params });
   }
 
   searchProfessionals(filters: {

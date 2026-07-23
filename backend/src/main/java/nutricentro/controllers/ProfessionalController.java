@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.professionals.ProfessionalRequestDTO;
 import nutricentro.dtos.professionals.ProfessionalResponseDTO;
 import nutricentro.dtos.professionals.ProfessionalUpdateDTO;
+import nutricentro.dtos.users.UserResponseDTO;
 import nutricentro.enums.GenderType;
 import nutricentro.enums.PersonStatus;
 import nutricentro.services.ProfessionalService;
@@ -44,7 +45,7 @@ public class ProfessionalController {
     }
 
     @PutMapping("{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<ProfessionalResponseDTO> update(@PathVariable Long id,
                                                           @Valid @RequestBody ProfessionalUpdateDTO professional) {
         return ResponseEntity.ok(professionalService.update(id, professional));
@@ -108,5 +109,12 @@ public class ProfessionalController {
                         pageRequest
                 )
         );
+    }
+
+    @GetMapping("/available-users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponseDTO>> getAvailableProfessionalUsers(
+            @RequestParam(required = false) Long professionalId) {
+        return ResponseEntity.ok(professionalService.getAvailableProfessionalUsers(professionalId));
     }
 }

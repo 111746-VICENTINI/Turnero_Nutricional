@@ -8,6 +8,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {ProfessionalRequestDTO, ProfessionalResponseDTO, ProfessionalUpdateDTO} from '../models/professional-model';
 import {ProfessionalService} from '../services/professional-service';
 import {SpecialtyService} from '../specialties/services/specialty-service';
+import {UserResponseDTO} from '../../../core/models/login-model';
 import {toIsoLocalDate} from '../../../shared/utils/date-utils';
 import {Gender_Options} from '../../../shared/enums/genders';
 import {PERSON_STATUS_OPTIONS} from '../../../shared/enums/person-status';
@@ -32,6 +33,7 @@ export class CreateProfessionals implements OnInit {
   saving = false;
   fields: GenericFormField[] = [];
   initialValues: Record<string, any> = {};
+  availableUsers: { label: string; value: number }[] = [];
 
   private professionalService = inject(ProfessionalService);
   private specialtyService = inject(SpecialtyService);
@@ -40,8 +42,6 @@ export class CreateProfessionals implements OnInit {
   private router = inject(Router);
 
   ngOnInit(): void {
-    this.loadSpecialties();
-
     const id = this.route.snapshot.paramMap.get('id');
     const routePath = this.route.snapshot.routeConfig?.path || '';
 
@@ -52,11 +52,22 @@ export class CreateProfessionals implements OnInit {
       this.loadProfessional(this.professionalId);
     }
 
+    this.loadSpecialties();
+    this.loadAvailableProfessionalUsers(this.professionalId);
     this.buildFields();
   }
 
   private buildFields(): void {
     this.fields = [
+      {
+        name: 'userId',
+        label: 'Usuario asociado',
+        placeholder: 'Seleccione un usuario profesional',
+        type: 'select',
+        options: this.availableUsers,
+        required: true,
+        autocomplete: 'off'
+      },
       {
         name: 'firstName',
         label: 'Nombre',
@@ -180,11 +191,27 @@ export class CreateProfessionals implements OnInit {
           birthDate: professionals.birthDate,
           tuition: professionals.tuition,
           document: professionals.document,
+          userId: professionals.userId,
           specialtyIds: professionals.specialties.map(s => s.id)
         };
       },
       error: () => {
         this.showError('No se pudieron cargar los profesionales.');
+      }
+    });
+  }
+
+  loadAvailableProfessionalUsers(professionalId?: number): void {
+    this.professionalService.getAvailableProfessionalUsers(professionalId).subscribe({
+      next: (users) => {
+        this.availableUsers = users.map(user => ({
+          label: this.userLabel(user),
+          value: Number(user.id)
+        }));
+        this.buildFields();
+      },
+      error: () => {
+        this.showError('No se pudieron cargar los usuarios profesionales disponibles.');
       }
     });
   }
@@ -225,6 +252,7 @@ export class CreateProfessionals implements OnInit {
         tuition: formData['tuition'],
         birthDate,
         document: formData['document'],
+        userId: Number(formData['userId']),
       };
 
       this.professionalService.updateProfessional(this.professionalId!, request).subscribe({
@@ -252,8 +280,9 @@ export class CreateProfessionals implements OnInit {
       birthDate,
       registration: formData['registration'],
       specialtyIds: formData['specialtyIds'],
-      document: formData['document'],
-      tuition: formData['tuition']
+        document: formData['document'],
+        userId: Number(formData['userId']),
+        tuition: formData['tuition']
     };
 
     this.professionalService.createProfessional(request).subscribe({
@@ -287,6 +316,7 @@ export class CreateProfessionals implements OnInit {
       registration: this.selectedProfessional?.registration,
       tuition: this.selectedProfessional?.tuition,
       document: this.selectedProfessional?.document,
+      userId: this.selectedProfessional?.userId,
       specialtyIds: this.selectedProfessional?.specialties.map(s => s.id)
     };
 
@@ -305,6 +335,10 @@ export class CreateProfessionals implements OnInit {
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
+  }
+
+  private userLabel(user: UserResponseDTO): string {
+    return `${user.username} - ${user.email}`;
   }
 
   editModeProfessional(): void {

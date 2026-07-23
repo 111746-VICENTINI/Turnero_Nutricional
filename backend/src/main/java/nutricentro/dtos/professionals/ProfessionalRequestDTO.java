@@ -38,6 +38,9 @@ public class ProfessionalRequestDTO {
     @NotEmpty(message = "La especialidad es obligatoria")
     private List<Long> specialtyIds;
 
+    @NotNull(message = "El usuario asociado es obligatorio")
+    private Long userId;
+
     @NotBlank(message = "La matricula es obligatoria")
     @NotNull(message = "La matricula es obligatoria")
     private String tuition;

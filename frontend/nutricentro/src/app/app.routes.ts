@@ -19,6 +19,7 @@ import {ListSpecialties} from './components/professionals/specialties/list-speci
 import {ListAppointments} from './components/appointments/list-appointments/list-appointments';
 import {CreateAppointments} from './components/appointments/create-appointments/create-appointments';
 import {ProfessionalAvailability} from './components/professionals/availability/professional-availability';
+import {PreguntasFrecuentes} from './components/preguntas-frecuentes/preguntas-frecuentes';
 
 export const routes: Routes = [
   {
@@ -86,7 +87,7 @@ export const routes: Routes = [
         path: 'patient/create',
         component: CreatePatients,
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
+        data: { roles: ['ADMIN', 'SECRETARY'] }
       },
       {
         path: 'patient/:id',
@@ -199,6 +200,12 @@ export const routes: Routes = [
         component: HistoryClinical,
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'PROFESSIONAL'] }
+      },
+      {
+        path: 'preguntas-frecuentes',
+        component: PreguntasFrecuentes,
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL'] }
       },
     ]
   },

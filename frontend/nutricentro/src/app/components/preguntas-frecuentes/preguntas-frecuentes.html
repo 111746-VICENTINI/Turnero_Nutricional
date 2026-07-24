@@ -1,0 +1,37 @@
+<section class="preguntas-page">
+  <header class="preguntas-header">
+    <h2>Preguntas Frecuentes</h2>
+  </header>
+
+  <div class="sections-list">
+    @for (seccion of seccionesVisibles; track trackSeccion($index, seccion)) {
+      <section class="faq-section">
+        <h2>{{ seccion.nombre }}</h2>
+
+        <p-accordion styleClass="faq-accordion">
+          @for (pregunta of seccion.preguntas; track trackPregunta($index, pregunta)) {
+            <p-accordion-panel [value]="pregunta.id">
+              <p-accordion-header>
+                <span class="question-title">{{ pregunta.pregunta }}</span>
+              </p-accordion-header>
+
+              <p-accordion-content>
+                <div class="answer">
+                  <p>{{ pregunta.respuesta }}</p>
+                  <p-button
+                    [label]="pregunta.textoBoton"
+                    icon="pi pi-arrow-right"
+                    iconPos="right"
+                    [outlined]="true"
+                    size="small"
+                    (onClick)="navegar(pregunta)">
+                  </p-button>
+                </div>
+              </p-accordion-content>
+            </p-accordion-panel>
+          }
+        </p-accordion>
+      </section>
+    }
+  </div>
+</section>

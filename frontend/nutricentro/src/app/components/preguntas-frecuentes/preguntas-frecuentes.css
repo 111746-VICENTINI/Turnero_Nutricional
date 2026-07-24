@@ -1,0 +1,104 @@
+.preguntas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.preguntas-header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.preguntas-header span {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.preguntas-header h2 {
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.preguntas-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.sections-list {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.faq-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.faq-section h2 {
+  color: #0f172a;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.question-title {
+  color: #1f2937;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.answer {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.1rem 0 0.35rem;
+}
+
+.answer p {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+:host ::ng-deep .faq-accordion {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .faq-accordion .p-accordionpanel {
+  border-color: #e5e7eb;
+}
+
+:host ::ng-deep .faq-accordion .p-accordionheader {
+  background: #ffffff;
+  padding: 0.95rem 0.75rem;
+}
+
+:host ::ng-deep .faq-accordion .p-accordionheader:hover {
+  background: #f8fafc;
+}
+
+:host ::ng-deep .faq-accordion .p-accordioncontent-content {
+  background: #ffffff;
+  padding: 0 0.75rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .preguntas-page {
+    gap: 1.25rem;
+  }
+
+  .sections-list {
+    gap: 1.5rem;
+  }
+}

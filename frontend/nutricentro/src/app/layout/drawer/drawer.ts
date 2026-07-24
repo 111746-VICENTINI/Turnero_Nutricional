@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
-import {NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+import {ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
 import {filter, interval, Subject, takeUntil} from 'rxjs';
 import {ConfirmationService} from 'primeng/api';
 import {AvatarModule} from 'primeng/avatar';
@@ -8,6 +9,7 @@ import {ButtonModule} from 'primeng/button';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {DrawerModule} from 'primeng/drawer';
 import {Popover} from 'primeng/popover';
+import {MultiSelectModule} from 'primeng/multiselect';
 import {RippleModule} from 'primeng/ripple';
 import {StyleClassModule} from 'primeng/styleclass';
 import {AuthService} from '../../core/services/auth-service';
@@ -16,12 +18,16 @@ import {NotificationResponseDTO} from '../../core/models/notification-model';
 import {NotificationService} from '../../core/services/notification-service';
 import {NotificationsPanel} from '../../shared/components/notifications/notifications-panel';
 import {NavigationItem} from './drawer-model';
+import {ProfessionalResponseDTO} from '../../components/professionals/models/professional-model';
+import {ProfessionalService} from '../../components/professionals/services/professional-service';
+import {SpecialtyService} from '../../components/professionals/specialties/services/specialty-service';
 
 @Component({
   selector: 'app-drawer',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterOutlet,
     AvatarModule,
     RouterLink,
@@ -29,6 +35,7 @@ import {NavigationItem} from './drawer-model';
     ButtonModule,
     ConfirmDialogModule,
     DrawerModule,
+    MultiSelectModule,
     Popover,
     RippleModule,
     StyleClassModule,
@@ -48,22 +55,31 @@ export class Drawer implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly notificationService = inject(NotificationService);
+  private readonly professionalService = inject(ProfessionalService);
+  private readonly specialtyService = inject(SpecialtyService);
+  private readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly roles = this.authService.roles;
   readonly actualUser = this.authService.currentUser;
   notifications: NotificationResponseDTO[] = [];
   notificationsLoading = false;
   unreadNotificationsCount = 0;
+  accountProfessional?: ProfessionalResponseDTO;
+  accountSpecialtyOptions: {label: string; value: number}[] = [];
+  accountSpecialtyIds: number[] = [];
+  accountEditingSpecialties = false;
+  accountSavingSpecialties = false;
+  accountMessage = '';
   private readonly destroy$ = new Subject<void>();
 
   readonly navigationItems: NavigationItem[] = [
     {label: 'Inicio', icon: 'pi pi-chart-line', route: '/dashboard', roles: ['ADMIN']},
-    {label: 'Agenda', icon: 'pi pi-calendar-clock', route: '/agenda', roles: ['ADMIN', 'SECRETARY']},
-    {label: 'Mi Día', icon: 'pi pi-sun', route: '/mi-dia', roles: ['PROFESSIONAL']},
+    {label: 'Agenda', icon: 'pi pi-calendar-clock', route: '/agenda', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Pacientes', icon: 'pi pi-user', route: '/patient', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Profesionales', icon: 'pi pi-id-card', route: '/professional', roles: ['ADMIN']},
     {label: 'Disponibilidad', icon: 'pi pi-calendar-plus', route: '/availability', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Usuarios', icon: 'pi pi-users', route: '/users', roles: ['ADMIN']},
+    {label: 'Preguntas Frecuentes', icon: 'pi pi-question-circle', route: '/preguntas-frecuentes', roles: ['ADMIN', 'SECRETARY', 'PROFESSIONAL']},
     {label: 'Configuración', icon: 'pi pi-cog', route: '/specialty', roles: ['ADMIN']}
   ];
 
@@ -82,6 +98,7 @@ export class Drawer implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.sidebarExpanded = false;
+        this.openRequestedAccountPanel();
       });
   }
 
@@ -102,13 +119,26 @@ export class Drawer implements OnInit, OnDestroy {
     return this.unreadNotificationsCount > 9 ? '9+' : String(this.unreadNotificationsCount);
   }
 
+  roleLabels(roles?: string[]): string {
+    return roles?.map(role => this.roleLabel(role)).join(', ') || '-';
+  }
+
+  roleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      ADMIN: 'Administrador',
+      SECRETARY: 'Secretaria',
+      PROFESSIONAL: 'Profesional'
+    };
+    return labels[role] ?? role;
+  }
+
   get currentSection(): string {
     const url = this.router.url;
     const match = this.navigationItems
       .filter(item => url === item.route || url.startsWith(`${item.route}/`))
       .sort((first, second) => second.route.length - first.route.length)[0];
 
-    return match?.label ?? 'Nutri Centro';
+    return match?.label ?? '';
   }
 
   toggleSidebar(): void {
@@ -124,7 +154,7 @@ export class Drawer implements OnInit, OnDestroy {
       message: '¿Está seguro que desea cerrar sesión?',
       header: 'Cerrar sesión',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Cerrar sesión',
+      acceptLabel: ' Si ',
       rejectLabel: 'Volver',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
@@ -146,6 +176,10 @@ export class Drawer implements OnInit, OnDestroy {
   openAccount(popover: Popover): void {
     popover.hide();
     this.accountDrawerVisible = true;
+    if (this.isProfessionalOnly) {
+      this.loadProfessionalAccount();
+      this.loadAccountSpecialties();
+    }
   }
 
   openChangePassword(popover: Popover): void {
@@ -227,7 +261,113 @@ export class Drawer implements OnInit, OnDestroy {
     return `${this.actualUser()?.username ?? 'usuario'}`;
   }
 
+  get isProfessionalOnly(): boolean {
+    const roles = this.roles();
+    return roles.includes('PROFESSIONAL') && !roles.includes('ADMIN') && !roles.includes('SECRETARY');
+  }
+
+  startSpecialtyEdit(): void {
+    this.accountSpecialtyIds = this.accountProfessional?.specialties?.map(specialty => specialty.id) ?? [];
+    this.accountEditingSpecialties = true;
+    this.accountMessage = '';
+  }
+
+  cancelSpecialtyEdit(): void {
+    this.accountEditingSpecialties = false;
+    this.accountSpecialtyIds = this.accountProfessional?.specialties?.map(specialty => specialty.id) ?? [];
+    this.accountMessage = '';
+  }
+
+  saveSpecialties(): void {
+    const professional = this.accountProfessional;
+    if (!professional) {
+      return;
+    }
+
+    this.accountSavingSpecialties = true;
+    this.accountMessage = '';
+    this.professionalService.updateProfessional(professional.id, {
+      firstName: professional.firstName,
+      lastName: professional.lastName,
+      birthDate: professional.birthDate,
+      mobile: professional.mobile,
+      gender: professional.gender,
+      email: professional.email,
+      registration: professional.registration,
+      status: professional.status,
+      document: professional.document,
+      tuition: professional.tuition,
+      userId: professional.userId,
+      specialtyIds: this.accountSpecialtyIds
+    }).subscribe({
+      next: (updated) => {
+        this.accountProfessional = updated;
+        this.accountSpecialtyIds = updated.specialties?.map(specialty => specialty.id) ?? [];
+        this.accountEditingSpecialties = false;
+        this.accountSavingSpecialties = false;
+        this.accountMessage = 'Especialidades actualizadas.';
+      },
+      error: () => {
+        this.accountSavingSpecialties = false;
+        this.accountMessage = 'No se pudieron actualizar las especialidades.';
+      }
+    });
+  }
+
+  private loadProfessionalAccount(): void {
+    this.professionalService.getAllProfessionals().subscribe({
+      next: (professionals) => {
+        this.accountProfessional = professionals[0];
+        this.accountSpecialtyIds = this.accountProfessional?.specialties?.map(specialty => specialty.id) ?? [];
+      },
+      error: () => this.accountMessage = 'No se pudieron cargar los datos profesionales.'
+    });
+  }
+
+  private loadAccountSpecialties(): void {
+    this.specialtyService.getAllSpecialties().subscribe({
+      next: (specialties) => {
+        this.accountSpecialtyOptions = specialties
+          .filter(specialty => specialty.isActive !== false)
+          .map(specialty => ({label: specialty.name, value: specialty.id}));
+      },
+      error: () => this.accountMessage = 'No se pudieron cargar las especialidades.'
+    });
+  }
+
   private syncUnreadCountFromList(): void {
     this.unreadNotificationsCount = this.notifications.filter(notification => !notification.read).length;
+  }
+
+  private openRequestedAccountPanel(): void {
+    let activeRoute = this.route;
+    while (activeRoute.firstChild) {
+      activeRoute = activeRoute.firstChild;
+    }
+
+    const requestedPanel = activeRoute.snapshot.queryParamMap.get('panel');
+
+    if (!['contrasena', 'mis-datos'].includes(requestedPanel ?? '')) {
+      return;
+    }
+
+    if (requestedPanel === 'contrasena') {
+      this.passwordDrawerVisible = true;
+    }
+
+    if (requestedPanel === 'mis-datos') {
+      this.accountDrawerVisible = true;
+      if (this.isProfessionalOnly) {
+        this.loadProfessionalAccount();
+        this.loadAccountSpecialties();
+      }
+    }
+
+    this.router.navigate([], {
+      relativeTo: activeRoute,
+      queryParams: {panel: null},
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 }

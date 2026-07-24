@@ -17,7 +17,7 @@
               pRipple
               [routerLink]="item.route"
               routerLinkActive="menu-active"
-              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' || item.route === '/agenda' || item.route === '/mi-dia' || item.route === '/patient' || item.route === '/professional' || item.route === '/availability' || item.route === '/users' || item.route === '/specialty' }"
+              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' || item.route === '/agenda' || item.route === '/mi-dia' || item.route === '/patient' || item.route === '/professional' || item.route === '/availability' || item.route === '/users' || item.route === '/specialty' || item.route === '/preguntas-frecuentes' }"
               class="menu-item"
               [attr.aria-label]="item.label"
             >
@@ -54,7 +54,9 @@
 
         <div class="topbar-heading">
           <span class="topbar-brand">Nutri Centro</span>
-          <span class="topbar-section">{{ currentSection }}</span>
+          @if (currentSection) {
+            <span class="topbar-section">{{ currentSection }}</span>
+          }
         </div>
       </div>
 
@@ -135,9 +137,51 @@
     </div>
     <div>
       <span>Roles</span>
-      <strong>{{ actualUser()?.roles?.join(', ') || '-' }}</strong>
+      <strong>{{ roleLabels(actualUser()?.roles) }}</strong>
     </div>
   </div>
+  @if (isProfessionalOnly && accountProfessional) {
+    <section class="account-specialties">
+      <header>
+        <div>
+          <span>Especialidades</span>
+          <strong>{{ accountProfessional.specialties.length || 0 }}</strong>
+        </div>
+        @if (!accountEditingSpecialties) {
+          <p-button label="Editar especialidades" icon="pi pi-pencil" size="small" [outlined]="true" (onClick)="startSpecialtyEdit()"></p-button>
+        }
+      </header>
+
+      @if (accountEditingSpecialties) {
+        <p-multiSelect
+          [(ngModel)]="accountSpecialtyIds"
+          [options]="accountSpecialtyOptions"
+          optionLabel="label"
+          optionValue="value"
+          display="chip"
+          selectedItemsLabel="{0} especialidades seleccionadas"
+          styleClass="w-full"
+          placeholder="Seleccionar especialidades">
+        </p-multiSelect>
+        <div class="account-specialty-actions">
+          <p-button label="Cancelar" severity="secondary" [outlined]="true" size="small" (onClick)="cancelSpecialtyEdit()"></p-button>
+          <p-button label="Guardar" icon="pi pi-check" size="small" [loading]="accountSavingSpecialties" (onClick)="saveSpecialties()"></p-button>
+        </div>
+      } @else {
+        <div class="account-specialty-list">
+          @for (specialty of accountProfessional.specialties; track specialty.id) {
+            <span>{{ specialty.name }}</span>
+          } @empty {
+            <span>Sin especialidades cargadas</span>
+          }
+        </div>
+      }
+
+      @if (accountMessage) {
+        <small>{{ accountMessage }}</small>
+      }
+    </section>
+  }
 </p-drawer>
 
 <p-drawer

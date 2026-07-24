@@ -85,13 +85,14 @@
 .notification-trigger {
   align-items: center;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 0;
   border-radius: 999px;
   color: white;
   cursor: pointer;
   display: inline-flex;
   height: 2.35rem;
   justify-content: center;
+  overflow: visible;
   position: relative;
   transition: background 0.18s ease, transform 0.18s ease;
   width: 2.35rem;
@@ -121,9 +122,10 @@
   min-width: 1.2rem;
   padding: 0 0.28rem;
   position: absolute;
-  right: -0.35rem;
-  top: -0.35rem;
+  right: -0.45rem;
+  top: -0.45rem;
   white-space: nowrap;
+  z-index: 2;
 }
 
 :host ::ng-deep .notifications-popover {
@@ -211,6 +213,59 @@
   color: #0f172a;
   font-size: 0.98rem;
   overflow-wrap: anywhere;
+}
+
+.account-specialties {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.account-specialties header,
+.account-specialty-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.account-specialties header div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-specialties span,
+.account-specialties small {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.account-specialties header span {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.account-specialties header strong {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.account-specialty-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.account-specialty-list span {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  color: #3730a3;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
 }
 
 :host ::ng-deep .password-drawer .page-shell {

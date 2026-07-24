@@ -10,6 +10,8 @@ import nutricentro.services.AuthService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +19,14 @@ import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @ConditionalOnProperty(prefix = "app.initial-admins", name = "enabled", havingValue = "true")
 public class InitialAdminBootstrapRunner implements ApplicationRunner {
 
@@ -41,6 +46,8 @@ public class InitialAdminBootstrapRunner implements ApplicationRunner {
         }
 
         if (userRepository.countAdmins() > 0) {
+            normalizeExistingConfiguredAdmin(optionalEmail(properties.primaryEmail()));
+            normalizeExistingConfiguredAdmin(optionalEmail(properties.secondaryEmail()));
             log.info("Bootstrap de administradores omitido porque ya existe al menos un usuario ADMIN");
             return;
         }
@@ -51,8 +58,7 @@ public class InitialAdminBootstrapRunner implements ApplicationRunner {
             throw new IllegalStateException("Los emails de administradores iniciales no pueden repetirse");
         }
 
-        RoleEntity adminRole = roleRepository.findByNameIgnoreCase(ADMIN_ROLE)
-                .orElseGet(() -> roleRepository.save(buildAdminRole()));
+        RoleEntity adminRole = findOrCreateAdminRole();
 
         createPendingAdmin(primaryEmail, adminRole);
         if (StringUtils.hasText(secondaryEmail)) {
@@ -78,6 +84,32 @@ public class InitialAdminBootstrapRunner implements ApplicationRunner {
 
     private void sendInitialInvitation(UserEntity user) {
         authService.sendCreatePasswordInvitation(user);
+    }
+
+    private void normalizeExistingConfiguredAdmin(String email) {
+        if (!StringUtils.hasText(email)) {
+            return;
+        }
+
+        var existingUser = userRepository.findByEmailIgnoreCase(email);
+        if (existingUser == null || existingUser.isEmpty()) {
+            return;
+        }
+
+        UserEntity user = existingUser.get();
+        if (hasOnlyAdminRole(user)) {
+            return;
+        }
+
+        user.setRoles(new HashSet<>(Set.of(findOrCreateAdminRole())));
+        userRepository.save(user);
+    }
+
+    private boolean hasOnlyAdminRole(UserEntity user) {
+        return user.getRoles() != null
+                && user.getRoles().size() == 1
+                && user.getRoles().stream()
+                .anyMatch(role -> role != null && ADMIN_ROLE.equalsIgnoreCase(role.getName()));
     }
 
     private String generateUsername(String email, Long currentUserId) {
@@ -132,5 +164,10 @@ public class InitialAdminBootstrapRunner implements ApplicationRunner {
         role.setDescription("Administrador del sistema");
         role.setHierarchy(0);
         return role;
+    }
+
+    private RoleEntity findOrCreateAdminRole() {
+        return roleRepository.findByNameIgnoreCase(ADMIN_ROLE)
+                .orElseGet(() -> roleRepository.save(buildAdminRole()));
     }
 }

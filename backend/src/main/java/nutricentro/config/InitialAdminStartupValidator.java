@@ -5,10 +5,13 @@ import nutricentro.repositories.UserRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class InitialAdminStartupValidator implements ApplicationRunner {
 
     private final InitialAdminsProperties properties;

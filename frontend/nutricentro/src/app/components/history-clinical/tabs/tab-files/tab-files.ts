@@ -5,8 +5,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { EmailService } from '../../../../core/services/email-service';
+import { AttachmentDTO } from '../../../../core/models/email-model';
+import { AuthService } from '../../../../core/services/auth-service';
+import { isValidEmail } from '../../../../shared/utils/email-validation';
 import { ClinicalFileResponseDTO, MedicalHistoryResponseDTO } from '../../models/history-clinical-model';
 import { HistoryClinicalService } from '../../services/history-clinical-service';
+
+type FileDeliveryMode = 'SAVE' | 'SAVE_EMAIL';
 
 @Component({
   selector: 'app-tab-files',
@@ -21,6 +27,8 @@ export class TabFiles implements OnChanges, OnDestroy {
   private historyService = inject(HistoryClinicalService);
   private messageService = inject(MessageService);
   private sanitizer = inject(DomSanitizer);
+  private authService = inject(AuthService);
+  private emailService = inject(EmailService);
 
   fileTypes = [
     'Plan alimentario',
@@ -33,6 +41,11 @@ export class TabFiles implements OnChanges, OnDestroy {
   ];
   acceptedTypes = '.pdf,.jpg,.jpeg,.png,.docx';
   files: ClinicalFileResponseDTO[] = [];
+  deliveryOptions = [
+    { label: 'Guardar solamente', value: 'SAVE' as FileDeliveryMode },
+    { label: 'Guardar y enviar por email al paciente', value: 'SAVE_EMAIL' as FileDeliveryMode },
+  ];
+  deliveryMode: FileDeliveryMode = 'SAVE';
   selectedFile?: File;
   selectedType = 'Analisis';
   comment = '';
@@ -47,6 +60,7 @@ export class TabFiles implements OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['history']) {
+      this.ensureProfessionalDefault();
       this.files = [...(this.history.files ?? [])];
       this.refreshFiles();
     }
@@ -65,6 +79,15 @@ export class TabFiles implements OnChanges, OnDestroy {
 
   get canUpload(): boolean {
     return !!this.selectedFile && !this.uploading;
+  }
+
+  get patientEmail(): string {
+    return this.history?.patient?.email?.trim() || '';
+  }
+
+  get patientName(): string {
+    const patient = this.history?.patient;
+    return patient ? `${patient.firstName} ${patient.lastName}`.trim() : 'paciente';
   }
 
   onFileInput(event: Event): void {
@@ -93,11 +116,16 @@ export class TabFiles implements OnChanges, OnDestroy {
       return;
     }
 
+    if (this.deliveryMode === 'SAVE_EMAIL' && !this.canSendUploadedFileByEmail()) {
+      return;
+    }
+
+    const fileToSend = this.selectedFile;
     this.uploading = true;
     this.historyService
       .uploadFile(
         this.history.id,
-        this.selectedFile,
+        fileToSend,
         this.selectedType,
         this.comment,
         this.date,
@@ -105,17 +133,16 @@ export class TabFiles implements OnChanges, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.uploading = false;
-          this.selectedFile = undefined;
-          this.comment = '';
-          this.date = new Date().toISOString().slice(0, 10);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Archivo guardado',
-            detail: 'El adjunto quedo vinculado a la historia clinica.',
-          });
-          this.refreshFiles();
-          this.saved.emit();
+          if (this.deliveryMode === 'SAVE_EMAIL') {
+            this.sendUploadedFileByEmail(fileToSend);
+            return;
+          }
+
+          this.finishUploadFlow(
+            'success',
+            'Archivo guardado',
+            'El adjunto quedo vinculado a la historia clinica.'
+          );
         },
         error: () => {
           this.uploading = false;
@@ -216,6 +243,94 @@ export class TabFiles implements OnChanges, OnDestroy {
         this.files = files;
       },
     });
+  }
+
+  private ensureProfessionalDefault(): void {
+    if (this.professional.trim()) {
+      return;
+    }
+
+    this.professional = this.authService.getCurrentUser()?.username ?? '';
+  }
+
+  private canSendUploadedFileByEmail(): boolean {
+    if (!this.patientEmail) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Email requerido',
+        detail: 'El paciente no posee un correo electronico registrado.',
+      });
+      return false;
+    }
+
+    if (!isValidEmail(this.patientEmail)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Email invalido',
+        detail: 'Revisa el correo electronico del paciente antes de enviar.',
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  private sendUploadedFileByEmail(file: File): void {
+    this.fileToAttachment(file)
+      .then((attachment) => {
+        this.emailService.send({
+          to: [this.patientEmail],
+          subject: `Archivo clinico - ${file.name}`,
+          textMessage: `Hola ${this.patientName},\n\nTe enviamos el archivo clinico adjunto.\n\nSaludos.`,
+          patientId: this.history.patientId,
+          historyId: this.history.id,
+          attachments: [attachment],
+        }).subscribe({
+          next: () => this.finishUploadFlow(
+            'success',
+            'Archivo enviado',
+            'El archivo quedo guardado y fue enviado por email.'
+          ),
+          error: () => this.finishUploadFlow(
+            'warn',
+            'Archivo guardado',
+            'El archivo quedo guardado, pero no se pudo enviar el email.'
+          ),
+        });
+      })
+      .catch(() => this.finishUploadFlow(
+        'warn',
+        'Archivo guardado',
+        'El archivo quedo guardado, pero no se pudo preparar el adjunto para email.'
+      ));
+  }
+
+  private fileToAttachment(file: File): Promise<AttachmentDTO> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const content = String(reader.result ?? '');
+        resolve({
+          filename: file.name,
+          contentType: file.type,
+          contentBase64: content.includes(',') ? content.split(',')[1] : content,
+          sizeBytes: file.size,
+        });
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private finishUploadFlow(severity: 'success' | 'warn', summary: string, detail: string): void {
+    this.uploading = false;
+    this.selectedFile = undefined;
+    this.comment = '';
+    this.date = new Date().toISOString().slice(0, 10);
+    this.ensureProfessionalDefault();
+    this.messageService.add({ severity, summary, detail });
+    this.refreshFiles();
+    this.saved.emit();
   }
 
   private pickFile(file?: File): void {

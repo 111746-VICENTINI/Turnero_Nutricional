@@ -39,7 +39,7 @@ export class TabAnthropometry {
   detailDialogVisible = false;
   saving = false;
 
-  fields: GenericFormField[] = [
+  private readonly editableFields: GenericFormField[] = [
     { name: 'date', label: 'Fecha', type: 'date', required: true, allowFuture: true },
     { name: 'professionalName', label: 'Profesional', type: 'text' },
     { name: 'source', label: 'Origen', type: 'select',
@@ -110,6 +110,14 @@ export class TabAnthropometry {
     },
     { name: 'observations', label: 'Observaciones', type: 'textarea', rows: 2, colSpan: 2 },
   ];
+
+  private readonly createFields = this.editableFields.filter(
+    (field) => !['date', 'professionalName'].includes(field.name)
+  );
+
+  get fields(): GenericFormField[] {
+    return this.selected ? this.editableFields : this.createFields;
+  }
 
   columns: TableColumnConfig<AntropometryResponseDTO>[] = [
     { field: 'date', header: 'Fecha', type: 'date', width: '8rem' },
@@ -251,6 +259,7 @@ export class TabAnthropometry {
     const { rawMeasurementsText, ...rest } = values as AntropometryFormValue;
     const request: AntropometryRequestDTO = {
       ...rest,
+      date: rest.date ?? new Date().toISOString().slice(0, 10),
       rawMeasurements: this.parseRawMeasurements(rawMeasurementsText),
     };
     const operation = this.selected

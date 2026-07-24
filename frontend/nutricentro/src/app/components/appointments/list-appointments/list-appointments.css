@@ -93,26 +93,6 @@
   text-transform: capitalize;
 }
 
-.own-agenda-banner {
-  align-items: center;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: 8px;
-  color: #065f46;
-  display: flex;
-  gap: 0.5rem;
-  min-height: 2.65rem;
-  padding: 0.55rem 0.75rem;
-}
-
-.own-agenda-banner i {
-  color: #047857;
-}
-
-.own-agenda-banner strong {
-  font-size: 0.9rem;
-}
-
 .view-switcher {
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
@@ -212,32 +192,38 @@
 }
 
 .status-pending .summary-icon,
-.appointment-card.status-pending {
+.appointment-card.status-pending,
+.week-item.status-pending {
   border-left-color: #f59e0b;
 }
 
 .status-confirmed .summary-icon,
-.appointment-card.status-confirmed {
+.appointment-card.status-confirmed,
+.week-item.status-confirmed {
   border-left-color: #10b981;
 }
 
 .status-completed .summary-icon,
-.appointment-card.status-completed {
+.appointment-card.status-completed,
+.week-item.status-completed {
   border-left-color: #3b82f6;
 }
 
 .status-canceled .summary-icon,
-.appointment-card.status-canceled {
+.appointment-card.status-canceled,
+.week-item.status-canceled {
   border-left-color: #ef4444;
 }
 
 .status-rejected .summary-icon,
-.appointment-card.status-rejected {
+.appointment-card.status-rejected,
+.week-item.status-rejected {
   border-left-color: #6b7280;
 }
 
 .status-rescheduled .summary-icon,
-.appointment-card.status-rescheduled {
+.appointment-card.status-rescheduled,
+.week-item.status-rescheduled {
   border-left-color: #6366f1;
 }
 
@@ -323,8 +309,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  max-height: calc(100vh - 15.5rem);
-  overflow: auto;
   padding: 0.55rem;
 }
 
@@ -389,6 +373,25 @@
   font-size: 0.84rem;
 }
 
+.professional-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.professional-line b,
+.week-professional b {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  white-space: nowrap;
+}
+
 .appointment-main .appointment-cost,
 .professional-card-main .appointment-cost {
   color: #047857;
@@ -416,9 +419,9 @@
 
 .slot-grid {
   display: grid;
-  gap: 0.35rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 0.55rem;
+  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(4.1rem, 1fr));
+  padding: 0.35rem;
 }
 
 .slot-grid button {
@@ -428,8 +431,10 @@
   color: #047857;
   cursor: pointer;
   font: inherit;
+  font-size: 0.76rem;
   font-weight: 800;
-  min-height: 2.15rem;
+  min-height: 1.75rem;
+  padding: 0 0.35rem;
 }
 
 .empty-state,
@@ -527,8 +532,29 @@
   cursor: pointer;
   display: grid;
   gap: 0.15rem;
-  padding: 0.4rem;
+  padding: 0.35rem 0.4rem;
   text-align: left;
+}
+
+.week-item.status-pending {
+  background: #fffaf0;
+}
+
+.week-item.status-confirmed {
+  background: #f0fdf4;
+}
+
+.week-item.status-completed {
+  background: #eff6ff;
+}
+
+.week-item.status-canceled,
+.week-item.status-rejected {
+  background: #f8fafc;
+}
+
+.week-item.status-rescheduled {
+  background: #eef2ff;
 }
 
 .week-item span {
@@ -547,6 +573,14 @@
 
 .week-item small {
   color: #64748b;
+}
+
+.week-professional {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
 .week-empty {
@@ -641,8 +675,6 @@
 .professional-list {
   display: grid;
   gap: 0.75rem;
-  max-height: 44rem;
-  overflow: auto;
   padding: 0.85rem;
 }
 

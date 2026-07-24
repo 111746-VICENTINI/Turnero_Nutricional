@@ -25,7 +25,7 @@ import {ProfessionalService} from '../../professionals/services/professional-ser
 import {SpecialtyResponseDTO} from '../../professionals/specialties/models/specialty-model';
 import {SpecialtyService} from '../../professionals/specialties/services/specialty-service';
 import {AppointmentDetailDrawer} from '../appointment-detail-drawer/appointment-detail-drawer';
-import {AppointmentFilters, AppointmentResponseDTO} from '../models/appointment-model';
+import {AppointmentFeeType, AppointmentFilters, AppointmentResponseDTO} from '../models/appointment-model';
 import {AppointmentService} from '../services/appointment-service';
 
 type AgendaViewMode = 'day' | 'week' | 'list';
@@ -106,6 +106,7 @@ export class ListAppointments implements OnDestroy {
     { field: 'time', header: 'Hora', width: '7rem', formatFn: value => this.formatTime(value) },
     { field: 'patientFullName', header: 'Paciente', minWidth: '14rem' },
     { field: 'professionalFullName', header: 'Profesional', minWidth: '14rem' },
+    { field: 'feeType', header: 'Tipo', width: '9rem', formatFn: value => this.feeTypeLabel(value as AppointmentFeeType) },
     { field: 'reason', header: 'Motivo', minWidth: '16rem' },
     {
       field: 'appliedFee',
@@ -156,6 +157,7 @@ export class ListAppointments implements OnDestroy {
 
   ngOnInit(): void {
     this.restoreAgendaStateFromQuery();
+    this.showReturnMessageFromQuery();
     this.agendaSearch$.pipe(
       debounceTime(250),
       takeUntil(this.destroy$)
@@ -286,7 +288,9 @@ export class ListAppointments implements OnDestroy {
   }
 
   get filteredFreeSlots(): string[] {
-    const busy = new Set(this.dailyAppointments.map(item => this.formatTime(item.time)));
+    const busy = new Set(this.dailyAppointments
+      .filter(item => !this.isTerminal(item.status))
+      .map(item => this.formatTime(item.time)));
     return this.availableSlots
       .map(slot => this.formatTime(slot))
       .filter(slot => !busy.has(slot));
@@ -519,7 +523,8 @@ export class ListAppointments implements OnDestroy {
     this.router.navigate(['/medical-history', appointment.patientId], {
       queryParams: {
         tab: 'consultations',
-        appointmentId: appointment.id
+        appointmentId: appointment.id,
+        returnTo: this.currentAgendaUrl()
       }
     });
   }
@@ -540,6 +545,7 @@ export class ListAppointments implements OnDestroy {
         this.appointmentService.deleteAppointment(Number(appointment.id)).subscribe({
           next: () => {
             this.loadAppointments();
+            this.loadAvailableSlots();
             this.showSuccess('Turno cancelado correctamente.');
           },
           error: (error) => this.showError(this.errorMessage(error, 'No se pudo cancelar el turno.'))
@@ -667,6 +673,15 @@ export class ListAppointments implements OnDestroy {
     return `${symbol}${Number(value).toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
   }
 
+  feeTypeLabel(type?: AppointmentFeeType | null): string {
+    const labels: Record<AppointmentFeeType, string> = {
+      FIRST: 'Primera consulta',
+      CONTROL: 'Control',
+      ONLINE: 'Online'
+    };
+    return type ? labels[type] ?? type : 'Sin tipo';
+  }
+
   shortDateLabel(value: string): string {
     return this.parseIsoDate(value).toLocaleDateString('es-AR', {day: '2-digit', month: 'short'});
   }
@@ -734,7 +749,7 @@ export class ListAppointments implements OnDestroy {
     return values.length ? values.reduce((total, value) => total + Number(value), 0) : undefined;
   }
 
-  private isTerminal(status: AppointmentStatus): boolean {
+  isTerminal(status: AppointmentStatus): boolean {
     return [
       AppointmentStatus.CANCELED,
       AppointmentStatus.COMPLETED,
@@ -779,6 +794,25 @@ export class ListAppointments implements OnDestroy {
     if (status) {
       this.selectedStatus = status;
     }
+  }
+
+  private showReturnMessageFromQuery(): void {
+    const success = this.route.snapshot.queryParamMap.get('success');
+    if (success !== 'next-control') {
+      return;
+    }
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Listo',
+      detail: 'Consulta finalizada y proximo control programado correctamente.'
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {success: null},
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   private persistAgendaState(): void {

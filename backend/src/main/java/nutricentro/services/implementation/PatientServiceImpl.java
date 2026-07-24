@@ -14,9 +14,11 @@ import nutricentro.repositories.AppointmentRepository;
 import nutricentro.repositories.ConsultationRepository;
 import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.PatientService;
+import nutricentro.exception.ApiException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -54,6 +56,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PatientResponseDTO createPatient(PatientRequestDTO patient) {
+        validateUniqueDocumentForCreate(patient.getDocument());
         PatientEntity patientEntity = new PatientEntity();
         patientEntity.setFirstName(patient.getFirstName());
         patientEntity.setLastName(patient.getLastName());
@@ -82,6 +85,7 @@ public class PatientServiceImpl implements PatientService {
         PatientEntity patientEntity = patientRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
         validatePatientScope(patientEntity.getId());
+        validateUniqueDocumentForUpdate(patient.getDocument(), patientEntity.getId());
         patientEntity.setFirstName(patient.getFirstName());
         patientEntity.setLastName(patient.getLastName());
         patientEntity.setEmail(patient.getEmail());
@@ -89,7 +93,9 @@ public class PatientServiceImpl implements PatientService {
         patientEntity.setGender(patient.getGender());
         patientEntity.setMobile(patient.getMobile());
         patientEntity.setAddress(patient.getAddress());
-        patientEntity.setStatus(patient.getStatus());
+        if (patient.getStatus() != null) {
+            patientEntity.setStatus(patient.getStatus());
+        }
         patientEntity.setBirthDate(patient.getBirthDate());
         PatientEntity saved = patientRepository.save(patientEntity);
         return toResponse(saved);
@@ -198,6 +204,18 @@ public class PatientServiceImpl implements PatientService {
                 && !appointmentRepository.existsByPatientIdAndProfessionalId(patientId, professionalId)
                 && !consultationRepository.existsByPatientIdAndProfessionalId(patientId, professionalId)) {
             throw new EntityNotFoundException("Paciente no encontrado");
+        }
+    }
+
+    private void validateUniqueDocumentForCreate(Integer document) {
+        if (document != null && patientRepository.existsByDocument(document)) {
+            throw new ApiException("Ya existe un paciente registrado con ese DNI.", HttpStatus.CONFLICT.value());
+        }
+    }
+
+    private void validateUniqueDocumentForUpdate(Integer document, Long patientId) {
+        if (document != null && patientRepository.existsByDocumentAndIdNot(document, patientId)) {
+            throw new ApiException("Ya existe un paciente registrado con ese DNI.", HttpStatus.CONFLICT.value());
         }
     }
 

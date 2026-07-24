@@ -6,7 +6,6 @@ import nutricentro.dtos.specialties.SpecialtyRequestDTO;
 import nutricentro.dtos.specialties.SpecialtyResponseDTO;
 import nutricentro.dtos.specialties.SpecialtyUpdateDTO;
 import nutricentro.entities.SpecialtyEntity;
-import nutricentro.repositories.ProfessionalRepository;
 import nutricentro.repositories.SpecialtyRepository;
 import nutricentro.services.SpecialtyService;
 import org.springframework.data.domain.Page;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SpecialtyServiceImpl implements SpecialtyService {
     private final SpecialtyRepository specialtyRepository;
-    private final ProfessionalRepository professionalRepository;
 
     @Override
     public SpecialtyResponseDTO createSpecialty(SpecialtyRequestDTO dto) {
@@ -50,10 +48,6 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     public void delete(Long id) {
         SpecialtyEntity specialty = specialtyRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Especialidad no encontrada"));
-
-        if (professionalRepository.existsBySpecialties_Id(id)){
-            throw new IllegalStateException("No se puede eliminar la especialidad porque está asociada a profesionales");
-        }
 
         specialty.setIsActive(false);
         specialtyRepository.save(specialty);

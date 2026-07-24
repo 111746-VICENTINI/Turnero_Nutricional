@@ -84,7 +84,7 @@
         dateFormat="dd/mm/yy"
         [showIcon]="true"
         appendTo="body"
-        (ngModelChange)="onWeekChange($event)">
+        (onSelect)="onWeekChange($event)">
       </p-datepicker>
       <p-button label="Hoy" icon="pi pi-calendar" severity="secondary" [outlined]="true" (onClick)="goToToday()"></p-button>
       <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" (onClick)="moveWeek(7)"></p-button>
@@ -107,7 +107,7 @@
     @for (day of visibleWeekDays; track day.key) {
       <article class="day-column">
         <header class="day-header">
-          <div>
+          <div class="day-title-line">
             <strong>{{ day.label }}</strong>
             <span>{{ formatDate(dayDateByKey(day.key)) }}</span>
           </div>
@@ -125,7 +125,7 @@
               <strong>{{ blockReason }}</strong>
             }
             @if (canEdit) {
-              <p-button label="Desbloquear día" icon="pi pi-lock-open" size="large" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
+              <p-button label="Desbloquear día" icon="pi pi-lock-open" size="small" severity="warn" [loading]="saving" (onClick)="unblockDay(dayDateByKey(day.key))"></p-button>
             }
           </div>
         } @else {
@@ -203,8 +203,7 @@
         }
 
         <div class="slot-preview">
-          <strong>{{ slotsFor(dayDateByKey(day.key)).length }}</strong>
-          <span>horarios disponibles</span>
+          <span>{{ slotsFor(dayDateByKey(day.key)).length }} Horarios disponibles</span>
           @if (slotsFor(dayDateByKey(day.key)).length) {
             <div class="slot-chips">
               @for (slot of visibleSlotsFor(dayDateByKey(day.key)); track slot) {
@@ -429,7 +428,7 @@
     [draggable]="false"
     [style]="{width: '34rem'}"
     header="Copiar horarios entre dias">
-    <p class="dialog-intro">Se copiaran los bloques activos de {{ weekDayLabel(copySourceDay) }} hacia los días seleccionados.</p>
+    <p class="dialog-intro">Se copiarán los horarios del {{ weekDayLabel(copySourceDay) }} a todos los días seleccionados.</p>
     <div class="copy-targets">
       @for (day of weekDays; track day.key) {
         <button

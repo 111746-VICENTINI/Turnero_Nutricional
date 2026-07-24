@@ -5,6 +5,7 @@ import { FormGeneric } from '../../../../shared/components/form-generic/form-gen
 import { GenericFormField } from '../../../../shared/components/form-generic/model/form-model';
 import { AllergyDTO, ClinicalDataDTO, MedicalHistoryResponseDTO, MedicationDTO} from '../../models/history-clinical-model';
 import { HistoryClinicalService } from '../../services/history-clinical-service';
+import {GenderType} from '../../../../shared/enums/genders';
 
 type ClinicalFormValue = Omit<ClinicalDataDTO, 'livingSituation'> & {
   livingSituation?: string | string[] | null;
@@ -20,6 +21,7 @@ type ClinicalFormValue = Omit<ClinicalDataDTO, 'livingSituation'> & {
 })
 export class TabClinicalData implements OnChanges {
   @Input({ required: true }) history!: MedicalHistoryResponseDTO;
+  @Input() patientGender?: GenderType | null;
   @Output() saved = new EventEmitter<void>();
 
   private historyService = inject(HistoryClinicalService);
@@ -28,10 +30,20 @@ export class TabClinicalData implements OnChanges {
   form: ClinicalFormValue = {};
   saving = false;
 
-  fields: GenericFormField[] = [
+  private readonly gynecologyFieldNames = new Set([
+    'headerGynecology',
+    'pregnancies',
+    'pregnancyCount',
+    'lactation',
+    'menopause',
+    'menstrualCycle',
+    'contraceptiveMethod',
+  ]);
+
+  private readonly allFields: GenericFormField[] = [
     { name: 'headerGeneral', label: 'Ocupación del paciente', type: 'header' },
-    { name: 'occupation', label: 'A que se dedica', type: 'text' },
-    { name: 'workingHours', label: 'Horario laboral', type: 'text' },
+    { name: 'occupation', label: 'A que se dedica', type: 'text', placeholder: 'Profesión, estudiante..' },
+    { name: 'workingHours', label: 'Horario laboral', type: 'text', placeholder:'8 a 17hs' },
     {
       name: 'livingSituation',
       label: 'Convivencia',
@@ -47,10 +59,10 @@ export class TabClinicalData implements OnChanges {
       ],
     },
     { name: 'householdPeopleCount', label: 'Personas en el hogar', type: 'number', min: 0 },
-    { name: 'responsibleForFood', label: 'Responsable de la alimentacion', type: 'text' },
-    { name: 'cooksAtHome', label: 'Quien cocina', type: 'text' },
-    { name: 'buysFood', label: 'Quien compra alimentos', type: 'text' },
-    { name: 'organizesMeals', label: 'Quien organiza comidas', type: 'text' },
+    { name: 'responsibleForFood', label: 'Responsable de la alimentación', placeholder:'El mismo, su pareja..', type: 'text' },
+    { name: 'cooksAtHome', label: 'Quién cocina', type: 'text' },
+    { name: 'buysFood', label: 'Quién compra alimentos', type: 'text' },
+    { name: 'organizesMeals', label: 'Quién organiza comidas', type: 'text' },
 
     { name: 'headerGynecology', label: 'Datos ginecologicos', type: 'header' },
     { name: 'pregnancies', label: 'Embarazos', type: 'checkbox' },
@@ -69,15 +81,15 @@ export class TabClinicalData implements OnChanges {
     { name: 'headerConsumption', label: 'Consumo y suplementación', type: 'header' },
     { name: 'smoker', label: 'Fuma', type: 'checkbox' },
     { name: 'alcohol', label: 'Alcohol', type: 'checkbox' },
-    { name: 'caffeine', label: 'Cafeina', type: 'checkbox' },
+    { name: 'caffeine', label: 'Cafeína', type: 'checkbox' },
     { name: 'mate', label: 'Mate', type: 'checkbox' },
-    { name: 'energyDrinks', label: 'Bebidas energeticas', type: 'checkbox' },
-    { name: 'supplements', label: 'Suplementacion', type: 'checkbox' },
+    { name: 'energyDrinks', label: 'Bebidas energéticas', type: 'checkbox' },
+    { name: 'supplements', label: 'Suplementación', type: 'checkbox' },
 
-    { name: 'headerSleepStress', label: 'Sueño y estres', type: 'header' },
-    { name: 'sleepHoursPerNight', label: 'Horas por noche', type: 'number', min: 0, max: 24 },
-    { name: 'sleepQuality', label: 'Calidad de sueño', type: 'text' },
-    { name: 'stressLevel', label: 'Nivel de estres', type: 'text' },
+    { name: 'headerSleepStress', label: 'Sueño y estrés', type: 'header' },
+    { name: 'sleepHoursPerNight', label: 'Horas por noche', type: 'number', placeholder:'8', min: 0, max: 24 },
+    { name: 'sleepQuality', label: 'Calidad de sueño', type: 'text', placeholder:'Mala, buena' },
+    { name: 'stressLevel', label: 'Nivel de estrés', type: 'text', placeholder:'Alto, medio, bajo' },
 
     { name: 'headerPathologies', label: 'Patologías, medicación y alergias', type: 'header' },
     {
@@ -105,10 +117,21 @@ export class TabClinicalData implements OnChanges {
     { name: 'diseases', label: 'Enfermedades o diagnosticos', type: 'textarea', rows: 2, placeholder: 'Diabetes, hipertension, hipotiroidismo...' },
     { name: 'allergies', label: 'Alergias e intolerancias', type: 'textarea', rows: 2, placeholder: 'Alimentos, medicamentos, intolerancias digestivas...' },
     { name: 'medications', label: 'Medicación habitual', type: 'textarea', rows: 2, placeholder: 'Farmacos, dosis y frecuencia si corresponde' },
-    { name: 'familyHistory', label: 'Antecedentes familiares', type: 'textarea', rows: 2, placeholder: 'Cardiopatias, diabetes, cancer...' },
+    { name: 'familyHistory', label: 'Antecedentes familiares', type: 'textarea', rows: 2, placeholder: 'Cardiopatias, diabetes, cáncer...' },
     { name: 'surgeries', label: 'Cirugias o tratamientos', type: 'textarea', rows: 2, placeholder: 'Procedimientos previos relevantes' },
     { name: 'observations', label: 'Observaciones', type: 'textarea', rows: 2 },
   ];
+
+  private readonly maleFields = this.allFields.filter(
+    (field) => !this.gynecologyFieldNames.has(field.name)
+  );
+
+  get fields(): GenericFormField[] {
+    if (this.patientGender === GenderType.MALE) {
+      return this.maleFields;
+    }
+    return this.allFields;
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['history']) {

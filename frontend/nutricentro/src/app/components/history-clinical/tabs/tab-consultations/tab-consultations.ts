@@ -22,6 +22,7 @@ export class TabConsultations {
   @Input() appointmentContextId?: number;
   @Output() saved = new EventEmitter<void>();
   @Output() appointmentSelected = new EventEmitter<number>();
+  @Output() finalized = new EventEmitter<void>();
 
   private historyService = inject(HistoryClinicalService);
   private confirmationService = inject(ConfirmationService);
@@ -34,7 +35,7 @@ export class TabConsultations {
   hasUnsavedChanges = false;
   private formSnapshot = '';
 
-  fields: GenericFormField[] = [
+  private readonly editableFields: GenericFormField[] = [
     { name: 'date', label: 'Fecha', type: 'date', required: true, allowFuture: true },
     { name: 'professionalId', label: 'Profesional', type: 'number', min: 1 },
     { name: 'reason', label: 'Motivo', type: 'text' },
@@ -44,6 +45,14 @@ export class TabConsultations {
     { name: 'treatment', label: 'Tratamiento / indicaciones', type: 'textarea', rows: 2 },
     { name: 'observations', label: 'Observaciones', type: 'textarea', rows: 2 },
   ];
+
+  private readonly createFields = this.editableFields.filter(
+    (field) => !['date', 'professionalId'].includes(field.name)
+  );
+
+  get fields(): GenericFormField[] {
+    return this.selected ? this.editableFields : this.createFields;
+  }
 
   openCreate(): void {
     this.selected = undefined;
@@ -156,6 +165,7 @@ export class TabConsultations {
           detail: 'El control quedó finalizado y el turno fue actualizado.',
         });
         this.saved.emit();
+        this.finalized.emit();
       },
       error: (error) => {
         this.saving = false;
@@ -228,6 +238,12 @@ export class TabConsultations {
     return row.status !== 'FINALIZADA';
   }
 
+  isInProgressContext(row: ConsultationResponseDTO): boolean {
+    return row.status !== 'FINALIZADA'
+      && !!this.appointmentContextId
+      && row.appointmentId === this.appointmentContextId;
+  }
+
   durationText(row: ConsultationResponseDTO): string {
     if (!row.startTime || !row.endTime) {
       return 'Sin duración';
@@ -277,7 +293,7 @@ export class TabConsultations {
   ): ConsultationRequestDTO {
     const value = {...source, ...overrides};
     return {
-      date: this.toDateOnly(value.date),
+      date: this.toDateOnly(value.date) ?? new Date().toISOString().slice(0, 10),
       startTime: this.toLocalTime(value.startTime),
       endTime: this.toLocalTime(value.endTime),
       status: value.status,

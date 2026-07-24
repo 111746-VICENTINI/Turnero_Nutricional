@@ -98,6 +98,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
   appliedFee?: number;
   feeCurrency = 'ARS';
   returnTo?: string | null;
+  navigateAfterSave = false;
   createdAppointment?: AppointmentResponseDTO;
   whatsappStatus: WhatsAppStatus = 'idle';
   whatsappDetail = 'Se usara el telefono del paciente.';
@@ -129,6 +130,11 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
     this.selectedTime = this.route.snapshot.queryParamMap.get('time') || this.selectedTime;
     this.selectedCalendarDate = this.parseIsoDate(this.selectedDate);
     this.returnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    this.navigateAfterSave = this.route.snapshot.queryParamMap.get('navigateAfterSave') === 'true';
+    const requestedFeeType = this.resolveFeeType(this.route.snapshot.queryParamMap.get('feeType'));
+    if (requestedFeeType) {
+      this.selectedFeeType = requestedFeeType;
+    }
     this.setupPatientSearch();
 
     if (id) {
@@ -222,6 +228,10 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
 
   get canCreateAppointment(): boolean {
     return !!this.selectedPatient && !!this.selectedProfessional && !!this.selectedDate && !!this.selectedTime && !this.saving;
+  }
+
+  get canOpenCreatePatient(): boolean {
+    return !this.isProfessionalOnly && !this.selectedPatient && this.patientSearch.trim().length >= 2;
   }
 
   get selectedProfessionalSpecialty(): string {
@@ -494,6 +504,30 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.creatingPatientSaving = true;
+    const document = String(this.newPatient.document).trim();
+    this.patientService.searchPatients({
+      search: document,
+      page: 0,
+      size: 5
+    }).subscribe({
+      next: (page) => {
+        const duplicated = page.content.some((patient) => String(patient.document) === document);
+        if (duplicated) {
+          this.creatingPatientSaving = false;
+          this.showError('Ya existe un paciente registrado con ese DNI.');
+          return;
+        }
+
+        this.persistNewPatient();
+      },
+      error: () => {
+        this.creatingPatientSaving = false;
+        this.showError('No se pudo validar si el DNI ya existe.');
+      }
+    });
+  }
+
+  private persistNewPatient(): void {
     this.patientService.createPatient({
       firstName: this.newPatient.firstName.trim(),
       lastName: this.newPatient.lastName.trim(),
@@ -541,9 +575,7 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       feeType: this.selectedFeeType,
       feeCurrency: this.feeCurrency
     };
-    if (!this.isProfessionalOnly) {
-      request.professionalId = this.selectedProfessional!.id;
-    }
+    request.professionalId = this.selectedProfessional!.id;
 
     const operation = this.mode === 'edit' && this.appointmentId
       ? this.appointmentsService.updateAppointment(this.appointmentId, request as AppointmentUpdateDTO)
@@ -555,6 +587,10 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       next: (appointment) => {
         this.createdAppointment = appointment;
         this.selectedAppointment = appointment;
+        if (this.navigateAfterSave) {
+          this.navigateBackToContext();
+          return;
+        }
         this.showSuccess(this.mode === 'edit' ? 'Turno actualizado correctamente.' : 'Turno creado correctamente.');
         this.loadAvailability();
         this.loadPatientAppointments(appointment.patientId);
@@ -770,12 +806,24 @@ export class CreateAppointments implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const hasPreviousWithProfessional = this.patientAppointments
-      .some(appointment => appointment.professionalId === this.selectedProfessional?.id
-        && appointment.status === AppointmentStatus.COMPLETED);
-    this.selectedFeeType = hasPreviousWithProfessional ? 'CONTROL' : 'FIRST';
+    const requestedFeeType = this.resolveFeeType(this.route.snapshot.queryParamMap.get('feeType'));
+    if (requestedFeeType) {
+      this.selectedFeeType = requestedFeeType;
+    } else {
+      const hasPreviousWithProfessional = this.patientAppointments
+        .some(appointment => appointment.professionalId === this.selectedProfessional?.id
+          && appointment.status === AppointmentStatus.COMPLETED);
+      this.selectedFeeType = hasPreviousWithProfessional ? 'CONTROL' : 'FIRST';
+    }
     this.feeCurrency = this.selectedProfessional.feeCurrency || 'ARS';
     this.appliedFee = this.feeForType(this.selectedFeeType);
+  }
+
+  private resolveFeeType(value: string | null): AppointmentFeeType | null {
+    if (value === 'FIRST' || value === 'CONTROL' || value === 'ONLINE') {
+      return value;
+    }
+    return null;
   }
 
   private feeForType(type: AppointmentFeeType): number | undefined {

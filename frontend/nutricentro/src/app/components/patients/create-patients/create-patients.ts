@@ -183,9 +183,9 @@ export class CreatePatients implements OnInit {
           this.showSuccess('Paciente actualizado correctamente.');
           this.goBack();
         },
-        error: () => {
+        error: (error) => {
           this.saving = false;
-          this.showError('No se pudo actualizar el paciente.');
+          this.showError(this.errorMessage(error, 'No se pudo actualizar el paciente.'));
         },
       });
 
@@ -210,9 +210,9 @@ export class CreatePatients implements OnInit {
         this.showSuccess('Paciente creado correctamente.');
         this.goBack();
       },
-      error: () => {
+      error: (error) => {
         this.saving = false;
-        this.showError('No se pudo crear el paciente.');
+        this.showError(this.errorMessage(error, 'No se pudo crear el paciente.'));
       },
     });
 
@@ -251,6 +251,20 @@ export class CreatePatients implements OnInit {
 
   private showError(detail: string): void {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    const response = error as {error?: {message?: string} | string; message?: string};
+    const backendMessage = response?.error && typeof response.error === 'object'
+      ? response.error.message
+      : undefined;
+    if (backendMessage) {
+      return backendMessage;
+    }
+    if (typeof response?.error === 'string') {
+      return response.error;
+    }
+    return response?.message || fallback;
   }
 
   editModePatient(): void {

@@ -10,8 +10,7 @@
 >
   <ng-template pTemplate="header">
     <div class="drawer-title">
-      <span class="eyebrow">Detalle del turno</span>
-      <strong>{{ appointment()?.patientFullName || 'Turno' }}</strong>
+      <strong>Detalle del turno</strong>
     </div>
   </ng-template>
 
@@ -44,14 +43,7 @@
 
       <p-card styleClass="compact-card patient-card">
         <div class="patient-summary">
-          <p-avatar
-            [label]="(patient()?.firstName?.[0] || 'P') + (patient()?.lastName?.[0] || '')"
-            shape="circle"
-            size="large"
-          ></p-avatar>
-
           <div class="patient-main">
-            <strong>{{ fullName(patient()) }}</strong>
             <span>{{ patient()?.age || '-' }} años · DNI {{ patient()?.document || '-' }}</span>
             <span>{{ patient()?.mobile || 'Sin telefono' }}</span>
             <span>{{ patient()?.email || 'Sin email' }}</span>
@@ -113,10 +105,6 @@
               <span>Tipo</span>
               <strong>{{ feeTypeLabel(appointment()?.feeType) }}</strong>
             </div>
-            <div>
-              <span>Duracion</span>
-              <strong>{{ appointmentDuration() }}</strong>
-            </div>
             <p-tag
               [value]="appointment()?.feeEditable ? 'Editable' : 'Importe fijo'"
               [severity]="appointment()?.feeEditable ? 'info' : 'secondary'"
@@ -136,7 +124,7 @@
         </div>
 
         @if (timelineItems().length) {
-          <p-timeline [value]="timelineItems()" align="left" styleClass="appointment-timeline">
+          <p-timeline [value]="displayedTimelineItems()" align="left" styleClass="appointment-timeline">
             <ng-template pTemplate="marker" let-item>
               <span class="timeline-marker" [ngClass]="item.tone">
                 <i [ngClass]="item.icon"></i>
@@ -152,6 +140,18 @@
               </article>
             </ng-template>
           </p-timeline>
+          @if (hasMoreTimelineItems()) {
+            <div class="timeline-more">
+              <p-button
+                [label]="showFullTimeline() ? 'Ver menos' : 'Ver historial completo'"
+                [icon]="showFullTimeline() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="toggleTimeline()">
+              </p-button>
+            </div>
+          }
         } @else {
           <div class="empty-inline">
             <i class="pi pi-history"></i>

@@ -1,4 +1,5 @@
 import {Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
 import {Button} from 'primeng/button';
 import {TableModule} from 'primeng/table';
 import {TableGeneric} from '../../../shared/components/table-generic/table-generic';
@@ -18,6 +19,7 @@ import {AuthService} from '../../../core/services/auth-service';
   selector: 'app-list-patients',
   standalone: true,
   imports: [
+    CommonModule,
     Button,
     TableModule,
     TableGeneric
@@ -134,6 +136,11 @@ export class ListPatients {
 
   createPatient(): void {
     this.router.navigate(['/patient/create']);
+  }
+
+  canCreatePatient(): boolean {
+    const roles = this.authService.getUserRoles();
+    return roles.includes('ADMIN') || roles.includes('SECRETARY');
   }
 
   viewPatient(patient: PatientResponseDTO): void {

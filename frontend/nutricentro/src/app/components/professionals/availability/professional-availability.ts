@@ -240,9 +240,15 @@ export class ProfessionalAvailability implements OnInit {
       return 'Honorarios no cargados';
     }
     const currency = professional.feeCurrency || 'ARS';
-    const first = this.formatMoney(professional.firstConsultationFee, currency);
-    const control = this.formatMoney(professional.followUpConsultationFee, currency);
-    return `1° Consulta ${first} - Control ${control}`;
+    const fees = [
+      { label: '1° Consulta', value: professional.firstConsultationFee },
+      { label: 'Control', value: professional.followUpConsultationFee },
+      { label: 'Online', value: professional.onlineConsultationFee },
+    ]
+      .filter(fee => fee.value !== null && fee.value !== undefined && fee.value > 0)
+      .map(fee => `${fee.label} ${this.formatMoney(fee.value, currency)}`);
+
+    return fees.length ? fees.join(' - ') : 'Honorarios no cargados';
   }
 
   loadSpecialties(): void {
@@ -1396,7 +1402,7 @@ export class ProfessionalAvailability implements OnInit {
       return this.isPastDate(date) ? [] : [date];
     }
 
-    const monthDate = new Date(this.calendarDate);
+    const monthDate = this.parseIsoDate(this.dayDateByKey(day));
     const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
     const dates: string[] = [];
     while (date.getMonth() === monthDate.getMonth()) {

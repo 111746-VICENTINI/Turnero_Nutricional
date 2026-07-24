@@ -27,7 +27,7 @@
             dateFormat="dd/mm/yy"
             [showIcon]="true"
             appendTo="body"
-            (ngModelChange)="onSelectedDateChange($event)"
+            (onSelect)="onSelectedDateChange($event)"
             ariaLabel="Fecha de trabajo"
           ></p-datepicker>
 
@@ -93,12 +93,6 @@
         <strong>{{ selectedDateLabel }}</strong>
       </article>
     </section>
-
-    @if (isProfessionalOnly) {
-      <section class="own-agenda-banner">
-        <i class="pi pi-lock"></i>
-      </section>
-    }
 
     <section class="professional-status-grid" aria-label="Resumen del día">
       <article class="summary-card total-card">
@@ -311,7 +305,7 @@
           dateFormat="dd/mm/yy"
           [showIcon]="true"
           appendTo="body"
-          (ngModelChange)="onSelectedDateChange($event)"
+          (onSelect)="onSelectedDateChange($event)"
           ariaLabel="Fecha de agenda"
         ></p-datepicker>
 
@@ -412,12 +406,6 @@
     </article>
   </section>
 
-  @if (isProfessionalOnly) {
-    <section class="own-agenda-banner">
-      <i class="pi pi-lock"></i>
-    </section>
-  }
-
   <section class="status-grid" aria-label="Resumen de estados de turnos">
     @for (status of visibleStatusCards; track status) {
       <article class="summary-card" [ngClass]="statusClass(status)">
@@ -429,13 +417,13 @@
       </article>
     }
 
-      <article class="summary-card total-card">
-        <span class="summary-icon pi pi-calendar-clock"></span>
-        <div>
-          <strong>{{ totalRecords }}</strong>
-          <span>Turnos visibles</span>
-        </div>
-      </article>
+<!--      <article class="summary-card total-card">-->
+<!--        <span class="summary-icon pi pi-calendar-clock"></span>-->
+<!--        <div>-->
+<!--          <strong>{{ totalRecords }}</strong>-->
+<!--          <span>Turnos visibles</span>-->
+<!--        </div>-->
+<!--      </article>-->
       <article class="summary-card total-card">
         <span class="summary-icon pi pi-dollar"></span>
         <div>
@@ -451,7 +439,7 @@
         <div class="section-heading">
           <div>
             <h2>{{ selectedDateLabel }}</h2>
-            <p>{{ dailyAppointments.length }} turnos en la jornada</p>
+            <p>{{ dailyAppointments.length }} turnos del día</p>
           </div>
           @if (loading) {
             <span class="live-count">Cargando...</span>
@@ -473,7 +461,10 @@
                   <time>{{ formatTime(item.time) }}</time>
                   <div class="appointment-main">
                     <strong>{{ item.patientFullName }}</strong>
-                    <span>Profesional: {{ item.professionalFullName }}</span>
+                    <span class="professional-line">
+                      Profesional: {{ item.professionalFullName }}
+                      <b>{{ feeTypeLabel(item.feeType) }}</b>
+                    </span>
                     <span class="appointment-cost">Costo: {{ formatMoney(item.appliedFee, item.feeCurrency || 'ARS') }}</span>
                     <p>{{ item.reason || 'Sin motivo de consulta' }}</p>
                   </div>
@@ -502,6 +493,9 @@
                   }
                   @if (canCancel(item)) {
                     <p-button icon="pi pi-ban" label="Cancelar" size="small" severity="danger" [text]="true" (onClick)="cancelAppointment(item)"></p-button>
+                  }
+                  @if (canManageAppointments && !isTerminal(item.status)) {
+                    <p-button icon="pi pi-calendar-clock" label="Reprogramar" size="small" severity="info" [text]="true" (onClick)="editAppointment(item)"></p-button>
                   }
                 </div>
               </article>
@@ -572,6 +566,11 @@
               <button type="button" class="week-item" [ngClass]="statusClass(item.status)" (click)="viewAppointment(item)">
                 <span>{{ formatTime(item.time) }}</span>
                 <strong>{{ item.patientFullName }}</strong>
+                <small class="week-professional">
+                  {{ item.professionalFullName }}
+                  <b>{{ feeTypeLabel(item.feeType) }}</b>
+                </small>
+                <small>{{ item.reason || 'Sin motivo' }}</small>
                 <small>{{ formatMoney(item.appliedFee, item.feeCurrency || 'ARS') }}</small>
                 <small>{{ statusLabel(item.status) }}</small>
               </button>

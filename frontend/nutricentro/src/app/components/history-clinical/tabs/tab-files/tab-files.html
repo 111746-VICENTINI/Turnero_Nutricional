@@ -52,7 +52,16 @@
 
       <label>
         Profesional
-        <input type="text" [(ngModel)]="professional" placeholder="Profesional responsable" />
+        <input type="text" [(ngModel)]="professional" placeholder="Profesional responsable" readonly />
+      </label>
+
+      <label>
+        Accion al subir
+        <select [(ngModel)]="deliveryMode">
+          @for (option of deliveryOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
       </label>
 
       <label>

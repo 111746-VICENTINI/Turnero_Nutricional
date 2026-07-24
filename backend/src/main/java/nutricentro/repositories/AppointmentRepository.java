@@ -72,21 +72,4 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
             @Param("statuses") Collection<AppointmentStatus> statuses
     );
 
-    /** Busca controles realizados para calcular seguimiento sin persistir datos derivados. */
-    @Query("""
-    select appointment
-    from AppointmentEntity appointment
-    join fetch appointment.patient patient
-    join fetch appointment.professional professional
-    where appointment.status = :status
-    and appointment.date <= :date
-    and patient.status = nutricentro.enums.PersonStatus.ACTIVE
-    and (:professionalId is null or professional.id = :professionalId)
-    order by appointment.date desc, appointment.time desc
-    """)
-    List<AppointmentEntity> findValidCompletedAppointmentsForFollowUp(
-            @Param("status") AppointmentStatus status,
-            @Param("date") LocalDate date,
-            @Param("professionalId") Long professionalId
-    );
 }

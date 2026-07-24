@@ -4,6 +4,7 @@ import { Button } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import {MedicalHistoryResponseDTO, NutritionalDataDTO} from '../models/history-clinical-model';
+import {GenderType} from '../../../shared/enums/genders';
 import { TabAnthropometry } from '../tabs/tab-anthropometry/tab-anthropometry';
 import { TabClinicalData } from '../tabs/tab-clinical-data/tab-clinical-data';
 import { TabConsultations } from '../tabs/tab-consultations/tab-consultations';
@@ -47,6 +48,7 @@ import {formatLocalTime} from '../../../shared/utils/date-utils';
 export class HistoryTabs {
   @Input() nutritionData?: NutritionalDataDTO;
   @Input({ required: true }) history!: MedicalHistoryResponseDTO;
+  @Input() patientGender?: GenderType | null;
   @Input() appointments: AppointmentResponseDTO[] = [];
   @Input() communicationEvents: Array<{
     appointmentId: number;
@@ -63,6 +65,7 @@ export class HistoryTabs {
   @Output() historyChanged = new EventEmitter<void>();
   @Output() activeTabChanged = new EventEmitter<string>();
   @Output() appointmentSelected = new EventEmitter<number>();
+  @Output() consultationFinalized = new EventEmitter<void>();
 
   readonly statusSeverity = APPOINTMENT_STATUS_SEVERITY;
 
@@ -77,6 +80,10 @@ export class HistoryTabs {
 
   openAppointment(appointmentId: number): void {
     this.appointmentSelected.emit(appointmentId);
+  }
+
+  notifyConsultationFinalized(): void {
+    this.consultationFinalized.emit();
   }
 
   statusLabel(status: AppointmentStatus): string {

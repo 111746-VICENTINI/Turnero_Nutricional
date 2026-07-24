@@ -2,9 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, finalize, forkJoin, of, switchMap } from 'rxjs';
-import { MessageService} from 'primeng/api';
+import { ConfirmationService, MessageService} from 'primeng/api';
 import { Button } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
+import { FormGeneric } from '../../shared/components/form-generic/form-generic';
+import { GenericFormField } from '../../shared/components/form-generic/model/form-model';
 import { HistoryTabs } from './history-tabs/history-tabs';
 import {
   AntropometryResponseDTO,
@@ -13,24 +17,24 @@ import {
   MedicalHistoryResponseDTO,
   NutritionalDataDTO, PatientCommunicationItem,
 } from './models/history-clinical-model';
-import { PatientResponseDTO } from '../patients/models/patient-model';
+import { PatientResponseDTO, PatientUpdateDTO } from '../patients/models/patient-model';
 import { PatientService } from '../patients/services/patient-service';
 import { HistoryClinicalService } from './services/history-clinical-service';
-import { Gender_Labels } from '../../shared/enums/genders';
-import { PERSON_STATUS_LABELS, PersonStatus } from '../../shared/enums/person-status';
+import { Gender_Labels, Gender_Options } from '../../shared/enums/genders';
+import { PERSON_STATUS_LABELS, PERSON_STATUS_OPTIONS, PersonStatus } from '../../shared/enums/person-status';
 import { AppointmentDetailDrawer } from '../appointments/appointment-detail-drawer/appointment-detail-drawer';
 import { AppointmentResponseDTO, AppointmentTimelineEventResponseDTO } from '../appointments/models/appointment-model';
 import { AppointmentService } from '../appointments/services/appointment-service';
 import { AppointmentStatus } from '../../shared/enums/appointment-status';
-import {formatLocalTime} from '../../shared/utils/date-utils';
+import {formatLocalTime, toIsoLocalDate} from '../../shared/utils/date-utils';
 import { FollowUpService } from '../../core/services/follow-up-service';
 import { PatientFollowUpStatusDTO } from '../../core/models/follow-up-model';
 
 @Component({
   selector: 'app-history-clinical',
   standalone: true,
-  imports: [CommonModule, ToastModule, HistoryTabs, Button, AppointmentDetailDrawer],
-  providers: [MessageService],
+  imports: [CommonModule, ToastModule, ConfirmDialogModule, DialogModule, FormGeneric, HistoryTabs, Button, AppointmentDetailDrawer],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './history-clinical.html',
   styleUrl: './history-clinical.css',
 })
@@ -40,6 +44,7 @@ export class HistoryClinical implements OnInit {
   private historyService = inject(HistoryClinicalService);
   private appointmentService = inject(AppointmentService);
   private followUpService = inject(FollowUpService);
+  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
 
@@ -58,6 +63,20 @@ export class HistoryClinical implements OnInit {
   appointmentContextId?: number;
   selectedAppointmentId?: number;
   appointmentDrawerVisible = false;
+  summaryExpanded = false;
+  patientEditDialogVisible = false;
+  patientSaving = false;
+  patientEditInitialValues: Record<string, any> = {};
+  readonly patientEditFields: GenericFormField[] = [
+    { name: 'firstName', label: 'Nombre', type: 'text', required: true, minLength: 3, maxLength: 100 },
+    { name: 'lastName', label: 'Apellido', type: 'text', required: true, minLength: 3, maxLength: 100 },
+    { name: 'document', label: 'Documento', type: 'numeric', required: true, pattern: /^[0-9]{7,8}$/ },
+    { name: 'birthDate', label: 'Fecha de nacimiento', type: 'date', required: true },
+    { name: 'email', label: 'Email', type: 'email' },
+    { name: 'mobile', label: 'Telefono', type: 'numeric', pattern: /^\+?[0-9\s\-]{6,20}$/ },
+    { name: 'gender', label: 'Genero', type: 'select', options: Gender_Options },
+    { name: 'status', label: 'Estado', type: 'select', options: PERSON_STATUS_OPTIONS },
+  ];
 
   ngOnInit(): void {
     const patientId = Number(this.route.snapshot.paramMap.get('id'));
@@ -169,6 +188,43 @@ export class HistoryClinical implements OnInit {
     return this.history?.consultations?.[0];
   }
 
+  get contextConsultation(): ConsultationResponseDTO | undefined {
+    if (!this.appointmentContextId) {
+      return undefined;
+    }
+
+    return this.history?.consultations?.find((consultation) => consultation.appointmentId === this.appointmentContextId);
+  }
+
+  get activeConsultation(): ConsultationResponseDTO | undefined {
+    const context = this.contextConsultation;
+    if (context && context.status !== 'FINALIZADA') {
+      return context;
+    }
+
+    return this.history?.consultations?.find((consultation) => consultation.status !== 'FINALIZADA');
+  }
+
+  get canFinalizeContextConsultation(): boolean {
+    return !!this.activeConsultation;
+  }
+
+  get isNewPatient(): boolean {
+    return !(this.history?.consultations?.length);
+  }
+
+  get shouldShowFollowUp(): boolean {
+    return !!this.visibleFollowUpStatus;
+  }
+
+  get visibleFollowUpStatus(): PatientFollowUpStatusDTO | null {
+    if (!this.followUpStatus || this.isNewPatient || this.followUpStatus.status === 'WITHOUT_VALID_CONSULTATION') {
+      return null;
+    }
+
+    return this.followUpStatus;
+  }
+
   get followUpTone(): string {
     const status = this.followUpStatus?.status;
     if (status === 'OVER_ONE_YEAR') {
@@ -242,16 +298,22 @@ export class HistoryClinical implements OnInit {
   }
 
   get primaryGoal(): string {
-    return this.latestConsultation?.goal || this.activePlan?.title || 'Definir objetivo';
+    return this.latestConsultation?.goal || this.activePlan?.title || 'Objetivo nutricional';
   }
 
   get nextConsultationText(): string {
+    if (this.isNewPatient && !this.nextAppointment) {
+      return `Primera consulta ${this.formatDate(new Date())}`;
+    }
     return this.nextAppointment
       ? `${this.formatDate(this.nextAppointment.date)} ${this.formatTime(this.nextAppointment.time)}`
       : this.latestConsultation?.nextConsultation || 'Sin turno programado';
   }
 
   get lastConsultationSummary(): string {
+    if (this.isNewPatient) {
+      return 'Paciente nuevo';
+    }
     return (
       this.latestConsultation?.observations ||
       this.latestConsultation?.treatment ||
@@ -529,6 +591,94 @@ export class HistoryClinical implements OnInit {
     window.open(this.whatsappUrl, '_blank', 'noopener');
   }
 
+  openEmail(): void {
+    const email = this.patient?.email?.trim();
+    if (!email) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Email no disponible',
+        detail: 'El paciente no posee un correo electrónico registrado.'
+      });
+      return;
+    }
+
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('Historia clinica - ' + this.patientName)}`;
+  }
+
+  toggleSummary(): void {
+    this.summaryExpanded = !this.summaryExpanded;
+  }
+
+  openPatientEditDialog(): void {
+    if (!this.patient) {
+      return;
+    }
+    this.patientEditInitialValues = {
+      firstName: this.patient.firstName,
+      lastName: this.patient.lastName,
+      document: this.patient.document,
+      birthDate: this.patient.birthDate,
+      email: this.patient.email,
+      mobile: this.patient.mobile,
+      gender: this.patient.gender,
+      status: this.patient.status,
+    };
+    this.patientEditDialogVisible = true;
+  }
+
+  closePatientEditDialog(): void {
+    if (this.patientSaving) {
+      return;
+    }
+    this.patientEditDialogVisible = false;
+  }
+
+  savePatient(values: Record<string, any>): void {
+    if (!this.patient) {
+      return;
+    }
+    const request: PatientUpdateDTO = {
+      firstName: values['firstName'],
+      lastName: values['lastName'],
+      document: values['document'],
+      birthDate: toIsoLocalDate(values['birthDate']),
+      email: values['email'],
+      mobile: values['mobile'],
+      gender: values['gender'],
+      status: values['status'],
+      address: this.patient.address,
+    };
+
+    this.patientSaving = true;
+    this.patientService.updatePatient(this.patient.id, request).subscribe({
+      next: (patient) => {
+        this.patient = patient;
+        if (this.history) {
+          this.history = {
+            ...this.history,
+            patient,
+            patientId: patient.id
+          };
+        }
+        this.patientSaving = false;
+        this.patientEditDialogVisible = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Paciente actualizado',
+          detail: 'Los datos personales quedaron actualizados.',
+        });
+      },
+      error: () => {
+        this.patientSaving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo actualizar',
+          detail: 'Revisa los datos del paciente e intenta nuevamente.',
+        });
+      },
+    });
+  }
+
   selectTab(tab: string): void {
     this.onTabChanged(tab);
     document.querySelector('.clinical-tabs')?.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -552,6 +702,83 @@ export class HistoryClinical implements OnInit {
     this.appointmentDrawerVisible = true;
   }
 
+  finalizeContextConsultation(): void {
+    const consultation = this.activeConsultation;
+    if (!consultation) {
+      return;
+    }
+
+    this.historyService.updateConsultation(consultation.id, {
+      ...consultation,
+      date: consultation.date ?? new Date().toISOString().slice(0, 10),
+      status: 'FINALIZADA',
+      endTime: this.currentTime()
+    }).subscribe({
+      next: () => {
+        this.refreshHistory();
+        this.showPostFinalizeDialog();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo finalizar',
+          detail: 'Revisa el estado del turno e intenta nuevamente.'
+        });
+      }
+    });
+  }
+
+  onConsultationFinalizedFromTab(): void {
+    this.showPostFinalizeDialog();
+  }
+
+  private showPostFinalizeDialog(): void {
+    this.confirmationService.confirm({
+      header: 'Consulta finalizada correctamente.',
+      message: `La consulta fue finalizada correctamente.\n\nDesea agendar ahora el proximo control de ${this.patientName}?`,
+      icon: 'pi pi-calendar-plus',
+      acceptLabel: 'Agendar proximo control',
+      rejectLabel: 'Volver a Agenda',
+      accept: () => this.createNextControlAppointment(),
+      reject: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Consulta finalizada',
+          detail: 'La consulta fue guardada correctamente.'
+        });
+        this.router.navigateByUrl(this.agendaReturnUrl());
+      }
+    });
+  }
+
+  private createNextControlAppointment(): void {
+    const appointment = this.appointments.find((item) => item.id === this.appointmentContextId);
+    this.router.navigate(['/agenda/create'], {
+      queryParams: {
+        patientId: this.patient?.id,
+        professionalId: appointment?.professionalId ?? this.activeConsultation?.professionalId ?? this.history?.professionalId,
+        feeType: 'CONTROL',
+        returnTo: this.withQueryParam(this.agendaReturnUrl(), 'success', 'next-control'),
+        navigateAfterSave: true
+      }
+    });
+  }
+
+  private agendaReturnUrl(): string {
+    const configuredReturnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    if (configuredReturnTo) {
+      return configuredReturnTo;
+    }
+
+    const appointment = this.appointments.find((item) => item.id === this.appointmentContextId);
+    return appointment?.date ? `/agenda?date=${appointment.date}&view=day` : '/agenda';
+  }
+
+  private withQueryParam(url: string, key: string, value: string): string {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  }
+
   createAppointment(): void {
     const returnTo = this.patient?.id
       ? `/medical-history/${this.patient.id}?tab=appointments`
@@ -563,6 +790,15 @@ export class HistoryClinical implements OnInit {
         returnTo
       }
     });
+  }
+
+  private currentTime(): string {
+    const date = new Date();
+    return [
+      String(date.getHours()).padStart(2, '0'),
+      String(date.getMinutes()).padStart(2, '0'),
+      String(date.getSeconds()).padStart(2, '0')
+    ].join(':');
   }
 
   activatePatient(): void {
@@ -653,11 +889,6 @@ export class HistoryClinical implements OnInit {
         this.history = updatedHistory;
         this.nutritionData = updatedHistory.nutritionalData ?? undefined;
         this.loadAppointments(updatedHistory.patientId);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Consulta iniciada',
-          detail: 'La consulta quedo vinculada al turno.',
-        });
       },
       error: (error) => {
         this.loading = false;
@@ -739,14 +970,36 @@ export class HistoryClinical implements OnInit {
         ? 'success'
         : 'info';
 
+    const detail = this.translateAppointmentStatuses(
+      event.observations || event.reason || event.responsibleUsername || 'Sin observaciones'
+    );
+
     return {
       appointmentId: event.appointmentId,
       occurredAt: event.occurredAt,
       title: titleByType[event.eventType] ?? event.eventType,
-      detail: event.observations || event.reason || event.responsibleUsername || 'Sin observaciones',
+      detail,
       icon: event.eventType.includes('WHATSAPP') ? 'pi pi-whatsapp' : 'pi pi-calendar',
       tone
     };
+  }
+
+  private translateAppointmentStatuses(value: string): string {
+    const labels: Record<string, string> = {
+      PENDING: 'Pendiente',
+      CONFIRMED: 'Confirmado',
+      CANCELED: 'Cancelado',
+      PATIENT_PRESENT: 'Paciente presente',
+      COMPLETED: 'Consulta finalizada',
+      RESCHEDULED: 'Reprogramado',
+      ABSENT: 'Ausente',
+      REJECTED: 'Rechazado'
+    };
+
+    return Object.entries(labels).reduce(
+      (text, [status, label]) => text.replace(new RegExp(`\\b${status}\\b`, 'g'), label),
+      value
+    );
   }
 
   private formatValue(value: number | null | undefined, unit: string): string {

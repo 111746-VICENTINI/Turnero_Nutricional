@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FormGeneric } from '../../../../shared/components/form-generic/form-generic';
 import { GenericFormField } from '../../../../shared/components/form-generic/model/form-model';
 import { MedicalHistoryResponseDTO, NutritionalDataDTO } from '../../models/history-clinical-model';
@@ -8,7 +10,8 @@ import { HistoryClinicalService } from '../../services/history-clinical-service'
 
 @Component({
   selector: 'app-tab-nutritional-data',
-  imports: [CommonModule, FormGeneric],
+  imports: [CommonModule, ButtonModule, ConfirmDialogModule, FormGeneric],
+  providers: [ConfirmationService],
   templateUrl: './tab-nutritional-data.html',
   styleUrl: './tab-nutritional-data.css',
 })
@@ -17,6 +20,7 @@ export class TabNutritionalData implements OnChanges {
   @Output() saved = new EventEmitter<void>();
 
   private historyService = inject(HistoryClinicalService);
+  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
 
   form: NutritionalDataDTO = {};
@@ -37,7 +41,7 @@ export class TabNutritionalData implements OnChanges {
     { name: 'observations', label: 'Observaciones/notas', type: 'textarea', rows: 2 },
 
     { name: 'headerHydration', label: 'Hidratación', type: 'header' },
-    { name: 'waterIntake', label: 'Agua diaria', type: 'numeric', placeholder: 'Ej: 1.5 lts', suffix: 'lts', colSpan: 1 },
+    { name: 'waterIntake', label: 'Agua diaria', type: 'numeric', placeholder: 'Ej: 2.5', suffix: 'lts', colSpan: 1 },
     { name: 'drinksSoda', label: 'Gaseosas', type: 'checkbox' },
 
     { name: 'headerActivity', label: 'Actividad', type: 'header' },
@@ -50,7 +54,7 @@ export class TabNutritionalData implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['history']) {
-      this.form = { ...(this.history.nutritionalData ?? {}) };
+      this.restoreNutritionalData();
     }
   }
 
@@ -75,5 +79,21 @@ export class TabNutritionalData implements OnChanges {
         });
       },
     });
+  }
+
+  confirmRestore(): void {
+    this.confirmationService.confirm({
+      message: '¿Desea restaurar toda la información nutricional del paciente?',
+      header: 'Restaurar nutrición',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Restaurar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.restoreNutritionalData()
+    });
+  }
+
+  private restoreNutritionalData(): void {
+    this.form = { ...(this.history.nutritionalData ?? {}) };
   }
 }

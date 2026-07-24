@@ -3,15 +3,12 @@ package nutricentro.services.implementation;
 import lombok.RequiredArgsConstructor;
 import nutricentro.dtos.followup.FollowUpDashboardDTO;
 import nutricentro.dtos.followup.PatientFollowUpStatusDTO;
-import nutricentro.entities.AppointmentEntity;
 import nutricentro.entities.ConsultationEntity;
 import nutricentro.entities.PatientEntity;
-import nutricentro.enums.AppointmentStatus;
 import nutricentro.enums.ConsultationStatus;
 import nutricentro.enums.FollowUpStatus;
 import nutricentro.enums.NotificationPriority;
 import nutricentro.exception.ApiException;
-import nutricentro.repositories.AppointmentRepository;
 import nutricentro.repositories.ConsultationRepository;
 import nutricentro.repositories.PatientRepository;
 import nutricentro.services.CurrentProfessionalProvider;
@@ -28,18 +25,15 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class PatientFollowUpServiceImpl implements PatientFollowUpService {
 
-    private final AppointmentRepository appointmentRepository;
     private final ConsultationRepository consultationRepository;
     private final PatientRepository patientRepository;
     private final CurrentUserProvider currentUserProvider;
@@ -116,10 +110,6 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
         LocalDate today = LocalDate.now();
         Date consultationLimitDate = consultationLimitDate(today);
         Map<String, FollowUpCandidate> latest = new LinkedHashMap<>();
-        Set<Long> patientsWithFinalizedConsultation = patientsWithAnyFinalizedConsultation(
-                consultationLimitDate,
-                professionalId
-        );
 
         List<ConsultationEntity> finalizedConsultations = consultationRepository.findFinalizedConsultationsForFollowUp(
                 ConsultationStatus.FINALIZADA,
@@ -131,17 +121,6 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
             putLatest(latest, candidate, true);
         });
 
-        List<AppointmentEntity> completedAppointments = appointmentRepository.findValidCompletedAppointmentsForFollowUp(
-                AppointmentStatus.COMPLETED,
-                today,
-                professionalId
-        );
-        completedAppointments.stream()
-                .map(this::fromAppointment)
-                .filter(candidate -> candidate != null)
-                .filter(candidate -> !patientsWithFinalizedConsultation.contains(candidate.patientId()))
-                .forEach(candidate -> putLatest(latest, candidate, true));
-
         return latest;
     }
 
@@ -149,10 +128,6 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
         LocalDate today = LocalDate.now();
         Date consultationLimitDate = consultationLimitDate(today);
         Map<String, FollowUpCandidate> latest = new LinkedHashMap<>();
-        Set<Long> patientsWithFinalizedConsultation = patientsWithAnyFinalizedConsultation(
-                consultationLimitDate,
-                professionalId
-        );
 
         List<ConsultationEntity> finalizedConsultations = consultationRepository.findFinalizedConsultationsForFollowUp(
                 ConsultationStatus.FINALIZADA,
@@ -164,27 +139,7 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
             putLatest(latest, candidate, false);
         });
 
-        List<AppointmentEntity> completedAppointments = appointmentRepository.findValidCompletedAppointmentsForFollowUp(
-                AppointmentStatus.COMPLETED,
-                today,
-                professionalId
-        );
-        completedAppointments.stream()
-                .map(this::fromAppointment)
-                .filter(candidate -> candidate != null)
-                .filter(candidate -> !patientsWithFinalizedConsultation.contains(candidate.patientId()))
-                .forEach(candidate -> putLatest(latest, candidate, false));
-
         return latest;
-    }
-
-    private Set<Long> patientsWithAnyFinalizedConsultation(Date consultationLimitDate, Long professionalId) {
-        List<Long> patientIds = consultationRepository.findPatientIdsWithFinalizedConsultations(
-                ConsultationStatus.FINALIZADA,
-                consultationLimitDate,
-                professionalId
-        );
-        return patientIds == null ? Set.of() : new HashSet<>(patientIds);
     }
 
     private Date consultationLimitDate(LocalDate today) {
@@ -201,19 +156,6 @@ public class PatientFollowUpServiceImpl implements PatientFollowUpService {
                 : String.valueOf(candidate.patientId());
         latest.merge(key, candidate, (current, next) ->
                 current.lastConsultationDate().isAfter(next.lastConsultationDate()) ? current : next
-        );
-    }
-
-    private FollowUpCandidate fromAppointment(AppointmentEntity appointment) {
-        if (appointment.getPatient() == null || appointment.getProfessional() == null) {
-            return null;
-        }
-        return new FollowUpCandidate(
-                appointment.getPatient().getId(),
-                fullName(appointment.getPatient().getFirstName(), appointment.getPatient().getLastName()),
-                appointment.getProfessional().getId(),
-                fullName(appointment.getProfessional().getFirstName(), appointment.getProfessional().getLastName()),
-                appointment.getDate()
         );
     }
 

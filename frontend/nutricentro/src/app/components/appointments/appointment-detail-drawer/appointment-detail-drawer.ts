@@ -4,7 +4,6 @@ import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {catchError, finalize, forkJoin, of, switchMap} from 'rxjs';
 import {MessageService} from 'primeng/api';
-import {Avatar} from 'primeng/avatar';
 import {Button} from 'primeng/button';
 import {Card} from 'primeng/card';
 import {Divider} from 'primeng/divider';
@@ -36,7 +35,6 @@ import {ConsultationDraft, TimelineViewItem} from '../models/appointment-detail-
   imports: [
     CommonModule,
     FormsModule,
-    Avatar,
     Button,
     Card,
     DialogModule,
@@ -73,6 +71,7 @@ export class AppointmentDetailDrawer implements OnChanges {
   readonly professional = signal<ProfessionalResponseDTO | null>(null);
   readonly history = signal<MedicalHistoryResponseDTO | null>(null);
   readonly timeline = signal<AppointmentTimelineEventResponseDTO[]>([]);
+  readonly showFullTimeline = signal(false);
   readonly nextAppointment = signal<AppointmentResponseDTO | null>(null);
   consultationDraft: ConsultationDraft = this.emptyConsultationDraft();
   followUpDialogVisible = false;
@@ -101,6 +100,10 @@ export class AppointmentDetailDrawer implements OnChanges {
   });
 
   readonly timelineItems = computed(() => this.timeline().map(event => this.toTimelineItem(event)));
+  readonly displayedTimelineItems = computed(() => this.showFullTimeline()
+    ? this.timelineItems()
+    : this.timelineItems().slice(0, 10));
+  readonly hasMoreTimelineItems = computed(() => this.timelineItems().length > 10);
   readonly lastWhatsAppMessage = computed(() => this.lastEvent(['WHATSAPP_MESSAGE_SENT', 'WHATSAPP_MESSAGE_FAILED']));
   readonly lastReminder = computed(() => this.lastEvent(['WHATSAPP_REMINDER_SENT', 'WHATSAPP_REMINDER_FAILED']));
   readonly lastResponse = computed(() => this.lastEvent(['WHATSAPP_RESPONSE_RECEIVED', 'WHATSAPP_RESPONSE_AMBIGUOUS', 'WHATSAPP_RESPONSE_INVALID']));
@@ -143,6 +146,7 @@ export class AppointmentDetailDrawer implements OnChanges {
         this.history.set(history);
         this.timeline.set(timeline);
         this.nextAppointment.set(nextAppointment);
+        this.showFullTimeline.set(false);
         this.syncConsultationDraft();
         this.cdr.markForCheck();
       },
@@ -508,6 +512,10 @@ export class AppointmentDetailDrawer implements OnChanges {
       ONLINE: 'Online'
     };
     return type ? labels[type] : '-';
+  }
+
+  toggleTimeline(): void {
+    this.showFullTimeline.update(value => !value);
   }
 
   private syncConsultationDraft(): void {

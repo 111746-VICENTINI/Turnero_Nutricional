@@ -5,6 +5,7 @@
     </div>
 
     <p-button
+      *ngIf="canCreatePatient()"
       label="Nuevo Paciente"
       icon="pi pi-plus"
       (onClick)="createPatient()"

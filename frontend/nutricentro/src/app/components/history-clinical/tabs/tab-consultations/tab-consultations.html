@@ -30,8 +30,10 @@
                 [severity]="consultationSeverity(consultation.status)"
                 icon="pi pi-stethoscope">
               </p-tag>
-              <p-button icon="pi pi-copy" label="Duplicar" severity="secondary" [outlined]="true" size="small" (onClick)="duplicate(consultation)"></p-button>
-              <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [outlined]="true" size="small" (onClick)="openEdit(consultation)"></p-button>
+              @if (!isInProgressContext(consultation)) {
+                <p-button icon="pi pi-copy" label="Duplicar" severity="secondary" [outlined]="true" size="small" (onClick)="duplicate(consultation)"></p-button>
+                <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [outlined]="true" size="small" (onClick)="openEdit(consultation)"></p-button>
+              }
               @if (canFinalize(consultation)) {
                 <p-button icon="pi pi-verified" label="Finalizar" severity="success" size="small" [loading]="saving" (onClick)="finalize(consultation)"></p-button>
               }
@@ -40,10 +42,10 @@
           </div>
 
           <div class="consultation-meta">
-            <span><i class="pi pi-user"></i> Profesional {{ consultation.professionalId || '-' }}</span>
-            <span><i class="pi pi-clock"></i> {{ consultation.startTime || '-' }} - {{ consultation.endTime || '-' }} · {{ durationText(consultation) }}</span>
-            <span><i class="pi pi-calendar-plus"></i> Próximo turno: {{ consultation.nextConsultation || '-' }}</span>
-            @if (consultation.appointmentId) {
+            <span><i class="pi pi-clock"></i> Hora inicio {{ consultation.startTime || '-' }}</span>
+            <span><i class="pi pi-clock"></i> Hora fin {{ consultation.endTime || '-' }}</span>
+            <span><i class="pi pi-calendar-plus"></i> Proximo turno: {{ consultation.nextConsultation || '-' }}</span>
+            @if (consultation.appointmentId && !isInProgressContext(consultation)) {
               <button type="button" class="linked-appointment" (click)="openAppointment(consultation.appointmentId)">
                 <i class="pi pi-link"></i>
                 Turno #{{ consultation.appointmentId }}
@@ -57,7 +59,7 @@
               <p>{{ consultation.reason || '-' }}</p>
             </section>
             <section>
-              <span>Evolución</span>
+              <span>Evolucion</span>
               <p>{{ consultation.evolution || consultation.observations || consultation.diagnosis || '-' }}</p>
             </section>
             <section>
@@ -84,13 +86,13 @@
     [modal]="true"
     [closable]="false"
     [draggable]="false"
-    [style]="{ width: 'min(60rem, 94vw)' }"
+    [style]="{ width: 'min(72rem, 94vw)' }"
     [header]="selected ? 'Editar consulta' : 'Registrar consulta'">
     <app-form-generic
       [fields]="fields"
       [initialValues]="form"
       [isSubmitting]="saving"
-      [columnsPerRow]="2"
+      [columnsPerRow]="4"
       formWidth="full"
       [submitLabel]="selected ? 'Guardar cambios' : 'Registrar consulta'"
       cancelLabel="Cancelar"

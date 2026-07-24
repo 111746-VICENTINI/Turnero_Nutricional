@@ -1,8 +1,17 @@
 <section class="tab-surface">
+  <p-confirmDialog></p-confirmDialog>
   <div class="section-title">
     <div>
       <h2>Nutrición y habitos alimentarios</h2>
     </div>
+    <p-button
+      icon="pi pi-refresh"
+      label="Restaurar"
+      severity="secondary"
+      [outlined]="true"
+      type="button"
+      (onClick)="confirmRestore()">
+    </p-button>
   </div>
 
   <div class="edit-panel">
@@ -12,8 +21,8 @@
       [isSubmitting]="saving"
       [columnsPerRow]="4"
       formWidth="full"
-      submitLabel="Guardar nutricion"
-      cancelLabel="Restaurar"
+      submitLabel="Guardar nutrición"
+      [showCancel]="false"
       (formSubmit)="save($event)">
     </app-form-generic>
   </div>

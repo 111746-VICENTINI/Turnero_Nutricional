@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PatientRepository extends JpaRepository<PatientEntity, Long>, JpaSpecificationExecutor<PatientEntity> {
     boolean existsByDocument(Integer dni);
+    boolean existsByDocumentAndIdNot(Integer dni, Long id);
     boolean existsByEmail(String email);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

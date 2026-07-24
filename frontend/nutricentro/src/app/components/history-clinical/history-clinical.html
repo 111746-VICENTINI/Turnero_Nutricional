@@ -1,4 +1,5 @@
 <p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
 
 @if (loading) {
   <section class="history-shell">
@@ -49,30 +50,61 @@
         </div>
 
         <div class="patient-identity">
-          <h1>{{ patientName }}</h1>
+          <div class="patient-name-line">
+            <h1>{{ patientName }}</h1>
+            <p-button
+              icon="pi pi-pencil"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              size="small"
+              ariaLabel="Editar paciente"
+              (onClick)="openPatientEditDialog()">
+            </p-button>
+          </div>
           <div class="identity-meta">
-            <span>{{ patient.age || '-' }} años</span>
             <span>{{ genderLabels[patient.gender] || '-' }}</span>
             <span>DNI {{ patient.document }}</span>
-            <span>{{ statusLabels[patient.status] || patient.status }}</span>
             <span>Nac. {{ patient.birthDate ? (patient.birthDate | date: 'dd/MM/yyyy') : '-' }}</span>
+            <span>{{ patient.age || '-' }} años</span>
           </div>
         </div>
 
         <div class="contact-panel">
-          <span>{{ patient.mobile || 'Sin telefono' }}</span>
-          <span>{{ patient.email || 'Sin email' }}</span>
-          <p-button
-            icon="pi pi-whatsapp"
-            label="WhatsApp"
-            severity="success"
-            size="large"
-            (onClick)="openWhatsApp()">
-          </p-button>
+          <div class="contact-actions-row">
+            <p-button
+              icon="pi pi-whatsapp"
+              label="WhatsApp"
+              severity="success"
+              (onClick)="openWhatsApp()">
+            </p-button>
+            <p-button
+              icon="pi pi-envelope"
+              label="Email"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="openEmail()">
+            </p-button>
+          </div>
+
+          <div class="contact-actions-row">
+            <button type="button" class="summary-toggle" (click)="toggleSummary()">
+              <i [class]="summaryExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+              {{ summaryExpanded ? 'Contraer resumen' : 'Expandir resumen' }}
+            </button>
+            @if (canFinalizeContextConsultation) {
+              <p-button
+                icon="pi pi-verified"
+                label="Finalizar consulta"
+                severity="warn"
+                (onClick)="finalizeContextConsultation()">
+              </p-button>
+            }
+          </div>
         </div>
       </div>
 
-      @if (followUpStatus) {
+      @if (visibleFollowUpStatus; as followUp) {
         <section class="follow-up-card" [ngClass]="'follow-up-' + followUpTone">
           <div class="follow-up-icon">
             <i [class]="followUpIcon"></i>
@@ -80,22 +112,20 @@
 
           <div class="follow-up-body">
             <span>Seguimiento automatico</span>
-            <strong>{{ followUpStatus.label }}</strong>
-            <p>{{ followUpStatus.recommendation }}</p>
+            <strong>{{ followUp.label }}</strong>
+            <p>{{ followUp.recommendation }}</p>
           </div>
 
           <div class="follow-up-data">
             <span>Ultima consulta</span>
             <strong>
-              {{ followUpStatus.lastConsultationDate ? (followUpStatus.lastConsultationDate | date: 'dd/MM/yyyy') : '-' }}
+              {{ followUp.lastConsultationDate ? (followUp.lastConsultationDate | date: 'dd/MM/yyyy') : '-' }}
             </strong>
-            <small>
-              {{ followUpStatus.daysSinceLastConsultation ?? 0 }} días desde el ultimo control
-            </small>
           </div>
         </section>
       }
 
+      @if (summaryExpanded) {
       <div class="focus-row">
         <article>
           <span>Objetivo nutricional</span>
@@ -121,6 +151,7 @@
           <strong>{{ lastCommunicationText }}</strong>
         </article>
       </div>
+      }
 
       <!-- alertas -->
       <section class="alerts-panel" aria-label="Alertas clinicas">
@@ -152,7 +183,7 @@
         </div>
       </section>
 
-      @if (showSummaryActions) {
+      @if (summaryExpanded && showSummaryActions) {
         <nav class="quick-actions" aria-label="Acciones rapidas">
           <p-button icon="pi pi-plus" label="Nueva consulta" (onClick)="selectTab('consultations')"></p-button>
           <p-button icon="pi pi-calendar-plus" label="Nuevo turno" severity="secondary" [outlined]="true" (onClick)="createAppointment()"></p-button>
@@ -163,6 +194,7 @@
     </header>
 
   <!-- cards -->
+  @if (summaryExpanded) {
     <section class="metric-board" aria-label="Metricas rapidas">
       @for (metric of quickMetrics; track metric.label) {
         <article class="metric-card" [ngClass]="'metric-' + metric.tone">
@@ -172,10 +204,12 @@
         </article>
       }
     </section>
+  }
 
     <app-history-tabs
       [nutritionData]="nutritionData"
       [history]="history"
+      [patientGender]="patient.gender"
       [appointments]="appointments"
       [communicationEvents]="communicationEvents"
       [communicationsLoading]="communicationsLoading"
@@ -183,6 +217,7 @@
       [appointmentContextId]="appointmentContextId"
       (activeTabChanged)="onTabChanged($event)"
       (appointmentSelected)="openAppointmentDetail($event)"
+      (consultationFinalized)="onConsultationFinalizedFromTab()"
       (historyChanged)="refreshHistory()">
     </app-history-tabs>
 
@@ -191,6 +226,26 @@
       [appointmentId]="selectedAppointmentId"
       (appointmentUpdated)="loadPatientAndHistory(patient.id)">
     </app-appointment-detail-drawer>
+
+    <p-dialog
+      [(visible)]="patientEditDialogVisible"
+      [modal]="true"
+      [draggable]="false"
+      [style]="{ width: 'min(46rem, 94vw)' }"
+      header="Editar paciente">
+      <app-form-generic
+        [fields]="patientEditFields"
+        [initialValues]="patientEditInitialValues"
+        [isSubmitting]="patientSaving"
+        [columnsPerRow]="2"
+        formWidth="full"
+        fontSize="sm"
+        submitLabel="Guardar cambios"
+        cancelLabel="Cancelar"
+        (formSubmit)="savePatient($event)"
+        (formCancel)="closePatientEditDialog()">
+      </app-form-generic>
+    </p-dialog>
   </section>
 } @else {
   <section class="history-shell">

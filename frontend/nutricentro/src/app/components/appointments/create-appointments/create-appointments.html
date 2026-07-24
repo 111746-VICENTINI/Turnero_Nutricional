@@ -20,20 +20,20 @@
             </div>
             @if (selectedPatient) {
               <p-button label="Quitar paciente" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="clearSelectedPatient()"></p-button>
-            } @else if (patientSearch.length >= 2) {
-              <p-button label="Crear paciente" icon="pi pi-user-plus" severity="secondary" [outlined]="true" (onClick)="openCreatePatientDialog()"></p-button>
+            } @else {
+              <p-button label="Crear paciente" icon="pi pi-user-plus" severity="secondary" [outlined]="true" [disabled]="!canOpenCreatePatient" (onClick)="openCreatePatientDialog()"></p-button>
             }
           </div>
 
           <label class="search-field">
-            <span>Buscar por nombre, apellido, DNI o telefono</span>
+            <span>Buscar por nombre, apellido, DNI o teléfono <b class="required-mark">*</b></span>
             <i class="pi pi-search"></i>
             <input
               #patientSearchInput
               type="search"
               [ngModel]="patientSearch"
               (ngModelChange)="onPatientSearchChange($event)"
-              placeholder="Ej: Gomez, 30111222 o 351..."
+              placeholder="Busca un paciente si ya está agendado"
               aria-label="Buscar paciente"
             />
           </label>
@@ -76,12 +76,6 @@
                   <div class="empty-inline">
                     <i class="pi pi-user"></i>
                     <span>No hay pacientes para esa búsqueda.</span>
-                    <p-button label="Crear paciente" icon="pi pi-user-plus" size="small" (onClick)="openCreatePatientDialog()"></p-button>
-                  </div>
-                } @else {
-                  <div class="helper-inline">
-                    <i class="pi pi-bolt"></i>
-                    <span>El primer foco queda aca para agendar sin perder tiempo.</span>
                   </div>
                 }
               }
@@ -103,7 +97,7 @@
           @if (!isProfessionalOnly) {
             <div class="professional-filters">
               <label>
-                <span>Buscar profesional</span>
+                <span>Buscar profesional <b class="required-mark">*</b></span>
                 <input type="search" [(ngModel)]="professionalSearch" placeholder="Nombre o apellido" [disabled]="!selectedPatient" />
               </label>
               <label>
@@ -127,7 +121,7 @@
                 type="button"
                 class="professional-card"
                 [class.selected]="selectedProfessional?.id === professional.id"
-                [disabled]="!selectedPatient"
+                [disabled]="!selectedPatient || isProfessionalOnly"
                 (click)="selectProfessional(professional)">
                 <strong>{{ professional.firstName }} {{ professional.lastName }}</strong>
                 <span>{{ specialtyText(professional) }}</span>
@@ -146,16 +140,18 @@
           <div class="block-heading">
             <div>
               <span class="step-kicker">3</span>
-              <h2>Agenda del profesional</h2>
+              <h2>Agenda del profesional <b class="required-mark">*</b></h2>
             </div>
             <p-datepicker
+              styleClass="agenda-date-picker"
               [(ngModel)]="selectedCalendarDate"
               dateFormat="dd/mm/yy"
               [showIcon]="true"
               [disabled]="!selectedProfessional"
               [minDate]="minDate"
               appendTo="body"
-              (ngModelChange)="onDateChange($event)">
+              (ngModelChange)="onDateChange($event)"
+              (onSelect)="onDateChange($event)">
             </p-datepicker>
           </div>
 
@@ -220,36 +216,6 @@
                   }
                 </div>
               }
-            </div>
-
-            <div class="busy-panel">
-              <div class="panel-title">
-                <strong>Ocupados</strong>
-                @if (loadingBusySlots) {
-                  <span><i class="pi pi-spin pi-spinner"></i></span>
-                } @else {
-                  <span>{{ occupiedAppointments.length }}</span>
-                }
-              </div>
-
-              <div class="busy-list">
-                @for (appointment of occupiedAppointments; track appointment.id) {
-                  <article class="busy-card">
-                    <strong>{{ formatTime(appointment.time) }}</strong>
-                    <span>{{ appointment.patientFullName }}</span>
-                    <p-tag
-                      [value]="statusLabels[appointment.status]"
-                      [icon]="statusIcon[appointment.status]"
-                      [severity]="statusSeverity[appointment.status]">
-                    </p-tag>
-                  </article>
-                } @empty {
-                  <div class="empty-inline compact">
-                    <i class="pi pi-check-circle"></i>
-                    <span>No hay turnos ocupados.</span>
-                  </div>
-                }
-              </div>
             </div>
           </div>
         </section>
@@ -353,27 +319,19 @@
       [style]="{width: '34rem'}">
       <div class="create-patient-form">
         <label>
-          <span>Nombre</span>
+          <span>Nombre <b class="required-mark">*</b></span>
           <input type="text" [(ngModel)]="newPatient.firstName" autocomplete="given-name" />
         </label>
         <label>
-          <span>Apellido</span>
+          <span>Apellido <b class="required-mark">*</b></span>
           <input type="text" [(ngModel)]="newPatient.lastName" autocomplete="family-name" />
         </label>
         <label>
-          <span>WhatsApp</span>
-          <input type="tel" [(ngModel)]="newPatient.mobile" autocomplete="tel" />
-        </label>
-        <label>
-          <span>DNI</span>
+          <span>DNI <b class="required-mark">*</b></span>
           <input type="number" [(ngModel)]="newPatient.document" />
         </label>
         <label>
-          <span>Fecha de nacimiento</span>
-          <input type="date" [(ngModel)]="newPatient.birthDate" />
-        </label>
-        <label>
-          <span>Género</span>
+          <span>Género <b class="required-mark">*</b></span>
           <p-select
             [(ngModel)]="newPatient.gender"
             [options]="genderOptions"
@@ -381,6 +339,14 @@
             optionValue="value"
             appendTo="body">
           </p-select>
+        </label>
+        <label>
+          <span>Fecha de nacimiento <b class="required-mark">*</b></span>
+          <input type="date" [(ngModel)]="newPatient.birthDate" />
+        </label>
+        <label>
+          <span>WhatsApp <b class="required-mark">*</b></span>
+          <input type="tel" [(ngModel)]="newPatient.mobile" autocomplete="tel" />
         </label>
         <label class="wide">
           <span>Email</span>

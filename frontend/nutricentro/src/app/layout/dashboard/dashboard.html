@@ -1,41 +1,62 @@
-<div class="dashboard-container">
+<section class="dashboard-shell">
   <header class="dashboard-header">
-    <h1>Bienvenida {{ getFullName() }}</h1>
+    <div>
+      <span class="eyebrow">Panel Administrativo</span>
+      <h1> Hola {{getFullName()}}! </h1>
+    </div>
+
+<!--    <div class="date-chip">-->
+<!--      <i class="pi pi-calendar"></i>-->
+<!--      <span>{{ getDashboardDate() }}</span>-->
+<!--      <strong>{{ getDashboardTime() }}</strong>-->
+<!--    </div>-->
   </header>
 
-  <div class="stats-grid">
-    <p-card>
-      <div class="stat-card">
-        <i class="pi pi-users"></i>
-        <span class="number">{{ patientsCount }}</span>
-        <span class="label">Pacientes</span>
+  @if (loadError) {
+    <p class="dashboard-error">No se pudieron cargar los datos del Dashboard.</p>
+  } @else {
+    @if (loading) {
+      <div class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
       </div>
-    </p-card>
+    } @else {
+      <section class="dashboard-section">
+        <div class="section-heading">
+          <span class="eyebrow">Estado del dia</span>
+        </div>
 
-    <p-card>
-      <div class="stat-card">
-        <i class="pi pi-calendar"></i>
-        <span class="number">{{ todayAppointments }}</span>
-        <span class="label">Turnos hoy</span>
-      </div>
-    </p-card>
+        <div class="kpi-grid">
+          @for (metric of todayMetrics; track metric.label) {
+            <article class="kpi-card" [class]="'tone-' + metric.tone">
+              <div class="card-icon">
+                <i [class]="metric.icon"></i>
+              </div>
+              <strong>{{ metric.value }}</strong>
+              <span>{{ metric.label }}</span>
+              <small>{{ metric.description }}</small>
+            </article>
+          }
+        </div>
+      </section>
 
-    <p-card>
-      <div class="stat-card">
-        <i class="pi pi-user"></i>
-        <span class="number">{{ professionalsCount }}</span>
-        <span class="label">Profesionales</span>
-      </div>
-    </p-card>
-  </div>
+      <section class="dashboard-section">
+        <div class="section-heading">
+          <span class="eyebrow">Actividad del mes</span>
+        </div>
 
-  <app-table-generic
-    [title]="'Próximos turnos'"
-    [data]="upcomingAppointments"
-    formWidth="full"
-    fontSize="md"
-    [columns]="appointmentColumns"
-    [showGlobalFilter]="false"
-    [showPagination]="false"
-  ></app-table-generic>
-</div>
+        <div class="activity-grid">
+          @for (metric of activityMetrics; track metric.label) {
+            <article class="activity-card" [class]="'tone-' + metric.tone">
+              <div class="card-icon">
+                <i [class]="metric.icon"></i>
+              </div>
+              <strong>{{ metric.value }}</strong>
+              <span>{{ metric.label }}</span>
+              <small>{{ metric.description }}</small>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

@@ -44,38 +44,42 @@ export class LoginForm {
   readonly termsSections = [
     {
       title: '1. Alcance y uso autorizado',
-      text: 'Nutri Centro es una herramienta de gestión profesional para consultorios nutricionales.' +
-        ' Su uso esta reservado exclusivamente a usuarios autorizados por la institucion, de acuerdo con el rol asignado: administración, secretaria o profesional.'
+      text: 'NutriCentro es un sistema de gestión para consultorios nutricionales. Su uso está reservado a usuarios autorizados, de acuerdo con el rol asignado y las funciones habilitadas para tareas administrativas, de secretaría o de atención profesional.'
     },
     {
       title: '2. Información confidencial',
       text: 'El sistema puede contener datos personales, turnos, agenda, historia clínica, antropometrías, resultados de laboratorio, consultas, archivos clínicos, planes alimentarios y otra información sensible de pacientes.' +
-        ' Toda informacion consultada o cargada debe tratarse como confidencial.'
+        ' Toda informacion consultada, cargada o modificada debe tratarse de manera confidencial y utilizarse únicamente para la prestación del servicio correspondiente.'
     },
     {
-      title: '3. Responsabilidad del usuario',
-      text: 'Cada usuario es responsable por la veracidad, pertinencia y actualización de la información que registra, modifica o consulta. El acceso a datos clínicos debe responder a una finalidad profesional legítima vinculada con la atención, administración o seguimiento del paciente.'
+      title: '3. Protección de datos personales',
+      text: 'NutriCentro asume el compromiso de proteger la privacidad y confidencialidad de los datos personales almacenados en el sistema, especialmente la información clínica y de salud. ' +
+        'Los datos serán utilizados únicamente para la gestión de turnos, atención nutricional, seguimiento profesional, administración del consultorio y demás finalidades necesarias para el funcionamiento del servicio.'
     },
     {
-      title: '4. Credenciales y sesiones',
-      text: 'Las credenciales son personales e intransferibles. Está prohibido compartir usuario, contraseña, tokens de acceso o sesiones abiertas. En equipos compartidos o de uso público, el usuario debe cerrar sesión al finalizar y evitar que terceros visualicen información protegida.'
+      title: '4. Derechos del titular de los datos',
+      text: 'Conforme a la Ley N.º 25.326 de Protección de los Datos Personales de la República Argentina, el usuario tiene derecho a decidir o autorizar de forma libre,' +
+        ' previa, expresa e informada la recolección, uso y tratamiento de sus datos personales. Asimismo, tiene derecho a conocer qué información posee el sistema sobre su persona, acceder a ella, solicitar su actualización, rectificación, supresión cuando corresponda y controlar el tratamiento que se realiza de dicha información.'
     },
     {
-      title: '5. Acceso según roles',
-      text: 'Las funciones y datos disponibles dependen de los permisos configurados para cada rol. Intentar acceder, divulgar, extraer o modificar información fuera de las responsabilidades asignadas constituye un uso indebido del sistema.'
+      title: '5. Supresión de datos personales',
+      text: 'NutriCentro pone a disposición de sus usuarios un mecanismo para solicitar la eliminación de los datos personales almacenados cuando dejen de utilizar la aplicación, independientemente de su desinstalación. ' +
+        'La solicitud será gestionada conforme a la normativa vigente, las obligaciones legales de conservación de la información y las necesidades derivadas de la atención profesional registrada.'
     },
     {
-      title: '6. Protección de datos y normativa aplicable',
-      text: 'El usuario se compromete a utilizar el sistema respetando la normativa de privacidad, protección de datos personales, secreto profesional y confidencialidad aplicable. ' +
-        'La información clínica debe emplearse unicamente para fines asistenciales, administrativos o profesionales autorizados.'
+      title: '6. Comunicaciones relacionadas con la atención',
+      text: 'El sistema podrá contactar al usuario únicamente para comunicaciones necesarias relacionadas con turnos, recordatorios, cambios de agenda o información requerida para la atención. ' +
+        'Estas comunicaciones podrán realizarse por correo electrónico, WhatsApp u otros medios informados, sin fines comerciales.'
     },
     {
-      title: '7. Uso adecuado del sistema',
-      text: 'No se permite utilizar el sistema para acciones que comprometan su seguridad, disponibilidad, integridad de datos o trazabilidad. Cualquier error, acceso indebido, pérdida de confidencialidad o sospecha de incidente debe informarse a la administración responsable.'
+      title: '7. Responsabilidad del usuario',
+      text: 'Cada usuario es responsable por la veracidad, pertinencia y actualización de la información que registra, consulta o modifica. ' +
+        'Las credenciales de acceso son personales e intransferibles, y el usuario debe evitar accesos indebidos, uso no autorizado o divulgación de información protegida..'
     },
     {
       title: '8. Aceptación',
-      text: 'Al aceptar estos términos, el usuario declara haberlos leído y comprendido, y se compromete a cumplirlos durante todo el uso del sistema Nutri Centro.'
+      text: 'Al aceptar estos Términos y Condiciones, el usuario declara haberlos leído y comprendido, y se compromete a utilizar NutriCentro respetando la confidencialidad,' +
+        ' la protección de datos personales, el secreto profesional y la normativa vigente aplicable.'
     }
   ];
 

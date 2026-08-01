@@ -50,4 +50,10 @@ public class ClinicalFileEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medical_history_id", nullable = false)
     private MedicalHistoryEntity medicalHistory;
+
+    // Optional consultation context. Historical records can remain null.
+    // Never infer this relation from dates or an active consultation.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consultation_id")
+    private ConsultationEntity consultation;
 }

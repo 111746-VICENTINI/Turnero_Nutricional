@@ -4,6 +4,7 @@ import { environment } from '../../../enviroment/enviroment';
 import {
   AntropometryRequestDTO,
   AntropometryResponseDTO,
+  ClinicalImportPreviewDTO,
   ClinicalDataDTO,
   ClinicalFileResponseDTO,
   ConsultationRequestDTO,
@@ -47,6 +48,22 @@ export class HistoryClinicalService {
     return this.http.post<LaboratoryResponseDTO>(`${this.historyUrl}/${historyId}/laboratory`, request);
   }
 
+  previewLaboratoryImport(historyId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ClinicalImportPreviewDTO>(
+      `${this.historyUrl}/${historyId}/laboratory/import/preview`,
+      formData
+    );
+  }
+
+  confirmLaboratoryImport(historyId: number, request: LaboratoryRequestDTO) {
+    return this.http.post<LaboratoryResponseDTO>(
+      `${this.historyUrl}/${historyId}/laboratory/import/confirm`,
+      request
+    );
+  }
+
   updateLaboratory(laboratoryId: number, request: LaboratoryRequestDTO) {
     return this.http.put<LaboratoryResponseDTO>(`${this.historyUrl}/laboratory/${laboratoryId}`, request);
   }
@@ -58,6 +75,22 @@ export class HistoryClinicalService {
   addAnthropometry(historyId: number, request: AntropometryRequestDTO) {
     return this.http.post<AntropometryResponseDTO>(
       `${this.historyUrl}/${historyId}/anthropometry`,
+      request
+    );
+  }
+
+  previewAnthropometryImport(historyId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ClinicalImportPreviewDTO>(
+      `${this.historyUrl}/${historyId}/anthropometry/import/preview`,
+      formData
+    );
+  }
+
+  confirmAnthropometryImport(historyId: number, request: AntropometryRequestDTO) {
+    return this.http.post<AntropometryResponseDTO>(
+      `${this.historyUrl}/${historyId}/anthropometry/import/confirm`,
       request
     );
   }

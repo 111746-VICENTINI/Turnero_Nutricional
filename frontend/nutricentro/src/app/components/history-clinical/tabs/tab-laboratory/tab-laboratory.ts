@@ -10,7 +10,9 @@ import {
   TableActionConfig,
   TableColumnConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
+import { ClinicalImportDialog } from '../../components/clinical-import-dialog/clinical-import-dialog';
 import {
+  ClinicalImportPreviewDTO,
   LaboratoryRequestDTO,
   LaboratoryResponseDTO,
   MedicalHistoryResponseDTO,
@@ -19,7 +21,7 @@ import { HistoryClinicalService } from '../../services/history-clinical-service'
 
 @Component({
   selector: 'app-tab-laboratory',
-  imports: [CommonModule, ButtonModule, DialogModule, FormGeneric, TableGeneric],
+  imports: [CommonModule, ButtonModule, DialogModule, FormGeneric, TableGeneric, ClinicalImportDialog],
   templateUrl: './tab-laboratory.html',
   styleUrl: './tab-laboratory.css',
 })
@@ -35,6 +37,11 @@ export class TabLaboratory {
   detailSelected?: LaboratoryResponseDTO;
   dialogVisible = false;
   detailDialogVisible = false;
+  importDialogVisible = false;
+  importPreview?: ClinicalImportPreviewDTO;
+  importForm: LaboratoryRequestDTO = this.emptyForm();
+  importLoading = false;
+  importSaving = false;
   saving = false;
 
   fields: GenericFormField[] = [
@@ -210,6 +217,48 @@ export class TabLaboratory {
     this.dialogVisible = true;
   }
 
+  openImport(): void {
+    this.importDialogVisible = true;
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  closeImport(): void {
+    if (this.importLoading || this.importSaving) {
+      return;
+    }
+    this.importDialogVisible = false;
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  clearImportPreview(): void {
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  previewImport(file: File): void {
+    this.importLoading = true;
+    this.historyService.previewLaboratoryImport(this.history.id, file).subscribe({
+      next: (preview) => {
+        this.importLoading = false;
+        this.importPreview = preview;
+        this.importForm = {
+          ...this.emptyForm(),
+          ...(preview.laboratoryDraft ?? {}),
+        };
+      },
+      error: () => {
+        this.importLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo importar',
+          detail: 'El archivo no pudo interpretarse correctamente.',
+        });
+      },
+    });
+  }
+
   openEdit(row: LaboratoryResponseDTO): void {
     this.selected = row;
     this.form = { ...row };
@@ -257,6 +306,30 @@ export class TabLaboratory {
           severity: 'error',
           summary: 'No se pudo guardar',
           detail: 'Revisa los valores ingresados.',
+        });
+      },
+    });
+  }
+
+  saveImported(values: Record<string, any>): void {
+    this.importSaving = true;
+    this.historyService.confirmLaboratoryImport(this.history.id, values as LaboratoryRequestDTO).subscribe({
+      next: () => {
+        this.importSaving = false;
+        this.closeImport();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Importacion confirmada',
+          detail: 'El analisis quedo registrado en la historia.',
+        });
+        this.saved.emit();
+      },
+      error: () => {
+        this.importSaving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo guardar',
+          detail: 'Revisa los valores importados antes de confirmar.',
         });
       },
     });

@@ -20,6 +20,14 @@
         [outlined]="true"
         (onClick)="openCreate()">
       </p-button>
+      <p-button
+        icon="pi pi-upload"
+        label="Importar archivo"
+        type="button"
+        severity="info"
+        [outlined]="true"
+        (onClick)="openImport()">
+      </p-button>
     </div>
   </div>
 
@@ -99,6 +107,23 @@
       (formCancel)="closeDialog()">
     </app-form-generic>
   </p-dialog>
+
+  <app-clinical-import-dialog
+    [(visible)]="importDialogVisible"
+    title="Importar antropometria"
+    emptyFileLabel="Selecciona un archivo clinico"
+    detectedColumnLabel="Campo detectado"
+    [preview]="importPreview"
+    [formValues]="importForm"
+    [fields]="importFields"
+    [columnsPerRow]="4"
+    [loading]="importLoading"
+    [saving]="importSaving"
+    (fileSelected)="clearImportPreview()"
+    (previewRequested)="previewImport($event)"
+    (confirmImport)="saveImported($event)"
+    (cancel)="closeImport()">
+  </app-clinical-import-dialog>
 
   <p-dialog
     [(visible)]="detailDialogVisible"

@@ -54,6 +54,8 @@ import nutricentro.repositories.NutritionalDataRepository;
 import nutricentro.repositories.PatientRepository;
 import nutricentro.repositories.ProfessionalRepository;
 import nutricentro.services.AppointmentService;
+import nutricentro.services.ClinicalFileValidator;
+import nutricentro.services.CurrentProfessionalProvider;
 import nutricentro.services.MedicalHistoryService;
 import nutricentro.services.NutritionalCalculatorService;
 import org.springframework.http.HttpStatus;
@@ -88,6 +90,8 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     private final FoodPlanRepository foodPlanRepository;
     private final NutritionalCalculatorService nutritionalCalculatorService;
     private final AppointmentService appointmentService;
+    private final CurrentProfessionalProvider currentProfessionalProvider;
+    private final ClinicalFileValidator clinicalFileValidator;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -95,6 +99,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public MedicalHistoryResponseDTO createOrUpdate(MedicalHistoryRequestDTO dto) {
         PatientEntity patient = patientRepository.findById(dto.getPatientId())
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+        validatePatientScope(patient.getId());
 
         MedicalHistoryEntity history = medicalHistoryRepository.findByPatientId(patient.getId())
                 .orElseGet(MedicalHistoryEntity::new);
@@ -104,7 +109,9 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         history.setConsultationReason(dto.getConsultationReason());
         history.setObservations(dto.getObservations());
 
-        if (dto.getProfessionalId() != null) {
+        if (isCurrentProfessionalUser()) {
+            history.setProfessional(currentProfessionalProvider.requireCurrentProfessional());
+        } else if (dto.getProfessionalId() != null) {
             history.setProfessional(findProfessional(dto.getProfessionalId()));
         }
 
@@ -117,6 +124,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public MedicalHistoryResponseDTO getByPatientId(Long patientId) {
         MedicalHistoryEntity history = medicalHistoryRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Historia clinica no encontrada"));
+        validateHistoryScope(history);
         return toHistoryResponse(history);
     }
 
@@ -244,8 +252,9 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Override
     @Transactional
     public LaboratoryResponseDTO addLaboratory(Long historyId, LaboratoryRequestDTO dto) {
+        MedicalHistoryEntity history = findHistory(historyId);
         LaboratoryEntity laboratory = new LaboratoryEntity();
-        laboratory.setMedicalHistory(findHistory(historyId));
+        laboratory.setMedicalHistory(history);
         applyLaboratory(laboratory, dto);
         return toLaboratoryResponse(laboratoryRepository.save(laboratory));
     }
@@ -255,6 +264,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public LaboratoryResponseDTO updateLaboratory(Long laboratoryId, LaboratoryRequestDTO dto) {
         LaboratoryEntity laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Laboratorio no encontrado"));
+        validateHistoryScope(laboratory.getMedicalHistory());
         applyLaboratory(laboratory, dto);
         return toLaboratoryResponse(laboratoryRepository.save(laboratory));
     }
@@ -262,10 +272,10 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Override
     @Transactional
     public void deleteLaboratory(Long laboratoryId) {
-        if (!laboratoryRepository.existsById(laboratoryId)) {
-            throw new EntityNotFoundException("Laboratorio no encontrado");
-        }
-        laboratoryRepository.deleteById(laboratoryId);
+        LaboratoryEntity laboratory = laboratoryRepository.findById(laboratoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Laboratorio no encontrado"));
+        validateHistoryScope(laboratory.getMedicalHistory());
+        laboratoryRepository.delete(laboratory);
     }
 
     @Override
@@ -286,6 +296,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         AntropometryEntity antropometry = antropometryRepository.findById(anthropometryId)
                 .orElseThrow(() -> new EntityNotFoundException("Antropometria no encontrada"));
         MedicalHistoryEntity history = antropometry.getMedicalHistory();
+        validateHistoryScope(history);
         applyAnthropometry(antropometry, dto, history);
         AntropometryEntity saved = antropometryRepository.save(antropometry);
         syncLatestAnthropometry(history.getId());
@@ -297,6 +308,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public void deleteAnthropometry(Long anthropometryId) {
         AntropometryEntity antropometry = antropometryRepository.findById(anthropometryId)
                 .orElseThrow(() -> new EntityNotFoundException("Antropometria no encontrada"));
+        validateHistoryScope(antropometry.getMedicalHistory());
         Long historyId = antropometry.getMedicalHistory().getId();
         antropometryRepository.delete(antropometry);
         syncLatestAnthropometry(historyId);
@@ -320,6 +332,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public ConsultationResponseDTO updateConsultation(Long consultationId, ConsultationRequestDTO dto) {
         ConsultationEntity consultation = consultationRepository.findById(consultationId)
                 .orElseThrow(() -> new EntityNotFoundException("Consulta no encontrada"));
+        validateHistoryScope(consultation.getMedicalHistory());
         ConsultationStatus previousStatus = consultation.getStatus();
         validateFinalizedConsultationTransition(previousStatus, dto.getStatus());
         applyConsultation(consultation, dto, consultation.getMedicalHistory());
@@ -333,9 +346,14 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public void deleteConsultation(Long consultationId) {
         ConsultationEntity consultation = consultationRepository.findById(consultationId)
                 .orElseThrow(() -> new EntityNotFoundException("Consulta no encontrada"));
+        if (consultation.getMedicalHistory() != null) {
+            validateHistoryScope(consultation.getMedicalHistory());
+        }
         if (consultation.getStatus() == ConsultationStatus.FINALIZADA) {
             throw new ApiException("No se puede eliminar una consulta finalizada", HttpStatus.CONFLICT.value());
         }
+        validateHistoryScope(consultation.getMedicalHistory());
+        clearConsultationReferences(consultation.getId());
         consultationRepository.delete(consultation);
     }
 
@@ -355,6 +373,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public FoodPlanResponseDTO updateFoodPlan(Long foodPlanId, FoodPlanRequestDTO dto) {
         FoodPlanEntity foodPlan = foodPlanRepository.findById(foodPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Plan alimentario no encontrado"));
+        validateHistoryScope(foodPlan.getMedicalHistory());
         applyFoodPlan(foodPlan, dto, false);
         return toFoodPlanResponse(foodPlanRepository.save(foodPlan));
     }
@@ -362,10 +381,10 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Override
     @Transactional
     public void deleteFoodPlan(Long foodPlanId) {
-        if (!foodPlanRepository.existsById(foodPlanId)) {
-            throw new EntityNotFoundException("Plan alimentario no encontrado");
-        }
-        foodPlanRepository.deleteById(foodPlanId);
+        FoodPlanEntity foodPlan = foodPlanRepository.findById(foodPlanId)
+                .orElseThrow(() -> new EntityNotFoundException("Plan alimentario no encontrado"));
+        validateHistoryScope(foodPlan.getMedicalHistory());
+        foodPlanRepository.delete(foodPlan);
     }
 
     @Override
@@ -373,6 +392,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public FoodPlanResponseDTO updateMenuMaterial(Long foodPlanId, MenuMaterialDTO dto) {
         FoodPlanEntity foodPlan = foodPlanRepository.findById(foodPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Plan alimentario no encontrado"));
+        validateHistoryScope(foodPlan.getMedicalHistory());
         foodPlan.setMenuDelivered(Boolean.TRUE.equals(dto.getDelivered()));
         foodPlan.setMenuDeliveredDate(dto.getDeliveredDate() != null ? dto.getDeliveredDate() : new Date());
         foodPlan.setMenuMaterialName(dto.getMaterialName());
@@ -383,6 +403,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Override
     @Transactional(readOnly = true)
     public List<ClinicalFileResponseDTO> listFiles(Long historyId) {
+        validateHistoryScope(findHistory(historyId));
         return clinicalFileRepository.findByMedicalHistoryIdOrderByFileDateDescIdDesc(historyId).stream()
                 .map(this::toClinicalFileResponse)
                 .toList();
@@ -400,9 +421,11 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("El archivo es obligatorio");
         }
+        clinicalFileValidator.validate(file);
 
+        MedicalHistoryEntity history = findHistory(historyId);
         ClinicalFileEntity entity = new ClinicalFileEntity();
-        entity.setMedicalHistory(findHistory(historyId));
+        entity.setMedicalHistory(history);
         entity.setOriginalName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "archivo");
         entity.setContentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream");
         entity.setSize(file.getSize());
@@ -425,6 +448,7 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     public ClinicalFileDownloadDTO downloadFile(Long fileId) {
         ClinicalFileEntity file = clinicalFileRepository.findById(fileId)
                 .orElseThrow(() -> new EntityNotFoundException("Archivo no encontrado"));
+        validateHistoryScope(file.getMedicalHistory());
 
         return ClinicalFileDownloadDTO.builder()
                 .originalName(file.getOriginalName())
@@ -436,10 +460,10 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     @Override
     @Transactional
     public void deleteFile(Long fileId) {
-        if (!clinicalFileRepository.existsById(fileId)) {
-            throw new EntityNotFoundException("Archivo no encontrado");
-        }
-        clinicalFileRepository.deleteById(fileId);
+        ClinicalFileEntity file = clinicalFileRepository.findById(fileId)
+                .orElseThrow(() -> new EntityNotFoundException("Archivo no encontrado"));
+        validateHistoryScope(file.getMedicalHistory());
+        clinicalFileRepository.delete(file);
     }
 
     private void applyLaboratory(LaboratoryEntity laboratory, LaboratoryRequestDTO dto) {
@@ -546,16 +570,28 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
 
     private void syncLatestAnthropometry(Long historyId) {
         MedicalHistoryEntity history = findHistory(historyId);
-        antropometryRepository.findByMedicalHistoryIdOrderByDateDesc(historyId).stream()
+        List<AntropometryEntity> anthropometries = antropometryRepository.findByMedicalHistoryIdOrderByDateDesc(historyId);
+
+        // MedicalHistory.weight and MedicalHistory.height are derived caches.
+        // Sync each field independently from the latest known non-null value.
+        history.setWeight(anthropometries.stream()
+                .map(AntropometryEntity::getWeight)
+                .filter(value -> value != null)
                 .findFirst()
-                .ifPresentOrElse(latest -> {
-                    history.setWeight(latest.getWeight());
-                    history.setHeight(latest.getHeight());
-                }, () -> {
-                    history.setWeight(null);
-                    history.setHeight(null);
-                });
+                .orElse(null));
+        history.setHeight(anthropometries.stream()
+                .map(AntropometryEntity::getHeight)
+                .filter(value -> value != null)
+                .findFirst()
+                .orElse(null));
         medicalHistoryRepository.save(history);
+    }
+
+    private void clearConsultationReferences(Long consultationId) {
+        antropometryRepository.clearConsultationReference(consultationId);
+        laboratoryRepository.clearConsultationReference(consultationId);
+        foodPlanRepository.clearConsultationReference(consultationId);
+        clinicalFileRepository.clearConsultationReference(consultationId);
     }
 
     private void applyConsultation(ConsultationEntity consultation, ConsultationRequestDTO dto, MedicalHistoryEntity history) {
@@ -589,6 +625,9 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     }
 
     private ProfessionalEntity resolveConsultationProfessional(Long professionalId, ConsultationEntity consultation, MedicalHistoryEntity history) {
+        if (isCurrentProfessionalUser()) {
+            return currentProfessionalProvider.requireCurrentProfessional();
+        }
         if (professionalId != null) {
             return findProfessional(professionalId);
         }
@@ -725,11 +764,75 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
     }
 
     private MedicalHistoryEntity findHistory(Long historyId) {
-        return medicalHistoryRepository.findById(historyId).orElseThrow(() -> new EntityNotFoundException("Historia clinica no encontrada"));
+        MedicalHistoryEntity history = medicalHistoryRepository.findById(historyId)
+                .orElseThrow(() -> new EntityNotFoundException("Historia clinica no encontrada"));
+        validateHistoryScope(history);
+        return history;
+    }
+
+    private void validateHistoryScope(MedicalHistoryEntity history) {
+        if (history == null) {
+            throw new EntityNotFoundException("Historia clinica no encontrada");
+        }
+        Long patientId = history.getPatient() != null ? history.getPatient().getId() : null;
+        validatePatientScope(patientId);
+    }
+
+    private void validatePatientScope(Long patientId) {
+        if (!isCurrentProfessionalUser()) {
+            return;
+        }
+        Long professionalId = currentProfessionalProvider.requireCurrentProfessionalId();
+        if (patientId == null || !isPatientLinkedToProfessional(patientId, professionalId)) {
+            throw new EntityNotFoundException("Historia clinica no encontrada");
+        }
+    }
+
+    private boolean isPatientLinkedToProfessional(Long patientId, Long professionalId) {
+        return appointmentRepository.existsByPatientIdAndProfessionalId(patientId, professionalId)
+                || consultationRepository.existsByPatientIdAndProfessionalId(patientId, professionalId);
+    }
+
+    private boolean isCurrentProfessionalUser() {
+        return currentProfessionalProvider != null && currentProfessionalProvider.isProfessional();
     }
 
     private ProfessionalEntity findProfessional(Long professionalId) {
         return professionalRepository.findById(professionalId).orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+    }
+
+    private Long consultationId(ConsultationEntity consultation) {
+        return consultation != null ? consultation.getId() : null;
+    }
+
+    private Date consultationDate(ConsultationEntity consultation) {
+        return consultation != null ? consultation.getDate() : null;
+    }
+
+    private String consultationStatus(ConsultationEntity consultation) {
+        return consultation != null && consultation.getStatus() != null ? consultation.getStatus().name() : null;
+    }
+
+    private String consultationReason(ConsultationEntity consultation) {
+        return consultation != null ? consultation.getReason() : null;
+    }
+
+    private String consultationProfessionalName(ConsultationEntity consultation) {
+        if (consultation == null || consultation.getProfessional() == null) {
+            return null;
+        }
+        return formatProfessionalName(consultation.getProfessional());
+    }
+
+    private String consultationObservations(ConsultationEntity consultation) {
+        return consultation != null ? consultation.getObservations() : null;
+    }
+
+    private String formatProfessionalName(ProfessionalEntity professional) {
+        String firstName = professional.getFirstName() != null ? professional.getFirstName().trim() : "";
+        String lastName = professional.getLastName() != null ? professional.getLastName().trim() : "";
+        String fullName = (firstName + " " + lastName).trim();
+        return fullName.isBlank() ? null : fullName;
     }
 
     private MedicalHistoryResponseDTO toHistoryResponse(MedicalHistoryEntity history) {
@@ -755,7 +858,9 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
                 .foodPlans(foodPlanRepository.findByMedicalHistoryIdOrderByStartDateDesc(history.getId()).stream()
                         .map(this::toFoodPlanResponse)
                         .toList())
-                .files(listFiles(history.getId()))
+                .files(clinicalFileRepository.findByMedicalHistoryIdOrderByFileDateDescIdDesc(history.getId()).stream()
+                        .map(this::toClinicalFileResponse)
+                        .toList())
                 .build();
     }
 
@@ -914,6 +1019,12 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
                 .hemoglobin(laboratory.getHemoglobin())
                 .customParameters(laboratory.getCustomParameters())
                 .observations(laboratory.getObservations())
+                .consultationId(consultationId(laboratory.getConsultation()))
+                .consultationDate(consultationDate(laboratory.getConsultation()))
+                .consultationStatus(consultationStatus(laboratory.getConsultation()))
+                .consultationReason(consultationReason(laboratory.getConsultation()))
+                .consultationProfessionalName(consultationProfessionalName(laboratory.getConsultation()))
+                .consultationObservations(consultationObservations(laboratory.getConsultation()))
                 .build();
     }
 
@@ -980,6 +1091,12 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
                 .externalReference(antropometry.getExternalReference())
                 .rawMeasurements(antropometry.getRawMeasurements())
                 .observations(antropometry.getObservations())
+                .consultationId(consultationId(antropometry.getConsultation()))
+                .consultationDate(consultationDate(antropometry.getConsultation()))
+                .consultationStatus(consultationStatus(antropometry.getConsultation()))
+                .consultationReason(consultationReason(antropometry.getConsultation()))
+                .consultationProfessionalName(consultationProfessionalName(antropometry.getConsultation()))
+                .consultationObservations(consultationObservations(antropometry.getConsultation()))
                 .build();
     }
 
@@ -1027,6 +1144,12 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
                 .totalProtein(foodPlan.getTotalProtein())
                 .totalCarbohydrates(foodPlan.getTotalCarbohydrates())
                 .totalFat(foodPlan.getTotalFat())
+                .consultationId(consultationId(foodPlan.getConsultation()))
+                .consultationDate(consultationDate(foodPlan.getConsultation()))
+                .consultationStatus(consultationStatus(foodPlan.getConsultation()))
+                .consultationReason(consultationReason(foodPlan.getConsultation()))
+                .consultationProfessionalName(consultationProfessionalName(foodPlan.getConsultation()))
+                .consultationObservations(consultationObservations(foodPlan.getConsultation()))
                 .build();
     }
 
@@ -1041,6 +1164,12 @@ public class MedicalHistoryServiceImpl implements MedicalHistoryService {
                 .date(file.getFileDate())
                 .professional(file.getProfessional())
                 .previewable(isPreviewable(file.getContentType()))
+                .consultationId(consultationId(file.getConsultation()))
+                .consultationDate(consultationDate(file.getConsultation()))
+                .consultationStatus(consultationStatus(file.getConsultation()))
+                .consultationReason(consultationReason(file.getConsultation()))
+                .consultationProfessionalName(consultationProfessionalName(file.getConsultation()))
+                .consultationObservations(consultationObservations(file.getConsultation()))
                 .build();
     }
 

@@ -33,4 +33,10 @@ public class FoodPlanResponseDTO {
     private Double totalProtein;
     private Double totalCarbohydrates;
     private Double totalFat;
+    private Long consultationId;
+    private Date consultationDate;
+    private String consultationStatus;
+    private String consultationReason;
+    private String consultationProfessionalName;
+    private String consultationObservations;
 }

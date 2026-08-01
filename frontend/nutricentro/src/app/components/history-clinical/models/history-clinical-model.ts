@@ -188,7 +188,16 @@ export interface LaboratoryRequestDTO {
   observations?: string | null;
 }
 
-export interface LaboratoryResponseDTO extends LaboratoryRequestDTO {
+export interface ConsultationContextDTO {
+  consultationId?: number | null;
+  consultationDate?: string | Date | null;
+  consultationStatus?: 'BORRADOR' | 'EN_CURSO' | 'FINALIZADA' | string | null;
+  consultationReason?: string | null;
+  consultationProfessionalName?: string | null;
+  consultationObservations?: string | null;
+}
+
+export interface LaboratoryResponseDTO extends LaboratoryRequestDTO, ConsultationContextDTO {
   id: number;
 }
 
@@ -252,7 +261,7 @@ export interface AntropometryRequestDTO {
   observations?: string | null;
 }
 
-export interface AntropometryResponseDTO extends Omit<AntropometryRequestDTO, 'rawMeasurements'> {
+export interface AntropometryResponseDTO extends Omit<AntropometryRequestDTO, 'rawMeasurements'>, ConsultationContextDTO {
   id: number;
   waistHipRatio?: number | null;
   bmi?: number | null;
@@ -313,7 +322,7 @@ export interface FoodPlanRequestDTO {
   items?: FoodPlanItemDTO[];
 }
 
-export interface FoodPlanResponseDTO extends FoodPlanRequestDTO {
+export interface FoodPlanResponseDTO extends FoodPlanRequestDTO, ConsultationContextDTO {
   id: number;
   totalCalories?: number | null;
   totalProtein?: number | null;
@@ -321,7 +330,7 @@ export interface FoodPlanResponseDTO extends FoodPlanRequestDTO {
   totalFat?: number | null;
 }
 
-export interface ClinicalFileResponseDTO {
+export interface ClinicalFileResponseDTO extends ConsultationContextDTO {
   id: number;
   originalName: string;
   contentType: string;
@@ -331,6 +340,31 @@ export interface ClinicalFileResponseDTO {
   date?: string | Date | null;
   professional?: string | null;
   previewable?: boolean | null;
+}
+
+export interface ClinicalImportFieldDTO {
+  fieldName?: string | null;
+  label: string;
+  extractedName?: string | null;
+  originalValue?: string | null;
+  normalizedValue?: number | null;
+  unit?: string | null;
+  confidence?: number | null;
+  status: 'DETECTED' | 'LOW_CONFIDENCE' | 'UNMATCHED' | string;
+  message?: string | null;
+}
+
+export interface ClinicalImportPreviewDTO {
+  targetType: 'ANTHROPOMETRY' | 'LABORATORY' | string;
+  filename: string;
+  contentType?: string | null;
+  provider: string;
+  extractionStatus: string;
+  message?: string | null;
+  fields: ClinicalImportFieldDTO[];
+  anthropometryDraft?: AntropometryRequestDTO | null;
+  laboratoryDraft?: LaboratoryRequestDTO | null;
+  rawText?: string | null;
 }
 
 export interface MenuMaterialDTO {

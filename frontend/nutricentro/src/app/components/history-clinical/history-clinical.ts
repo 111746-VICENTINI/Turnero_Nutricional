@@ -29,11 +29,12 @@ import { AppointmentStatus } from '../../shared/enums/appointment-status';
 import {formatLocalTime, toIsoLocalDate} from '../../shared/utils/date-utils';
 import { FollowUpService } from '../../core/services/follow-up-service';
 import { PatientFollowUpStatusDTO } from '../../core/models/follow-up-model';
+import { AnthropometricEvolutionPanel } from './components/anthropometric-evolution-panel/anthropometric-evolution-panel';
 
 @Component({
   selector: 'app-history-clinical',
   standalone: true,
-  imports: [CommonModule, ToastModule, ConfirmDialogModule, DialogModule, FormGeneric, HistoryTabs, Button, AppointmentDetailDrawer],
+  imports: [CommonModule, ToastModule, ConfirmDialogModule, DialogModule, FormGeneric, HistoryTabs, Button, AppointmentDetailDrawer, AnthropometricEvolutionPanel],
   providers: [ConfirmationService, MessageService],
   templateUrl: './history-clinical.html',
   styleUrl: './history-clinical.css',

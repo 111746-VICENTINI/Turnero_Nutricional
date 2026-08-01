@@ -6,6 +6,7 @@ import nutricentro.dtos.anthropometry.AntropometryRequestDTO;
 import nutricentro.dtos.anthropometry.AntropometryResponseDTO;
 import nutricentro.dtos.consultations.ConsultationRequestDTO;
 import nutricentro.dtos.consultations.ConsultationResponseDTO;
+import nutricentro.dtos.clinicalImport.ClinicalImportPreviewDTO;
 import nutricentro.dtos.historyClinical.ClinicalFileDownloadDTO;
 import nutricentro.dtos.historyClinical.ClinicalFileResponseDTO;
 import nutricentro.dtos.historyClinical.ClinicalDataDTO;
@@ -18,6 +19,7 @@ import nutricentro.dtos.historyClinical.NutritionalDataDTO;
 import nutricentro.dtos.laboratory.LaboratoryRequestDTO;
 import nutricentro.dtos.laboratory.LaboratoryResponseDTO;
 import nutricentro.services.MedicalHistoryService;
+import nutricentro.services.clinicalImport.ClinicalDocumentImportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -47,6 +49,7 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
 public class MedicalHistoryController {
     private final MedicalHistoryService medicalHistoryService;
+    private final ClinicalDocumentImportService clinicalDocumentImportService;
 
     @PostMapping
     public ResponseEntity<MedicalHistoryResponseDTO> createOrUpdate(
@@ -93,6 +96,20 @@ public class MedicalHistoryController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping(value = "/{historyId}/laboratory/import/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClinicalImportPreviewDTO> previewLaboratoryImport(
+            @PathVariable Long historyId,
+            @RequestParam MultipartFile file) {
+        return ResponseEntity.ok(clinicalDocumentImportService.previewLaboratory(historyId, file));
+    }
+
+    @PostMapping("/{historyId}/laboratory/import/confirm")
+    public ResponseEntity<LaboratoryResponseDTO> confirmLaboratoryImport(
+            @PathVariable Long historyId,
+            @Valid @RequestBody LaboratoryRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(medicalHistoryService.addLaboratory(historyId, dto));
+    }
+
     @PostMapping("/{historyId}/anthropometry")
     public ResponseEntity<AntropometryResponseDTO> addAnthropometry(
             @PathVariable Long historyId,
@@ -111,6 +128,20 @@ public class MedicalHistoryController {
     public ResponseEntity<Void> deleteAnthropometry(@PathVariable Long anthropometryId) {
         medicalHistoryService.deleteAnthropometry(anthropometryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/{historyId}/anthropometry/import/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClinicalImportPreviewDTO> previewAnthropometryImport(
+            @PathVariable Long historyId,
+            @RequestParam MultipartFile file) {
+        return ResponseEntity.ok(clinicalDocumentImportService.previewAnthropometry(historyId, file));
+    }
+
+    @PostMapping("/{historyId}/anthropometry/import/confirm")
+    public ResponseEntity<AntropometryResponseDTO> confirmAnthropometryImport(
+            @PathVariable Long historyId,
+            @Valid @RequestBody AntropometryRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(medicalHistoryService.addAnthropometry(historyId, dto));
     }
 
     @PostMapping("/{historyId}/consultations")

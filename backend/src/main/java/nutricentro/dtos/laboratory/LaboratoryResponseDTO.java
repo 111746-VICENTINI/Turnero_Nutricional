@@ -48,4 +48,10 @@ public class LaboratoryResponseDTO {
     private Double hemoglobin;
     private String customParameters;
     private String observations;
+    private Long consultationId;
+    private Date consultationDate;
+    private String consultationStatus;
+    private String consultationReason;
+    private String consultationProfessionalName;
+    private String consultationObservations;
 }

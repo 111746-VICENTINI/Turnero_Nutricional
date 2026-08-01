@@ -25,8 +25,12 @@ public class MedicalHistoryEntity extends BaseEntity{
     private String consultationReason;
     private String anthropometry;
     private String mealPlan;
-    private Double weight; //peso
-    private Double height; //altura
+
+    // Derived cache: last known non-null weight from anthropometries.
+    private Double weight;
+
+    // Derived cache: last known non-null height from anthropometries.
+    private Double height;
 
     @Column(columnDefinition = "TEXT")
     private String observations;

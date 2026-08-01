@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 @Data
 @AllArgsConstructor
@@ -21,4 +22,10 @@ public class ClinicalFileResponseDTO {
     private LocalDate date;
     private String professional;
     private Boolean previewable;
+    private Long consultationId;
+    private Date consultationDate;
+    private String consultationStatus;
+    private String consultationReason;
+    private String consultationProfessionalName;
+    private String consultationObservations;
 }

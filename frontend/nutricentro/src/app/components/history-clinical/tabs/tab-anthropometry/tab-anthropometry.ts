@@ -10,9 +10,11 @@ import {
   TableActionConfig,
   TableColumnConfig,
 } from '../../../../shared/components/table-generic/model/table-model';
+import { ClinicalImportDialog } from '../../components/clinical-import-dialog/clinical-import-dialog';
 import {
   AntropometryRequestDTO,
   AntropometryResponseDTO,
+  ClinicalImportPreviewDTO,
   MedicalHistoryResponseDTO,
 } from '../../models/history-clinical-model';
 import { HistoryClinicalService } from '../../services/history-clinical-service';
@@ -21,7 +23,7 @@ type AntropometryFormValue = AntropometryRequestDTO & { rawMeasurementsText?: st
 
 @Component({
   selector: 'app-tab-anthropometry',
-  imports: [CommonModule, ButtonModule, DialogModule, FormGeneric, TableGeneric],
+  imports: [CommonModule, ButtonModule, DialogModule, FormGeneric, TableGeneric, ClinicalImportDialog],
   templateUrl: './tab-anthropometry.html',
   styleUrl: './tab-anthropometry.css',
 })
@@ -37,6 +39,11 @@ export class TabAnthropometry {
   detailSelected?: AntropometryResponseDTO;
   dialogVisible = false;
   detailDialogVisible = false;
+  importDialogVisible = false;
+  importPreview?: ClinicalImportPreviewDTO;
+  importForm: AntropometryFormValue = this.emptyForm();
+  importLoading = false;
+  importSaving = false;
   saving = false;
 
   private readonly editableFields: GenericFormField[] = [
@@ -117,6 +124,10 @@ export class TabAnthropometry {
 
   get fields(): GenericFormField[] {
     return this.selected ? this.editableFields : this.createFields;
+  }
+
+  get importFields(): GenericFormField[] {
+    return this.editableFields;
   }
 
   columns: TableColumnConfig<AntropometryResponseDTO>[] = [
@@ -228,6 +239,49 @@ export class TabAnthropometry {
     this.dialogVisible = true;
   }
 
+  openImport(): void {
+    this.importDialogVisible = true;
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  closeImport(): void {
+    if (this.importLoading || this.importSaving) {
+      return;
+    }
+    this.importDialogVisible = false;
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  clearImportPreview(): void {
+    this.importPreview = undefined;
+    this.importForm = this.emptyForm();
+  }
+
+  previewImport(file: File): void {
+    this.importLoading = true;
+    this.historyService.previewAnthropometryImport(this.history.id, file).subscribe({
+      next: (preview) => {
+        this.importLoading = false;
+        this.importPreview = preview;
+        this.importForm = {
+          ...this.emptyForm(),
+          ...(preview.anthropometryDraft ?? {}),
+          rawMeasurementsText: this.formatRawMeasurements(preview.anthropometryDraft?.rawMeasurements, true),
+        };
+      },
+      error: () => {
+        this.importLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo importar',
+          detail: 'El archivo no pudo interpretarse correctamente.',
+        });
+      },
+    });
+  }
+
   openEdit(row: AntropometryResponseDTO): void {
     this.selected = row;
     const { id: _id, bmi: _bmi, bmr: _bmr, waistHipRatio: _waistHipRatio, rawMeasurements: _rawMeasurements, ...editable } = row;
@@ -284,6 +338,38 @@ export class TabAnthropometry {
           severity: 'error',
           summary: 'No se pudo guardar',
           detail: 'Revisa las mediciones ingresadas.',
+        });
+      },
+    });
+  }
+
+  saveImported(values: Record<string, any>): void {
+    const { rawMeasurementsText, ...rest } = values as AntropometryFormValue;
+    const request: AntropometryRequestDTO = {
+      ...rest,
+      date: rest.date ?? new Date().toISOString().slice(0, 10),
+      source: rest.source || 'IMPORTADO_ARCHIVO',
+      rawMeasurements: this.parseRawMeasurements(rawMeasurementsText),
+    };
+
+    this.importSaving = true;
+    this.historyService.confirmAnthropometryImport(this.history.id, request).subscribe({
+      next: () => {
+        this.importSaving = false;
+        this.closeImport();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Importacion confirmada',
+          detail: 'Las mediciones quedaron registradas en la historia.',
+        });
+        this.saved.emit();
+      },
+      error: () => {
+        this.importSaving = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo guardar',
+          detail: 'Revisa los valores importados antes de confirmar.',
         });
       },
     });

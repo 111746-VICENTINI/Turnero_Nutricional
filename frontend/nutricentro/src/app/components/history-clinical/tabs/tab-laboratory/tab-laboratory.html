@@ -4,12 +4,22 @@
       <h2>Valores de laboratorio</h2>
     </div>
 
-    <p-button
-      icon="pi pi-plus"
-      label="Nuevo analisis"
-      type="button"
-      (onClick)="openCreate()">
-    </p-button>
+    <div class="actions">
+      <p-button
+        icon="pi pi-plus"
+        label="Nuevo analisis"
+        type="button"
+        (onClick)="openCreate()">
+      </p-button>
+      <p-button
+        icon="pi pi-upload"
+        label="Importar archivo"
+        type="button"
+        severity="info"
+        [outlined]="true"
+        (onClick)="openImport()">
+      </p-button>
+    </div>
   </div>
 
   <div class="lab-highlight-grid">
@@ -55,6 +65,23 @@
       (formCancel)="closeDialog()">
     </app-form-generic>
   </p-dialog>
+
+  <app-clinical-import-dialog
+    [(visible)]="importDialogVisible"
+    title="Importar laboratorio"
+    emptyFileLabel="Selecciona un archivo de laboratorio"
+    detectedColumnLabel="Estudio detectado"
+    [preview]="importPreview"
+    [formValues]="importForm"
+    [fields]="fields"
+    [columnsPerRow]="3"
+    [loading]="importLoading"
+    [saving]="importSaving"
+    (fileSelected)="clearImportPreview()"
+    (previewRequested)="previewImport($event)"
+    (confirmImport)="saveImported($event)"
+    (cancel)="closeImport()">
+  </app-clinical-import-dialog>
 
   <p-dialog
     [(visible)]="detailDialogVisible"

@@ -95,17 +95,6 @@ export const PREGUNTAS_FRECUENTES: PreguntaFrecuente[] = [
     orden: 150
   },
   {
-    id: 'historia-plan',
-    seccion: 'Historia Clínica',
-    rolesPermitidos: ['ADMIN', 'PROFESSIONAL'],
-    pregunta: '¿Cómo crear un plan alimentario?',
-    respuesta: 'Desde historia clínica ingrese a plan alimentario, cree el plan y guarde.',
-    ruta: ['/medical-history'],
-    parametrosConsulta: {tab: 'plans'},
-    textoBoton: 'Ir a Historia Clínica',
-    orden: 160
-  },
-  {
     id: 'historia-archivos',
     seccion: 'Historia Clínica',
     rolesPermitidos: ['ADMIN', 'PROFESSIONAL'],

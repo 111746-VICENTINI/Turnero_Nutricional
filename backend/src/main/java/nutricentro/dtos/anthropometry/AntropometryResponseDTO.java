@@ -73,4 +73,10 @@ public class AntropometryResponseDTO {
     private String externalReference;
     private String rawMeasurements;
     private String observations;
+    private Long consultationId;
+    private Date consultationDate;
+    private String consultationStatus;
+    private String consultationReason;
+    private String consultationProfessionalName;
+    private String consultationObservations;
 }

@@ -38,7 +38,6 @@ import {formatLocalTime} from '../../../shared/utils/date-utils';
     TabClinicalData,
     TabLaboratory,
     TabAnthropometry,
-    TabPlans,
     TabConsultations,
     TabFiles,
   ],

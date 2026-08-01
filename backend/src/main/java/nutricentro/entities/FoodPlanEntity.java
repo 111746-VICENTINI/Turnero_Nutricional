@@ -48,4 +48,10 @@ public class FoodPlanEntity extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "patient_id")
     private PatientEntity patient;
+
+    // Optional consultation context. Historical records can remain null.
+    // Never infer this relation from dates or an active consultation.
+    @ManyToOne
+    @JoinColumn(name = "consultation_id")
+    private ConsultationEntity consultation;
 }

@@ -13,14 +13,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -199,14 +204,31 @@ public class WhatsAppNotificationService {
                                      String successObservation,
                                      boolean reminder) {
         try {
-            validateConfiguration();
-            restClient.post()
+            validateConfiguration(templateName);
+            Map<String, Object> payload = buildTemplatePayload(appointment, templateName, parameters);
+            String recipient = String.valueOf(payload.get("to"));
+            log.info(
+                    "Iniciando envio WhatsApp para turno {}. template={}, reminder={}, destinatario={}",
+                    appointment.getId(),
+                    templateName,
+                    reminder,
+                    maskPhone(recipient)
+            );
+            log.debug("Parametros WhatsApp para turno {} y template {}: {}", appointment.getId(), templateName, parameters);
+            ResponseEntity<String> metaResponse = restClient.post()
                     .uri("/{apiVersion}/{phoneNumberId}/messages", apiVersion, phoneNumberId)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(buildTemplatePayload(appointment, templateName, parameters))
+                    .body(payload)
                     .retrieve()
-                    .toBodilessEntity();
+                    .toEntity(String.class);
+            log.info(
+                    "Meta acepto WhatsApp para turno {}. template={}, httpStatus={}, respuesta={}",
+                    appointment.getId(),
+                    templateName,
+                    metaResponse.getStatusCode(),
+                    valueOrFallback(metaResponse.getBody(), "sin cuerpo")
+            );
 
             recordResult(
                     appointment,
@@ -230,7 +252,7 @@ public class WhatsAppNotificationService {
                                                      List<Map<String, String>> parameters) {
         return Map.of(
                 "messaging_product", "whatsapp",
-                "to", normalizePhone(appointment.getPatient().getMobile()),
+                "to", normalizePhoneNumber(appointment.getPatient().getMobile()),
                 "type", "template",
                 "template", Map.of(
                         "name", templateName,
@@ -249,7 +271,6 @@ public class WhatsAppNotificationService {
                 textParameter(appointment.getDate().format(DATE_FORMATTER)),
                 textParameter(appointment.getTime().format(TIME_FORMATTER)),
                 textParameter(fullName(appointment.getProfessional().getFirstName(), appointment.getProfessional().getLastName())),
-                textParameter(specialties(appointment.getProfessional())),
                 textParameter(valueOrFallback(consultorioAddress, "A confirmar")),
                 textParameter(appointmentCost(appointment)),
                 textParameter(valueOrFallback(consultorioPhone, "A confirmar"))
@@ -262,8 +283,8 @@ public class WhatsAppNotificationService {
                 textParameter(appointment.getDate().format(DATE_FORMATTER)),
                 textParameter(appointment.getTime().format(TIME_FORMATTER)),
                 textParameter(fullName(appointment.getProfessional().getFirstName(), appointment.getProfessional().getLastName())),
+                textParameter(appointmentCost(appointment)),
                 textParameter(valueOrFallback(consultorioAddress, "A confirmar")),
-                textParameter(valueOrFallback(consultorioPhone, "A confirmar")),
                 textParameter("Responda SI para confirmar o NO para cancelar")
         );
     }
@@ -272,12 +293,28 @@ public class WhatsAppNotificationService {
         return Map.of("type", "text", "text", valueOrFallback(value, "-"));
     }
 
-    private String normalizePhone(String phone) {
-        String normalized = valueOrFallback(phone, "").replaceAll("[^0-9]", "");
-        if (normalized.isBlank()) {
-            throw new IllegalArgumentException("El paciente no tiene telefono movil configurado");
+    static String normalizePhoneNumber(String phone) {
+        String digits = phone == null ? "" : phone.replaceAll("[^0-9]", "");
+        if (digits.isBlank()) {
+            throw new IllegalArgumentException("El telefono movil del paciente es invalido para WhatsApp");
         }
-        return normalized;
+        if (digits.startsWith("0")) {
+            digits = digits.substring(1);
+        }
+        if (digits.startsWith("549")) {
+            return validateWhatsAppPhoneNumber(digits);
+        }
+        if (digits.startsWith("54")) {
+            return validateWhatsAppPhoneNumber("549" + digits.substring(2));
+        }
+        return validateWhatsAppPhoneNumber("549" + digits);
+    }
+
+    private static String validateWhatsAppPhoneNumber(String phoneNumber) {
+        if (!phoneNumber.matches("549\\d{10}")) {
+            throw new IllegalArgumentException("El telefono movil del paciente es invalido para WhatsApp. Debe corresponder a un numero argentino en formato E.164.");
+        }
+        return phoneNumber;
     }
 
     private String specialties(ProfessionalEntity professional) {
@@ -300,17 +337,60 @@ public class WhatsAppNotificationService {
 
     private String appointmentCost(AppointmentEntity appointment) {
         if (appointment.getAppliedFee() != null) {
-            return valueOrFallback(appointment.getFeeCurrency(), "ARS") + " " + appointment.getAppliedFee();
+            return formatAppointmentCost(valueOrFallback(appointment.getFeeCurrency(), "ARS"), appointment.getAppliedFee());
         }
-        return valueOrFallback(appointmentCost, "A confirmar");
+        return formatConfiguredAppointmentCost(appointmentCost);
+    }
+
+    private String formatConfiguredAppointmentCost(String configuredCost) {
+        String value = valueOrFallback(configuredCost, "A confirmar");
+        String normalized = value
+                .replace("$", "")
+                .replace("ARS", "")
+                .trim();
+        try {
+            return formatAppointmentCost("ARS", new BigDecimal(normalizeConfiguredAmount(normalized)));
+        } catch (NumberFormatException exception) {
+            return value;
+        }
+    }
+
+    private String normalizeConfiguredAmount(String value) {
+        if (value.contains(",")) {
+            return value.replace(".", "").replace(",", ".");
+        }
+        if (value.matches("\\d{1,3}(\\.\\d{3})+")) {
+            return value.replace(".", "");
+        }
+        return value;
+    }
+
+    private String formatAppointmentCost(String currency, BigDecimal amount) {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.forLanguageTag("es-AR"));
+        DecimalFormat formatter = new DecimalFormat("#,##0.##", symbols);
+        String formattedAmount = formatter.format(amount);
+        if ("ARS".equalsIgnoreCase(currency)) {
+            return "$" + formattedAmount;
+        }
+        return currency.trim().toUpperCase(Locale.ROOT) + " " + formattedAmount;
     }
 
     private void validateConfiguration() {
+        validateConfiguration("-");
+    }
+
+    private void validateConfiguration(String templateName) {
         if (phoneNumberId == null || phoneNumberId.isBlank()) {
             throw new IllegalStateException("Falta configurar whatsapp.cloud-api.phone-number-id");
         }
         if (accessToken == null || accessToken.isBlank()) {
             throw new IllegalStateException("Falta configurar whatsapp.cloud-api.access-token");
+        }
+        if (templateName == null || templateName.isBlank()) {
+            throw new IllegalStateException("Falta configurar el template de WhatsApp");
+        }
+        if (templateLanguage == null || templateLanguage.isBlank()) {
+            throw new IllegalStateException("Falta configurar whatsapp.cloud-api.template-language");
         }
     }
 
@@ -353,5 +433,12 @@ public class WhatsAppNotificationService {
                 .baseUrl(baseUrl)
                 .requestFactory(requestFactory)
                 .build();
+    }
+
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() <= 4) {
+            return "****";
+        }
+        return "*".repeat(Math.max(0, phone.length() - 4)) + phone.substring(phone.length() - 4);
     }
 }

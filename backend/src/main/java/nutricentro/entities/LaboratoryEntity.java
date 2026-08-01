@@ -2,6 +2,7 @@ package nutricentro.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -60,4 +61,10 @@ public class LaboratoryEntity extends BaseEntity {
 
     @ManyToOne
     private MedicalHistoryEntity medicalHistory;
+
+    // Optional consultation context. Historical records can remain null.
+    // Never infer this relation from dates or an active consultation.
+    @ManyToOne
+    @JoinColumn(name = "consultation_id")
+    private ConsultationEntity consultation;
 }

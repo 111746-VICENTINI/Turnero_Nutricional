@@ -20,6 +20,12 @@
   font-size: 1.2rem;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .section-title p {
   margin: 0.25rem 0 0;
   color: #66736f;
@@ -155,6 +161,7 @@
 
 @media (max-width: 700px) {
   .section-title,
+  .actions,
   .lab-highlight-grid,
   .lab-detail-grid,
   .lab-detail-grid dl {

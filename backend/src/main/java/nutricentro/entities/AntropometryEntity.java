@@ -93,4 +93,10 @@ public class AntropometryEntity extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "medical_history_id")
     private MedicalHistoryEntity medicalHistory;
+
+    // Optional consultation context. Historical records can remain null.
+    // Never infer this relation from dates or an active consultation.
+    @ManyToOne
+    @JoinColumn(name = "consultation_id")
+    private ConsultationEntity consultation;
 }
